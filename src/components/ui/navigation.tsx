@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   GraduationCap, 
   Users, 
@@ -10,12 +11,16 @@ import {
   Map, 
   User,
   Menu,
-  X
+  X,
+  LogOut,
+  Settings
 } from "lucide-react";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -57,23 +62,48 @@ const Navigation = () => {
             ))}
           </div>
 
-          {/* Auth Buttons */}
+          {/* Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/student-dashboard">
-              <Button variant="ghost" size="sm">
-                <User className="w-4 h-4 mr-1" />
-                Student
-              </Button>
-            </Link>
-            <Link to="/alumni-dashboard">
-              <Button variant="ghost" size="sm">
-                <User className="w-4 h-4 mr-1" />
-                Alumni
-              </Button>
-            </Link>
-            <Badge variant="secondary" className="bg-accent/20 text-accent-foreground">
-              Demo Mode
-            </Badge>
+            {isAuthenticated && user ? (
+              <>
+                <Link to="/dashboard">
+                  <Button variant="ghost" size="sm">
+                    <User className="w-4 h-4 mr-1" />
+                    {user.name}
+                  </Button>
+                </Link>
+                <Badge variant="secondary" className={`${
+                  user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                  user.role === 'alumni' ? 'bg-green-100 text-green-800' :
+                  'bg-blue-100 text-blue-800'
+                }`}>
+                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}
+                >
+                  <LogOut className="w-4 h-4 mr-1" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">
+                    <User className="w-4 h-4 mr-1" />
+                    Login
+                  </Button>
+                </Link>
+                <Badge variant="secondary" className="bg-accent/20 text-accent-foreground">
+                  Demo Mode
+                </Badge>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -106,17 +136,43 @@ const Navigation = () => {
                   <span>{item.name}</span>
                 </Link>
               ))}
-              <div className="flex space-x-2 pt-4">
-                <Link to="/student-dashboard" onClick={() => setIsOpen(false)}>
-                  <Button variant="ghost" size="sm" className="w-full">
-                    Student Dashboard
-                  </Button>
-                </Link>
-                <Link to="/alumni-dashboard" onClick={() => setIsOpen(false)}>
-                  <Button variant="ghost" size="sm" className="w-full">
-                    Alumni Dashboard
-                  </Button>
-                </Link>
+              <div className="pt-4 border-t border-border">
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="px-3 py-2 mb-2">
+                      <p className="font-medium">{user.name}</p>
+                      <Badge variant="secondary" className="text-xs">
+                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      </Badge>
+                    </div>
+                    <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full justify-start mb-2">
+                        <User className="w-4 h-4 mr-2" />
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        logout();
+                        navigate('/');
+                        setIsOpen(false);
+                      }}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      <User className="w-4 h-4 mr-2" />
+                      Login
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>

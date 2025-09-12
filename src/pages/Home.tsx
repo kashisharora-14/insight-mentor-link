@@ -79,17 +79,17 @@ const Home = () => {
               with industry leaders for career guidance, networking, and professional growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/student-dashboard">
+              <Link to="/login">
                 <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-glow">
                   <GraduationCap className="w-5 h-5 mr-2" />
-                  Student Dashboard
+                  Get Started
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <Link to="/alumni-dashboard">
+              <Link to="/alumni">
                 <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
                   <Users className="w-5 h-5 mr-2" />
-                  Alumni Dashboard
+                  Explore Alumni
                 </Button>
               </Link>
             </div>
