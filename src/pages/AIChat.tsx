@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/contexts/AuthContext";
 import { chatMessages as initialMessages, alumni } from "@/data/mockData";
 import { 
   MessageCircle, 
@@ -15,7 +16,9 @@ import {
   Users, 
   Briefcase,
   TrendingUp,
-  Calendar
+  Calendar,
+  GraduationCap,
+  Shield
 } from "lucide-react";
 
 interface Message {
@@ -27,36 +30,191 @@ interface Message {
 }
 
 const AIChat = () => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages as Message[]);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  const quickActions = [
-    {
-      icon: Users,
-      title: "Find Alumni",
-      description: "Help me find alumni in my field",
-      prompt: "I'm looking for alumni who work in software engineering. Can you suggest some mentors?"
-    },
-    {
-      icon: Briefcase,
-      title: "Career Advice",
-      description: "Get career guidance",
-      prompt: "What skills should I focus on for a career in data science?"
-    },
-    {
-      icon: TrendingUp,
-      title: "Industry Trends",
-      description: "Latest industry insights",
-      prompt: "What are the current trends in artificial intelligence and machine learning?"
-    },
-    {
-      icon: Calendar,
-      title: "Upcoming Events",
-      description: "Relevant events for me",
-      prompt: "Are there any upcoming tech events I should attend?"
+  // Initialize with personalized greeting
+  useEffect(() => {
+    if (user) {
+      const personalizedGreeting: Message = {
+        id: 1,
+        type: "bot",
+        content: getPersonalizedGreeting(),
+        timestamp: new Date().toISOString(),
+        suggestions: getPersonalizedSuggestions()
+      };
+      setMessages([personalizedGreeting]);
+    } else {
+      setMessages(initialMessages as Message[]);
     }
-  ];
+  }, [user]);
+
+  const getPersonalizedGreeting = () => {
+    if (!user) return "Hello! I'm your AI Mentor Assistant. How can I help you today?";
+
+    const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+    
+    switch (user.role) {
+      case 'student':
+        return `Hello ${user.name}! 👋 Welcome to your AI Mentor Assistant!
+
+As a ${user.department} student (Class of ${user.batchYear}), I'm here to help you:
+
+🎯 **Connect with Alumni** in your field and interests
+📚 **Get Career Guidance** tailored to ${user.department} opportunities  
+🌟 **Develop Skills** that industry professionals recommend
+📅 **Find Events** relevant to your department and career goals
+💡 **Prepare for Interviews** and build your professional profile
+
+What would you like to explore today?`;
+
+      case 'alumni':
+        return `Welcome back, ${user.name}! 👋 
+
+As a ${user.department} alumnus (${user.batchYear}) working in ${user.profession}, I can help you:
+
+🤝 **Manage Mentorship** - Review incoming requests and connection opportunities
+📈 **Share Insights** about industry trends in ${user.profession}
+🎓 **Give Back** to current students in ${user.department}
+🌐 **Expand Network** with fellow alumni and professionals
+📊 **Track Impact** of your mentoring activities
+
+How can I assist you today?`;
+
+      case 'admin':
+        return `Hello ${user.name}! 👋 Admin Dashboard Assistant here.
+
+I can help you with:
+
+📊 **Platform Analytics** - User engagement and connection metrics
+👥 **User Management** - Student and alumni account oversight  
+📅 **Event Coordination** - Planning and organizing university events
+🔍 **Content Moderation** - Reviewing and managing platform content
+📈 **Growth Insights** - Recommendations for platform improvement
+
+What administrative task would you like help with?`;
+
+      default:
+        return `Hello ${user.name}! How can I assist you today?`;
+    }
+  };
+
+  const getPersonalizedSuggestions = () => {
+    if (!user) return ["Tell me about AlumniConnect", "How does this work?"];
+
+    switch (user.role) {
+      case 'student':
+        return [
+          `Find ${user.department} alumni mentors`,
+          "What skills are in demand?",
+          "Help me write a mentorship request",
+          "Show me upcoming events"
+        ];
+      case 'alumni':
+        return [
+          "How to be an effective mentor?",
+          `${user.profession} industry trends`,
+          "Manage my mentorship requests",
+          "Connect with fellow alumni"
+        ];
+      case 'admin':
+        return [
+          "Show platform statistics",
+          "Recent user activity",
+          "Event management tips",
+          "Growth recommendations"
+        ];
+      default:
+        return ["How can you help me?"];
+    }
+  };
+
+  const getQuickActions = () => {
+    const baseActions = {
+      student: [
+        {
+          icon: Users,
+          title: "Find Alumni",
+          description: `Connect with ${user?.department} alumni`,
+          prompt: `I'm a ${user?.department} student looking for alumni mentors in my field. Can you help me find relevant connections?`
+        },
+        {
+          icon: Briefcase,
+          title: "Career Advice",
+          description: "Get personalized guidance",
+          prompt: `As a ${user?.department} student graduating in ${user?.batchYear}, what career paths should I consider?`
+        },
+        {
+          icon: TrendingUp,
+          title: "Skill Development",
+          description: "What skills to focus on",
+          prompt: `What technical and soft skills should I develop as a ${user?.department} student?`
+        },
+        {
+          icon: Calendar,
+          title: "Events for Me",
+          description: "Department-specific events",
+          prompt: `Show me upcoming events relevant to ${user?.department} students.`
+        }
+      ],
+      alumni: [
+        {
+          icon: Users,
+          title: "Mentorship Guide",
+          description: "How to mentor effectively",
+          prompt: `As a ${user?.profession} professional, how can I provide valuable mentorship to students?`
+        },
+        {
+          icon: TrendingUp,
+          title: "Industry Insights",
+          description: "Share your expertise",
+          prompt: `What are the current trends and opportunities in ${user?.profession}?`
+        },
+        {
+          icon: GraduationCap,
+          title: "Student Requests",
+          description: "Review mentorship requests",
+          prompt: "Show me tips for reviewing and responding to student mentorship requests."
+        },
+        {
+          icon: Calendar,
+          title: "Alumni Events",
+          description: "Network and give back",
+          prompt: "What alumni networking events and giving-back opportunities are available?"
+        }
+      ],
+      admin: [
+        {
+          icon: Users,
+          title: "User Analytics",
+          description: "Platform engagement metrics",
+          prompt: "Show me current user engagement statistics and platform analytics."
+        },
+        {
+          icon: Calendar,
+          title: "Event Management",
+          description: "Organize university events",
+          prompt: "Help me plan and coordinate an upcoming university event."
+        },
+        {
+          icon: Shield,
+          title: "Platform Health",
+          description: "System status & security",
+          prompt: "Give me an overview of platform health, security status, and any issues."
+        },
+        {
+          icon: TrendingUp,
+          title: "Growth Strategy",
+          description: "Platform improvement tips",
+          prompt: "What recommendations do you have for improving platform engagement and growth?"
+        }
+      ]
+    };
+
+    return user ? baseActions[user.role] || baseActions.student : baseActions.student;
+  };
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
@@ -72,86 +230,180 @@ const AIChat = () => {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI response
+    // Simulate personalized AI response
     setTimeout(() => {
       let botResponse = "";
       let suggestions: string[] = [];
 
-      if (content.toLowerCase().includes("alumni") || content.toLowerCase().includes("mentor")) {
-        const relevantAlumni = alumni.slice(0, 2);
-        botResponse = `I found some great alumni who might be perfect mentors for you:
+      const userRole = user?.role || 'student';
+      const userDept = user?.department || 'UICET';
+      const userName = user?.name || 'there';
 
-${relevantAlumni.map(person => 
-  `🎓 **${person.name}** - ${person.profession}
-  📍 ${person.location} | ${person.department} '${person.batchYear}
-  💡 ${person.bio.substring(0, 100)}...`
+      if (content.toLowerCase().includes("alumni") || content.toLowerCase().includes("mentor")) {
+        if (userRole === 'student') {
+          const relevantAlumni = alumni
+            .filter(person => person.department === userDept || person.profession.toLowerCase().includes(content.toLowerCase().split(' ')[0]))
+            .slice(0, 3);
+          
+          botResponse = `Perfect! I found ${relevantAlumni.length} ${userDept} alumni who could be excellent mentors for you, ${userName}:
+
+${relevantAlumni.map((person, index) => 
+  `${index + 1}. 🎓 **${person.name}** - ${person.profession}
+     📍 ${person.location} | ${person.department} '${person.batchYear}
+     💼 ${person.skills.slice(0, 3).join(', ')}
+     💡 "${person.bio.substring(0, 120)}..."`
 ).join('\n\n')}
 
-Would you like me to help you draft a mentorship request to any of these alumni?`;
-        
-        suggestions = [
-          "Help me write a mentorship request",
-          "Show me more alumni in this field",
-          "What questions should I ask a mentor?"
-        ];
+As a ${userDept} student, you'd especially benefit from connecting with alumni who share your academic background!`;
+          
+          suggestions = [
+            "Draft mentorship request message",
+            `Find more ${userDept} alumni`,
+            "What to ask in first meeting?",
+            "Tips for effective mentorship"
+          ];
+        } else if (userRole === 'alumni') {
+          botResponse = `Great question! As an experienced ${user?.profession}, here are ways to provide valuable mentorship:
+
+🎯 **Best Practices for ${user?.profession} Mentoring:**
+• Share real industry challenges and solutions
+• Provide portfolio/resume feedback
+• Offer networking opportunities
+• Guide on skill prioritization for current market
+
+🤝 **Effective Mentoring Approach:**
+• Set clear expectations and boundaries
+• Schedule regular check-ins (monthly/bi-weekly)
+• Focus on actionable advice, not just motivation
+• Connect them with your professional network
+
+Would you like help crafting responses to current mentorship requests?`;
+          
+          suggestions = [
+            "Review pending requests",
+            "Mentorship best practices",
+            "Industry-specific guidance tips",
+            "How to give constructive feedback"
+          ];
+        }
       } else if (content.toLowerCase().includes("career") || content.toLowerCase().includes("skills")) {
-        botResponse = `Based on current industry trends, here are key skills to focus on:
+        if (userRole === 'student') {
+          botResponse = `Excellent question, ${userName}! For ${userDept} students, here's what's trending in 2024:
 
-🚀 **Technical Skills:**
-• Programming languages (Python, JavaScript, React)
-• Data analysis and visualization
-• Cloud platforms (AWS, Azure, GCP)
-• Machine learning fundamentals
+🚀 **High-Demand Skills for ${userDept}:**
+${userDept === 'UICET' ? 
+  `• Full-stack development (React, Node.js, Python)
+   • AI/ML (TensorFlow, PyTorch)
+   • Cloud computing (AWS, Docker, Kubernetes)
+   • Cybersecurity fundamentals` :
+  userDept === 'UBS' ?
+  `• Data analytics and business intelligence
+   • Digital marketing and SEO
+   • Financial modeling and analysis
+   • Project management (Agile, Scrum)` :
+  `• Industry-specific technical skills
+   • Data analysis and research methods
+   • Communication and presentation
+   • Critical thinking and problem-solving`
+}
 
-🎯 **Soft Skills:**
-• Communication and presentation
-• Problem-solving mindset
-• Team collaboration
-• Adaptability and continuous learning
+💰 **Salary Insights:** Entry-level positions in your field typically start at ₹4-8 LPA, with rapid growth potential.
 
-I can connect you with alumni who excel in these areas. Would you like specific recommendations?`;
-        
-        suggestions = [
-          "Find alumni with these skills",
-          "What courses should I take?",
-          "How to build a strong portfolio?"
-        ];
+Our ${userDept} alumni report these skills led to the fastest career growth!`;
+          
+          suggestions = [
+            `Connect with ${userDept} professionals`,
+            "Create learning roadmap",
+            "Portfolio building guide",
+            "Interview preparation tips"
+          ];
+        } else if (userRole === 'alumni') {
+          botResponse = `As a ${user?.profession} professional, you're in a perfect position to guide students! Current industry insights:
+
+📈 **Emerging Trends in ${user?.profession}:**
+• Increased demand for AI-enhanced workflows
+• Remote collaboration tools mastery
+• Sustainability and ESG considerations
+• Cross-functional skill combinations
+
+🎓 **What Students Should Focus On:**
+• Practical project experience over theoretical knowledge
+• Building a strong GitHub/portfolio presence
+• Networking and personal branding
+• Continuous learning mindset
+
+Your experience in ${user?.profession} is exactly what current students need to hear about!`;
+          
+          suggestions = [
+            "Share industry story",
+            "Review student portfolios",
+            "Discuss market trends",
+            "Career transition advice"
+          ];
+        } else if (userRole === 'admin') {
+          botResponse = `Platform Career Insights Dashboard:
+
+📊 **Current Trends Across Departments:**
+• UICET: 85% placement rate, avg ₹6.2 LPA
+• UBS: 78% placement rate, avg ₹5.8 LPA  
+• UIET: 82% placement rate, avg ₹6.5 LPA
+
+🎯 **Most Requested Skills by Students:**
+1. Programming & Development (40%)
+2. Data Analysis (25%)
+3. Communication Skills (20%)
+4. Industry Knowledge (15%)
+
+💡 **Recommendations:** Focus events on high-demand skills, increase alumni engagement in growing sectors.`;
+          
+          suggestions = [
+            "Detailed analytics",
+            "Event planning ideas",
+            "Alumni engagement strategies",
+            "Student success metrics"
+          ];
+        }
       } else if (content.toLowerCase().includes("events")) {
-        botResponse = `Here are some upcoming events that might interest you:
+        botResponse = `Here are personalized event recommendations for ${userRole}s:
 
-📅 **This Month:**
-• Tech Conference 2024 - March 15th
-• Finance Career Fair - February 28th
-• Legal Workshop - March 10th
+📅 **Upcoming Events for You:**
+${userRole === 'student' ? 
+  `• ${userDept} Career Fair - March 15th
+   • Tech Skills Workshop - March 20th  
+   • Alumni Networking Night - March 25th
+   • Interview Prep Session - April 2nd` :
+  userRole === 'alumni' ?
+  `• Alumni Mentoring Workshop - March 18th
+   • Industry Leaders Panel - March 22nd
+   • Career Guidance Training - April 5th
+   • Networking Mixer - April 10th` :
+  `• University Management Summit - March 20th
+   • Student Success Conference - April 1st
+   • Platform Analytics Workshop - April 8th
+   • Alumni Engagement Strategy - April 15th`
+}
 
-🔥 **Recommended for you:**
-• AI/ML Workshop - Perfect for building technical skills
-• Alumni Networking Night - Great for making connections
-
-Would you like me to help you register for any of these events?`;
+🔥 **Highly Recommended:** Events with your department focus and career-relevant content.`;
         
-        suggestions = [
-          "Register for Tech Conference",
-          "Tell me about networking events",
-          "What should I prepare for career fairs?"
+        suggestions = userRole === 'student' ? [
+          "Register for career fair",
+          "Skills workshop details", 
+          "Networking event prep",
+          "What to bring to events"
+        ] : userRole === 'alumni' ? [
+          "Mentoring workshop signup",
+          "Industry panel participation",
+          "Share speaking opportunity",
+          "Alumni event hosting"
+        ] : [
+          "Event coordination help",
+          "Attendance analytics", 
+          "Speaker recommendations",
+          "Budget planning assistance"
         ];
       } else {
-        botResponse = `I'm here to help you with your career journey! I can assist you with:
-
-🎯 **Finding the right mentors** based on your interests and goals
-📚 **Career guidance** and skill development recommendations  
-🌐 **Alumni connections** across different industries and locations
-📅 **Event recommendations** tailored to your field
-💡 **Interview preparation** and portfolio building tips
-
-What specific area would you like to explore today?`;
-        
-        suggestions = [
-          "Help me find a mentor",
-          "What skills should I develop?",
-          "Show me upcoming events",
-          "Career advice for my field"
-        ];
+        botResponse = getPersonalizedDefaultResponse();
+        suggestions = getPersonalizedSuggestions();
       }
 
       const aiMessage: Message = {
@@ -175,6 +427,51 @@ What specific area would you like to explore today?`;
     handleSendMessage(suggestion);
   };
 
+  const getPersonalizedDefaultResponse = () => {
+    if (!user) return "I'm here to help you with your career journey! What would you like to know?";
+
+    switch (user.role) {
+      case 'student':
+        return `Hi ${user.name}! As your AI assistant, I'm here to help you succeed as a ${user.department} student:
+
+🎯 **I can help you with:**
+• Finding relevant ${user.department} alumni mentors
+• Career guidance specific to your field and batch year
+• Skill development recommendations for ${user.department} 
+• Event suggestions tailored to your interests
+• Interview prep and portfolio building
+
+What would you like to focus on today?`;
+
+      case 'alumni':
+        return `Hello ${user.name}! I'm here to support your mentoring journey as a ${user.profession} professional:
+
+🤝 **How I can assist:**
+• Managing and optimizing your mentorship approach
+• Sharing industry insights with students
+• Connecting you with fellow ${user.department} alumni
+• Event recommendations for professional development
+• Tips for effective student guidance
+
+What aspect of mentoring would you like to explore?`;
+
+      case 'admin':
+        return `Welcome ${user.name}! Your administrative AI assistant is ready to help:
+
+📊 **Administrative Support:**
+• Platform analytics and user engagement metrics
+• Event planning and coordination assistance  
+• User management insights and recommendations
+• Content moderation and community health
+• Growth strategies and platform optimization
+
+Which administrative area needs your attention today?`;
+      
+      default:
+        return "How can I assist you today?";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -191,7 +488,7 @@ What specific area would you like to explore today?`;
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {quickActions.map((action, index) => (
+                {getQuickActions().map((action, index) => (
                   <Button
                     key={index}
                     variant="ghost"
@@ -223,7 +520,7 @@ What specific area would you like to explore today?`;
                   </div>
                   AI Mentor Assistant
                   <Badge variant="secondary" className="ml-auto">
-                    Online
+                    {user ? `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} Mode` : 'Demo Mode'}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -299,7 +596,12 @@ What specific area would you like to explore today?`;
               <div className="p-4 border-t">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Ask me anything about careers, alumni, or events..."
+                    placeholder={user ? 
+                      user.role === 'student' ? `Ask about ${user.department} careers, alumni, or events...` :
+                      user.role === 'alumni' ? "Share insights or ask about mentoring students..." :
+                      "Ask about platform management, analytics, or events..."
+                      : "Ask me anything about careers, alumni, or events..."
+                    }
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSendMessage(inputValue)}
