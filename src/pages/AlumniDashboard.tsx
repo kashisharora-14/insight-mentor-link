@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { mentorshipRequests, alumni } from "@/data/mockData";
+import { useToast } from "@/hooks/use-toast";
 import { 
   User, 
   MessageCircle, 
@@ -20,11 +23,20 @@ import {
   Settings,
   Award,
   TrendingUp,
-  Bell
+  Bell,
+  UserPlus
 } from "lucide-react";
 
 const AlumniDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
+  const [acceptingRequest, setAcceptingRequest] = useState<number | null>(null);
+  const [decliningRequest, setDecliningRequest] = useState<number | null>(null);
+  const [referringRequest, setReferringRequest] = useState<number | null>(null);
+  const [meetingLink, setMeetingLink] = useState("");
+  const [declineReason, setDeclineReason] = useState("");
+  const [referralEmail, setReferralEmail] = useState("");
+  const [referralNote, setReferralNote] = useState("");
+  const { toast } = useToast();
   
   // Mock current alumni
   const currentAlumni = alumni[0]; // Dr. Sarah Chen
@@ -58,13 +70,67 @@ const AlumniDashboard = () => {
   };
 
   const handleAcceptRequest = (requestId: number) => {
+    if (!meetingLink.trim()) {
+      toast({
+        title: "Meeting Link Required",
+        description: "Please provide a meeting link to schedule the session.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Mock function - would update request status in real implementation
-    console.log("Accepting request:", requestId);
+    console.log("Accepting request:", requestId, "with meeting link:", meetingLink);
+    toast({
+      title: "Request Accepted",
+      description: "Meeting scheduled successfully. Student will be notified.",
+    });
+    
+    setAcceptingRequest(null);
+    setMeetingLink("");
   };
 
   const handleDeclineRequest = (requestId: number) => {
+    if (!declineReason.trim()) {
+      toast({
+        title: "Reason Required",
+        description: "Please provide a reason for declining this request.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Mock function - would update request status in real implementation  
-    console.log("Declining request:", requestId);
+    console.log("Declining request:", requestId, "with reason:", declineReason);
+    toast({
+      title: "Request Declined",
+      description: "Student has been notified with your feedback.",
+    });
+    
+    setDecliningRequest(null);
+    setDeclineReason("");
+  };
+
+  const handleReferralSubmit = (requestId: number) => {
+    if (!referralEmail.trim() || !referralNote.trim()) {
+      toast({
+        title: "Complete Information Required",
+        description: "Please provide both referral email and note.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Mock function - would send referral to another alumni
+    console.log("Referring request:", requestId, "to:", referralEmail, "note:", referralNote);
+    toast({
+      title: "Referral Sent",
+      description: "The request has been forwarded to another alumnus.",
+    });
+    
+    setReferringRequest(null);
+    setReferralEmail("");
+    setReferralNote("");
   };
 
   const stats = [
@@ -206,22 +272,125 @@ const AlumniDashboard = () => {
                           </div>
 
                           {request.status === "pending" && (
-                            <div className="flex gap-3 mt-6">
-                              <Button 
-                                className="flex-1 bg-success hover:bg-success/90"
-                                onClick={() => handleAcceptRequest(request.id)}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Accept & Schedule
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                className="flex-1"
-                                onClick={() => handleDeclineRequest(request.id)}
-                              >
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Decline
-                              </Button>
+                            <div className="space-y-3 mt-6">
+                              <div className="grid grid-cols-2 gap-3">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button className="bg-success hover:bg-success/90">
+                                      <CheckCircle className="w-4 h-4 mr-2" />
+                                      Accept
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Accept Mentorship Request</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label htmlFor="meeting-link">Meeting Link</Label>
+                                        <Input
+                                          id="meeting-link"
+                                          placeholder="Enter Zoom/Meet/Teams link..."
+                                          value={meetingLink}
+                                          onChange={(e) => setMeetingLink(e.target.value)}
+                                        />
+                                      </div>
+                                      <div className="flex gap-2 justify-end">
+                                        <Button variant="outline" onClick={() => setMeetingLink("")}>
+                                          Cancel
+                                        </Button>
+                                        <Button 
+                                          className="bg-success hover:bg-success/90"
+                                          onClick={() => handleAcceptRequest(request.id)}
+                                        >
+                                          Schedule Meeting
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline">
+                                      <XCircle className="w-4 h-4 mr-2" />
+                                      Decline
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Decline Mentorship Request</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label htmlFor="decline-reason">Reason for declining</Label>
+                                        <Textarea
+                                          id="decline-reason"
+                                          placeholder="Please provide a reason (will be shared with student)..."
+                                          value={declineReason}
+                                          onChange={(e) => setDeclineReason(e.target.value)}
+                                        />
+                                      </div>
+                                      <div className="flex gap-2 justify-end">
+                                        <Button variant="outline" onClick={() => setDeclineReason("")}>
+                                          Cancel
+                                        </Button>
+                                        <Button 
+                                          variant="destructive"
+                                          onClick={() => handleDeclineRequest(request.id)}
+                                        >
+                                          Confirm Decline
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="secondary" className="w-full">
+                                    <UserPlus className="w-4 h-4 mr-2" />
+                                    Refer to Another Alumni
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Refer to Another Alumni</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label htmlFor="referral-email">Alumni Email</Label>
+                                      <Input
+                                        id="referral-email"
+                                        placeholder="colleague@alumni.edu"
+                                        value={referralEmail}
+                                        onChange={(e) => setReferralEmail(e.target.value)}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="referral-note">Referral Note</Label>
+                                      <Textarea
+                                        id="referral-note"
+                                        placeholder="Why would this person be a better fit for this request..."
+                                        value={referralNote}
+                                        onChange={(e) => setReferralNote(e.target.value)}
+                                      />
+                                    </div>
+                                    <div className="flex gap-2 justify-end">
+                                      <Button variant="outline" onClick={() => {
+                                        setReferralEmail("");
+                                        setReferralNote("");
+                                      }}>
+                                        Cancel
+                                      </Button>
+                                      <Button onClick={() => handleReferralSubmit(request.id)}>
+                                        Send Referral
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
                             </div>
                           )}
 

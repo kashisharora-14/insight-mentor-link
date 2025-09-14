@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type UserRole = 'student' | 'alumni' | 'admin';
+export type UserRole = 'student' | 'alumni';
 
 export interface User {
   id: string;
@@ -21,31 +21,24 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Dummy credentials for demo
-const DEMO_USERS = {
+// Dummy credentials for demo  
+const mockUsers: Record<string, User> = {
   'student@demo.com': {
     id: '1',
     name: 'Alex Johnson',
     email: 'student@demo.com',
     role: 'student' as UserRole,
-    department: 'UICET',
+    department: 'Computer Science',
     batchYear: 2024
   },
   'alumni@demo.com': {
     id: '2', 
-    name: 'Sarah Chen',
+    name: 'Dr. Sarah Chen',
     email: 'alumni@demo.com',
     role: 'alumni' as UserRole,
-    department: 'UIET',
-    batchYear: 2019,
+    department: 'Computer Science',
+    batchYear: 2018,
     profession: 'Software Engineer'
-  },
-  'admin@demo.com': {
-    id: '3',
-    name: 'Dr. Michael Smith',
-    email: 'admin@demo.com', 
-    role: 'admin' as UserRole,
-    department: 'Administration'
   }
 };
 
@@ -64,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // Demo login - accept any password for demo users
-    const demoUser = DEMO_USERS[email as keyof typeof DEMO_USERS];
+    const demoUser = mockUsers[email as keyof typeof mockUsers];
     
     if (demoUser && password === 'demo123') {
       setUser(demoUser);

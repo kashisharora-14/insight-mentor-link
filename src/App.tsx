@@ -14,7 +14,6 @@ import AIChat from "./pages/AIChat";
 import GlobalMap from "./pages/GlobalMap";
 import StudentDashboard from "./pages/StudentDashboard";
 import AlumniDashboard from "./pages/AlumniDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,14 +46,6 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['alumni']}>
                   <AlumniDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin-dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
                 </ProtectedRoute>
               } 
             />

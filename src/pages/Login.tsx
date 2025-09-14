@@ -59,12 +59,6 @@ const Login = () => {
       email: 'alumni@demo.com',
       icon: UserCheck,
       color: 'bg-green-500'
-    },
-    {
-      role: 'Admin',
-      email: 'admin@demo.com', 
-      icon: Shield,
-      color: 'bg-purple-500'
     }
   ];
 

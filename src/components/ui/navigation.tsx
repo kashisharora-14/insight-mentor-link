@@ -73,7 +73,6 @@ const Navigation = () => {
                   </Button>
                 </Link>
                 <Badge variant="secondary" className={`${
-                  user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
                   user.role === 'alumni' ? 'bg-green-100 text-green-800' :
                   'bg-blue-100 text-blue-800'
                 }`}>

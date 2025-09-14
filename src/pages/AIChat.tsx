@@ -83,21 +83,9 @@ As a ${user.department} alumnus (${user.batchYear}) working in ${user.profession
 
 How can I assist you today?`;
 
-      case 'admin':
-        return `Hello ${user.name}! 👋 Admin Dashboard Assistant here.
-
-I can help you with:
-
-📊 **Platform Analytics** - User engagement and connection metrics
-👥 **User Management** - Student and alumni account oversight  
-📅 **Event Coordination** - Planning and organizing university events
-🔍 **Content Moderation** - Reviewing and managing platform content
-📈 **Growth Insights** - Recommendations for platform improvement
-
-What administrative task would you like help with?`;
-
       default:
         return `Hello ${user.name}! How can I assist you today?`;
+    }
     }
   };
 
@@ -118,13 +106,6 @@ What administrative task would you like help with?`;
           `${user.profession} industry trends`,
           "Manage my mentorship requests",
           "Connect with fellow alumni"
-        ];
-      case 'admin':
-        return [
-          "Show platform statistics",
-          "Recent user activity",
-          "Event management tips",
-          "Growth recommendations"
         ];
       default:
         return ["How can you help me?"];
@@ -454,18 +435,6 @@ What would you like to focus on today?`;
 • Tips for effective student guidance
 
 What aspect of mentoring would you like to explore?`;
-
-      case 'admin':
-        return `Welcome ${user.name}! Your administrative AI assistant is ready to help:
-
-📊 **Administrative Support:**
-• Platform analytics and user engagement metrics
-• Event planning and coordination assistance  
-• User management insights and recommendations
-• Content moderation and community health
-• Growth strategies and platform optimization
-
-Which administrative area needs your attention today?`;
       
       default:
         return "How can I assist you today?";
