@@ -86,7 +86,6 @@ How can I assist you today?`;
       default:
         return `Hello ${user.name}! How can I assist you today?`;
     }
-    }
   };
 
   const getPersonalizedSuggestions = () => {
