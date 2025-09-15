@@ -82,7 +82,7 @@ export const students = [
     name: "Aarav Mehta",
     email: "aarav.mehta@student.edu",
     department: "UICET",
-    batchYear: 2024,
+    batchYear: 2025,
     avatar: "/api/placeholder/150/150"
   },
   {
@@ -90,7 +90,7 @@ export const students = [
     name: "Anisha Verma",
     email: "anisha.verma@student.edu",
     department: "UBS",
-    batchYear: 2025,
+    batchYear: 2026,
     avatar: "/api/placeholder/150/150"
   }
 ];

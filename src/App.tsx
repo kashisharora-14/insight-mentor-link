@@ -14,6 +14,9 @@ import AIChat from "./pages/AIChat";
 import GlobalMap from "./pages/GlobalMap";
 import StudentDashboard from "./pages/StudentDashboard";
 import AlumniDashboard from "./pages/AlumniDashboard";
+import Donations from "./pages/Donations";
+import GiftShop from "./pages/GiftShop";
+import JobBoard from "./pages/JobBoard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +36,9 @@ const App = () => (
             <Route path="/events" element={<Events />} />
             <Route path="/ai-chat" element={<AIChat />} />
             <Route path="/map" element={<GlobalMap />} />
+            <Route path="/donations" element={<Donations />} />
+            <Route path="/gift-shop" element={<GiftShop />} />
+            <Route path="/jobs" element={<JobBoard />} />
             <Route 
               path="/student-dashboard" 
               element={

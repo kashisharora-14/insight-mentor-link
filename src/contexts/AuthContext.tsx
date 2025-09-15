@@ -29,7 +29,7 @@ const mockUsers: Record<string, User> = {
     email: 'student@demo.com',
     role: 'student' as UserRole,
     department: 'Computer Science',
-    batchYear: 2024
+    batchYear: 2025
   },
   'alumni@demo.com': {
     id: '2', 
