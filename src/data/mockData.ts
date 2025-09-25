@@ -16,7 +16,8 @@ export const alumni = [
     avatar: "/api/placeholder/150/150",
     latitude: 37.7749,
     longitude: -122.4194,
-    skills: ["Machine Learning", "Python", "React", "Leadership"]
+    skills: ["Machine Learning", "Python", "React", "Leadership"],
+    isAvailableForMentorship: true
   },
   {
     id: 2,
@@ -30,7 +31,8 @@ export const alumni = [
     avatar: "/api/placeholder/150/150",
     latitude: 40.7128,
     longitude: -74.0060,
-    skills: ["Finance", "Investment Banking", "M&A", "Strategy"]
+    skills: ["Finance", "Investment Banking", "M&A", "Strategy"],
+    isAvailableForMentorship: true
   },
   {
     id: 3,
@@ -44,7 +46,8 @@ export const alumni = [
     avatar: "/api/placeholder/150/150",
     latitude: 51.5074,
     longitude: -0.1278,
-    skills: ["Corporate Law", "International Law", "Contract Negotiation"]
+    skills: ["Corporate Law", "International Law", "Contract Negotiation"],
+    isAvailableForMentorship: true
   },
   {
     id: 4,
@@ -58,7 +61,8 @@ export const alumni = [
     avatar: "/api/placeholder/150/150",
     latitude: 47.6062,
     longitude: -122.3321,
-    skills: ["Product Management", "Cloud Computing", "Strategy", "Leadership"]
+    skills: ["Product Management", "Cloud Computing", "Strategy", "Leadership"],
+    isAvailableForMentorship: true
   },
   {
     id: 5,
@@ -72,7 +76,113 @@ export const alumni = [
     avatar: "/api/placeholder/150/150",
     latitude: 19.0760,
     longitude: 72.8777,
-    skills: ["Creative Direction", "Brand Strategy", "Digital Marketing"]
+    skills: ["Creative Direction", "Brand Strategy", "Digital Marketing"],
+    isAvailableForMentorship: true
+  },
+  {
+    id: 6,
+    name: "Vikram Agarwal",
+    email: "vikram.agarwal@example.com",
+    department: "UICET",
+    batchYear: 2017,
+    profession: "Data Scientist at Netflix",
+    location: "Los Angeles, CA",
+    bio: "Expert in machine learning algorithms and data visualization. Love helping students understand complex data science concepts.",
+    avatar: "/api/placeholder/150/150",
+    latitude: 34.0522,
+    longitude: -118.2437,
+    skills: ["Data Science", "Machine Learning", "Python", "SQL", "Statistics"],
+    isAvailableForMentorship: true
+  },
+  {
+    id: 7,
+    name: "Anita Desai",
+    email: "anita.desai@example.com",
+    department: "UBS",
+    batchYear: 2011,
+    profession: "Marketing Director at Unilever",
+    location: "London, UK",
+    bio: "Brand management expert with 12+ years experience. Specialized in consumer goods and digital transformation.",
+    avatar: "/api/placeholder/150/150",
+    latitude: 51.5074,
+    longitude: -0.1278,
+    skills: ["Marketing", "Brand Management", "Digital Strategy", "Consumer Research"],
+    isAvailableForMentorship: true
+  },
+  {
+    id: 8,
+    name: "Rohit Mehta",
+    email: "rohit.mehta@example.com",
+    department: "UIET",
+    batchYear: 2014,
+    profession: "Cybersecurity Lead at IBM",
+    location: "Bangalore, India",
+    bio: "Cybersecurity expert with focus on enterprise security solutions. Passionate about educating students on security best practices.",
+    avatar: "/api/placeholder/150/150",
+    latitude: 12.9716,
+    longitude: 77.5946,
+    skills: ["Cybersecurity", "Network Security", "Ethical Hacking", "Risk Assessment"],
+    isAvailableForMentorship: true
+  },
+  {
+    id: 9,
+    name: "Dr. Kavya Reddy",
+    email: "kavya.reddy@example.com",
+    department: "Arts",
+    batchYear: 2018,
+    profession: "UX Designer at Adobe",
+    location: "San Jose, CA",
+    bio: "User experience designer with expertise in design thinking and user research. Love mentoring aspiring designers.",
+    avatar: "/api/placeholder/150/150",
+    latitude: 37.3382,
+    longitude: -121.8863,
+    skills: ["UX Design", "UI Design", "User Research", "Prototyping", "Figma"],
+    isAvailableForMentorship: true
+  },
+  {
+    id: 10,
+    name: "Sameer Khan",
+    email: "sameer.khan@example.com",
+    department: "Law",
+    batchYear: 2016,
+    profession: "Intellectual Property Lawyer at Jones Day",
+    location: "Washington, DC",
+    bio: "IP law specialist focusing on technology patents and trademark disputes. Available for legal career guidance.",
+    avatar: "/api/placeholder/150/150",
+    latitude: 38.9072,
+    longitude: -77.0369,
+    skills: ["Intellectual Property", "Patent Law", "Trademark", "Legal Research"],
+    isAvailableForMentorship: true
+  },
+  {
+    id: 11,
+    name: "Neha Gupta",
+    email: "neha.gupta@example.com",
+    department: "UBS",
+    batchYear: 2019,
+    profession: "Management Consultant at McKinsey",
+    location: "Dubai, UAE",
+    bio: "Strategy consultant with expertise in digital transformation and operational excellence. Happy to guide business students.",
+    avatar: "/api/placeholder/150/150",
+    latitude: 25.2048,
+    longitude: 55.2708,
+    skills: ["Strategy Consulting", "Digital Transformation", "Operations", "Analytics"],
+    isAvailableForMentorship: true
+  },
+  {
+    id: 12,
+    name: "Arun Joshi",
+    email: "arun.joshi@example.com",
+    department: "UIET",
+    batchYear: 2015,
+    profession: "DevOps Engineer at Amazon",
+    location: "Austin, TX",
+    bio: "Cloud infrastructure and DevOps expert. Passionate about helping students learn modern development practices.",
+    avatar: "/api/placeholder/150/150",
+    latitude: 30.2672,
+    longitude: -97.7431,
+    skills: ["DevOps", "AWS", "Docker", "Kubernetes", "CI/CD"],
+    isAvailableForMentorship: true
   }
 ];
 
@@ -143,57 +253,158 @@ export const events = [
   {
     id: 1,
     title: "Annual Tech Conference 2024",
-    description: "Join industry leaders discussing the latest trends in AI, blockchain, and cloud computing.",
+    description: "Join industry leaders discussing the latest trends in AI, blockchain, and cloud computing. Featuring keynote speakers from Google, Microsoft, and top startups.",
     date: "2024-03-15",
     time: "09:00 AM",
     department: "UICET",
     location: "University Auditorium",
     registrationLink: "https://events.university.edu/tech-conf-2024",
-    image: "/api/placeholder/300/200"
+    image: "/api/placeholder/300/200",
+    maxAttendees: 500,
+    currentAttendees: 245
   },
   {
     id: 2,
     title: "Finance Career Fair",
-    description: "Meet recruiters from top financial institutions and learn about career opportunities.",
+    description: "Meet recruiters from top financial institutions including Goldman Sachs, JPMorgan, and Morgan Stanley. Learn about internships and full-time opportunities.",
     date: "2024-02-28",
     time: "10:00 AM",
     department: "UBS",
     location: "Business School Campus",
     registrationLink: "https://events.university.edu/finance-fair",
-    image: "/api/placeholder/300/200"
+    image: "/api/placeholder/300/200",
+    maxAttendees: 300,
+    currentAttendees: 150
   },
   {
     id: 3,
     title: "Legal Workshop: Corporate Law Trends",
-    description: "Expert panel discussion on emerging trends in corporate law and compliance.",
+    description: "Expert panel discussion on emerging trends in corporate law and compliance. Featured speakers from top law firms and corporate legal departments.",
     date: "2024-03-10",
     time: "02:00 PM",
     department: "Law",
     location: "Law Faculty Building",
     registrationLink: "https://events.university.edu/law-workshop",
-    image: "/api/placeholder/300/200"
+    image: "/api/placeholder/300/200",
+    maxAttendees: 150,
+    currentAttendees: 89
   },
   {
     id: 4,
     title: "Engineering Innovation Summit",
-    description: "Showcase of cutting-edge engineering projects and research.",
+    description: "Showcase of cutting-edge engineering projects including robotics, IoT, and sustainable technology solutions developed by students and faculty.",
     date: "2024-04-05",
     time: "11:00 AM",
     department: "UIET",
     location: "Engineering Complex",
     registrationLink: "https://events.university.edu/eng-summit",
-    image: "/api/placeholder/300/200"
+    image: "/api/placeholder/300/200",
+    maxAttendees: 400,
+    currentAttendees: 180
   },
   {
     id: 5,
     title: "Arts & Culture Festival",
-    description: "Celebrate creativity with exhibitions, performances, and workshops.",
+    description: "Celebrate creativity with art exhibitions, musical performances, theater shows, and interactive workshops led by renowned artists.",
     date: "2024-03-25",
     time: "06:00 PM",
     department: "Arts",
     location: "Cultural Center",
     registrationLink: "https://events.university.edu/arts-festival",
-    image: "/api/placeholder/300/200"
+    image: "/api/placeholder/300/200",
+    maxAttendees: 600,
+    currentAttendees: 320
+  },
+  {
+    id: 6,
+    title: "AI & Machine Learning Workshop",
+    description: "Hands-on workshop covering fundamentals of AI/ML, practical applications, and career opportunities in the field. Includes coding sessions and project demonstrations.",
+    date: "2024-04-12",
+    time: "09:00 AM",
+    department: "UICET",
+    location: "Computer Lab Block A",
+    registrationLink: "https://events.university.edu/ai-workshop",
+    image: "/api/placeholder/300/200",
+    maxAttendees: 80,
+    currentAttendees: 65
+  },
+  {
+    id: 7,
+    title: "Startup Pitch Competition",
+    description: "Student entrepreneurs present their innovative business ideas to a panel of investors and industry experts. Prizes worth $50,000 for winners.",
+    date: "2024-03-30",
+    time: "02:00 PM",
+    department: "UBS",
+    location: "Innovation Hub",
+    registrationLink: "https://events.university.edu/startup-pitch",
+    image: "/api/placeholder/300/200",
+    maxAttendees: 200,
+    currentAttendees: 125
+  },
+  {
+    id: 8,
+    title: "Cybersecurity Bootcamp",
+    description: "Intensive 2-day bootcamp covering ethical hacking, network security, and digital forensics. Industry certification provided upon completion.",
+    date: "2024-04-18",
+    time: "09:00 AM",
+    department: "UIET",
+    location: "Security Lab",
+    registrationLink: "https://events.university.edu/cyber-bootcamp",
+    image: "/api/placeholder/300/200",
+    maxAttendees: 50,
+    currentAttendees: 42
+  },
+  {
+    id: 9,
+    title: "International Law Symposium",
+    description: "Global perspectives on international law, human rights, and cross-border legal issues. Features diplomats and international law experts.",
+    date: "2024-04-08",
+    time: "10:00 AM",
+    department: "Law",
+    location: "International Relations Center",
+    registrationLink: "https://events.university.edu/intl-law-symposium",
+    image: "/api/placeholder/300/200",
+    maxAttendees: 120,
+    currentAttendees: 78
+  },
+  {
+    id: 10,
+    title: "Digital Marketing Masterclass",
+    description: "Learn from industry experts about social media marketing, SEO, content strategy, and digital advertising. Includes hands-on campaign planning.",
+    date: "2024-03-22",
+    time: "01:00 PM",
+    department: "Arts",
+    location: "Media Studies Building",
+    registrationLink: "https://events.university.edu/digital-marketing",
+    image: "/api/placeholder/300/200",
+    maxAttendees: 100,
+    currentAttendees: 67
+  },
+  {
+    id: 11,
+    title: "Women in Technology Panel",
+    description: "Inspiring panel discussion featuring successful women leaders in technology, discussing career paths, challenges, and opportunities.",
+    date: "2024-04-15",
+    time: "04:00 PM",
+    department: "UICET",
+    location: "Main Conference Hall",
+    registrationLink: "https://events.university.edu/women-in-tech",
+    image: "/api/placeholder/300/200",
+    maxAttendees: 250,
+    currentAttendees: 190
+  },
+  {
+    id: 12,
+    title: "Investment Banking Workshop",
+    description: "Deep dive into investment banking with case studies, financial modeling, and networking opportunities with senior bankers and analysts.",
+    date: "2024-04-20",
+    time: "09:00 AM",
+    department: "UBS",
+    location: "Finance Lab",
+    registrationLink: "https://events.university.edu/ib-workshop",
+    image: "/api/placeholder/300/200",
+    maxAttendees: 75,
+    currentAttendees: 58
   }
 ];
 
