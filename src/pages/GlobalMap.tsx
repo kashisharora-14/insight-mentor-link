@@ -1,72 +1,197 @@
-import { useState } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import Navigation from "@/components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { alumni } from "@/data/mockData";
-import { MapPin, Users, Globe, MessageCircle, Search, Layers, Navigation as NavigationIcon, Minus, Plus, User, Briefcase } from "lucide-react";
+import { MapPin, Users, Globe, MessageCircle, Search, User, Briefcase } from "lucide-react";
+import { Loader } from "@googlemaps/js-api-loader";
 
 const GlobalMap = () => {
   const [selectedAlumni, setSelectedAlumni] = useState<typeof alumni[0] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [zoomLevel, setZoomLevel] = useState(2);
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null); // Added for country selection
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
+  const mapRef = useRef<HTMLDivElement>(null);
 
-  // Group alumni by location with coordinates
-  const alumniLocations = [
-    {
-      city: "San Francisco",
-      country: "USA",
-      coordinates: { lat: 37.7749, lng: -122.4194 },
-      mapPosition: { x: 15, y: 38 },
-      alumni: alumni.filter(a => a.location.includes("San Francisco"))
-    },
-    {
-      city: "New York",
-      country: "USA",
-      coordinates: { lat: 40.7128, lng: -74.0060 },
-      mapPosition: { x: 22, y: 35 },
-      alumni: alumni.filter(a => a.location.includes("New York"))
-    },
-    {
-      city: "London",
-      country: "UK",
-      coordinates: { lat: 51.5074, lng: -0.1278 },
-      mapPosition: { x: 48, y: 28 },
-      alumni: alumni.filter(a => a.location.includes("London"))
-    },
-    {
-      city: "Bangalore",
-      country: "India",
-      coordinates: { lat: 12.9716, lng: 77.5946 },
-      mapPosition: { x: 72, y: 48 },
-      alumni: alumni.filter(a => a.location.includes("Bangalore"))
-    },
-    {
-      city: "Toronto",
-      country: "Canada",
-      coordinates: { lat: 43.6532, lng: -79.3832 },
-      mapPosition: { x: 20, y: 32 },
-      alumni: alumni.filter(a => a.location.includes("Toronto"))
-    }
-  ];
+  // Initialize Google Maps
+  useEffect(() => {
+    const initializeMap = async () => {
+      const loader = new Loader({
+        apiKey: "AIzaSyBQZGTfN8QtXNON5BzP6z5TxZNP5k5Ck8o", // You'll need to get your own API key
+        version: "weekly",
+        libraries: ["places"]
+      });
 
-  // Simplified mapLocations for cluster markers
-  const mapLocations = [
-    { name: "USA", x: 20, y: 35, count: alumni.filter(a => a.location.includes("USA")).length },
-    { name: "UK", x: 48, y: 28, count: alumni.filter(a => a.location.includes("UK")).length },
-    { name: "India", x: 72, y: 48, count: alumni.filter(a => a.location.includes("India")).length },
-    { name: "Canada", x: 20, y: 32, count: alumni.filter(a => a.location.includes("Canada")).length },
-  ];
+      const { Map } = await loader.importLibrary("maps");
+      const { AdvancedMarkerElement } = await loader.importLibrary("marker");
 
-  const filteredLocations = alumniLocations.filter(location =>
-    location.alumni.some(person =>
-      person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      person.profession.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      location.city.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+      if (mapRef.current) {
+        const mapInstance = new Map(mapRef.current, {
+          center: { lat: 30.7333, lng: 76.7794 }, // Chandigarh coordinates
+          zoom: 6,
+          mapId: "DEMO_MAP_ID",
+        });
+
+        setMap(mapInstance);
+
+        // Add markers for each alumni
+        const newMarkers: google.maps.Marker[] = [];
+        
+        for (const person of alumni) {
+          // Create custom marker content
+          const markerContent = document.createElement('div');
+          markerContent.className = 'custom-marker';
+          markerContent.innerHTML = `
+            <div style="
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              border: 3px solid white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: bold;
+              font-size: 12px;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+              cursor: pointer;
+              transition: transform 0.2s;
+            ">
+              ${person.name.split(' ').map(n => n[0]).join('')}
+            </div>
+          `;
+
+          // Add hover effect
+          markerContent.addEventListener('mouseenter', () => {
+            markerContent.style.transform = 'scale(1.1)';
+          });
+          markerContent.addEventListener('mouseleave', () => {
+            markerContent.style.transform = 'scale(1)';
+          });
+
+          const marker = new AdvancedMarkerElement({
+            map: mapInstance,
+            position: { lat: person.latitude, lng: person.longitude },
+            content: markerContent,
+            title: person.name
+          });
+
+          // Create info window
+          const infoWindow = new google.maps.InfoWindow({
+            content: `
+              <div style="padding: 12px; max-width: 300px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                  <div style="
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 10px;
+                  ">
+                    ${person.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <h4 style="margin: 0; font-weight: 600; color: #1f2937;">${person.name}</h4>
+                    <p style="margin: 0; font-size: 12px; color: #6b7280;">${person.department} • ${person.batchYear}</p>
+                  </div>
+                </div>
+                <p style="margin: 4px 0; font-size: 14px; color: #374151;">${person.profession}</p>
+                <p style="margin: 4px 0; font-size: 12px; color: #6b7280; display: flex; align-items: center;">
+                  <span style="margin-right: 4px;">📍</span>${person.location}
+                </p>
+                <div style="margin: 8px 0;">
+                  ${person.skills.slice(0, 3).map(skill => 
+                    `<span style="
+                      display: inline-block;
+                      background: #dbeafe;
+                      color: #1e40af;
+                      padding: 2px 8px;
+                      border-radius: 12px;
+                      font-size: 10px;
+                      margin: 2px 2px 2px 0;
+                    ">${skill}</span>`
+                  ).join('')}
+                </div>
+                <button 
+                  onclick="selectAlumni(${person.id})"
+                  style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    width: 100%;
+                    margin-top: 8px;
+                  "
+                >
+                  View Profile
+                </button>
+              </div>
+            `
+          });
+
+          // Add click listener to marker
+          marker.addListener("click", () => {
+            // Close any open info windows
+            markers.forEach(m => {
+              if ((m as any).infoWindow) {
+                (m as any).infoWindow.close();
+              }
+            });
+            
+            infoWindow.open(mapInstance, marker);
+            setSelectedAlumni(person);
+          });
+
+          // Store info window reference
+          (marker as any).infoWindow = infoWindow;
+          newMarkers.push(marker as any);
+        }
+
+        setMarkers(newMarkers);
+
+        // Make selectAlumni function globally available
+        (window as any).selectAlumni = (id: number) => {
+          const alumni_member = alumni.find(a => a.id === id);
+          if (alumni_member) {
+            setSelectedAlumni(alumni_member);
+          }
+        };
+      }
+    };
+
+    initializeMap().catch(console.error);
+  }, []);
+
+  // Filter functionality
+  const filteredAlumni = alumni.filter(person =>
+    person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.profession.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Update marker visibility based on search
+  useEffect(() => {
+    if (map && markers.length > 0) {
+      markers.forEach((marker, index) => {
+        const person = alumni[index];
+        const isVisible = filteredAlumni.some(filtered => filtered.id === person.id);
+        marker.setMap(isVisible ? map : null);
+      });
+    }
+  }, [searchTerm, map, markers, filteredAlumni]);
 
   const totalAlumni = alumni.length;
 
@@ -81,12 +206,12 @@ const GlobalMap = () => {
             Global Alumni Network
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Explore our worldwide community of {totalAlumni} alumni across the globe.
+            Explore our worldwide community of {totalAlumni} alumni across the globe on real map locations.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Google Maps-like Interface */}
+          {/* Google Maps Container */}
           <div className="lg:col-span-3">
             <Card className="shadow-elegant overflow-hidden">
               <CardHeader className="bg-white border-b p-4">
@@ -100,183 +225,22 @@ const GlobalMap = () => {
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        placeholder="Search alumni or locations..."
+                        placeholder="Search alumni, skills, or locations..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10 w-64"
                       />
                     </div>
-                    {/* Map Controls */}
-                    <div className="flex flex-col">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 rounded-t-md rounded-b-none border-b-0"
-                        onClick={() => setZoomLevel(Math.min(5, zoomLevel + 1))}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 w-8 p-0 rounded-b-md rounded-t-none"
-                        onClick={() => setZoomLevel(Math.max(1, zoomLevel - 1))}
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                    </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {/* Enhanced Map Container */}
-                <div className="relative w-full h-[600px] bg-gradient-to-br from-blue-50 via-green-50 to-blue-100 overflow-hidden">
-                  {/* Map Grid Background */}
-                  <div className="absolute inset-0 opacity-20">
-                    <div className="w-full h-full"
-                         style={{
-                           backgroundImage: `
-                             linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
-                           `,
-                           backgroundSize: '20px 20px'
-                         }}>
-                    </div>
-                  </div>
-
-                  {/* Continent Shapes */}
-                  <div className="absolute inset-0">
-                    {/* North America */}
-                    <div className="absolute top-8 left-4 w-32 h-24 bg-green-200/60 rounded-xl transform rotate-12"></div>
-                    <div className="absolute top-16 left-12 w-20 h-16 bg-green-300/60 rounded-lg transform -rotate-6"></div>
-
-                    {/* Europe */}
-                    <div className="absolute top-12 left-[45%] w-16 h-12 bg-orange-200/60 rounded-lg"></div>
-
-                    {/* Asia */}
-                    <div className="absolute top-16 right-16 w-28 h-20 bg-purple-200/60 rounded-2xl transform rotate-3"></div>
-
-                    {/* South America */}
-                    <div className="absolute top-32 left-16 w-12 h-20 bg-yellow-200/60 rounded-xl transform rotate-12"></div>
-
-                    {/* Africa */}
-                    <div className="absolute top-24 left-[42%] w-14 h-18 bg-red-200/60 rounded-lg"></div>
-
-                    {/* Australia */}
-                    <div className="absolute bottom-16 right-20 w-12 h-8 bg-teal-200/60 rounded-lg"></div>
-                  </div>
-
-                  {/* Individual Alumni Markers */}
-                  {alumni.map((person, index) => {
-                    // Simplified longitude/latitude to map position, fallback to random
-                    const longitude = person.location.includes("San Francisco") ? -122.4194 : person.location.includes("New York") ? -74.0060 : person.location.includes("London") ? -0.1278 : person.location.includes("Bangalore") ? 77.5946 : person.location.includes("Toronto") ? -79.3832 : null;
-                    const latitude = person.location.includes("San Francisco") ? 37.7749 : person.location.includes("New York") ? 40.7128 : person.location.includes("London") ? 51.5074 : person.location.includes("Bangalore") ? 12.9716 : person.location.includes("Toronto") ? 43.6532 : null;
-
-                    const x = longitude ? ((longitude + 180) / 360) * 100 : Math.random() * 80 + 10;
-                    const y = latitude ? ((90 - latitude) / 180) * 100 : Math.random() * 60 + 20;
-
-                    return (
-                      <div
-                        key={person.id}
-                        className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10"
-                        style={{ left: `${x}%`, top: `${y}%`, transform: `translate(-50%, -50%) scale(${0.8 + (zoomLevel - 1) * 0.1})` }}
-                        onClick={() => setSelectedAlumni(person)}
-                      >
-                        {/* Pulse animation */}
-                        <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-20 w-12 h-12"></div>
-
-                        {/* Alumni Photo Marker */}
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-lg transition-transform group-hover:scale-110 bg-gradient-hero">
-                          <div className="w-full h-full bg-gradient-hero flex items-center justify-center text-white font-bold text-sm">
-                            {person.name.split(' ').map(n => n[0]).join('')}
-                          </div>
-                        </div>
-
-                        {/* Detailed Tooltip */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                          <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-64">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-8 h-8 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-xs">
-                                {person.name.split(' ').map(n => n[0]).join('')}
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-sm text-gray-900">{person.name}</h4>
-                                <p className="text-xs text-gray-600">{person.department} • {person.batchYear}</p>
-                              </div>
-                            </div>
-                            <p className="text-sm text-gray-700 mb-2">{person.profession}</p>
-                            <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
-                              <MapPin className="w-3 h-3" />
-                              {person.location}
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {person.skills.slice(0, 2).map((skill, i) => (
-                                <span key={i} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                  {skill}
-                                </span>
-                              ))}
-                              {person.skills.length > 2 && (
-                                <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
-                                  +{person.skills.length - 2}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Country cluster markers for dense areas */}
-                  {mapLocations.map((location, index) => (
-                    <div
-                      key={`cluster-${index}`}
-                      className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group ${
-                        selectedCountry === location.name ? 'z-30' : 'z-20'
-                      }`}
-                      style={{ left: `${location.x + 5}%`, top: `${location.y - 5}%` }}
-                      onClick={() => setSelectedCountry(selectedCountry === location.name ? null : location.name)}
-                    >
-                      {/* Cluster count indicator */}
-                      <div className={`relative w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg transition-transform group-hover:scale-110 ${
-                        selectedCountry === location.name ? 'scale-125 bg-red-600' : ''
-                      }`}>
-                        {location.count}
-                      </div>
-
-                      {/* Cluster tooltip */}
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap">
-                          {location.name}: {location.count} alumni
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Map Legend */}
-                  <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <MapPin className="w-4 h-4 text-primary" />
-                        Alumni Locations
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <div className="w-3 h-3 bg-gradient-hero rounded-full"></div>
-                        Click markers to view alumni
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Zoom: {zoomLevel}x
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Navigation Controls */}
-                  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-lg">
-                    <Button variant="ghost" size="sm" className="p-2">
-                      <NavigationIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+                {/* Google Maps Container */}
+                <div 
+                  ref={mapRef}
+                  className="w-full h-[600px] bg-gray-100"
+                  style={{ minHeight: '600px' }}
+                />
               </CardContent>
             </Card>
           </div>
@@ -322,7 +286,7 @@ const GlobalMap = () => {
                     </p>
 
                     <div className="flex flex-wrap gap-1">
-                      {selectedAlumni.skills.slice(0, 3).map((skill, i) => (
+                      {selectedAlumni.skills.slice(0, 4).map((skill, i) => (
                         <Badge key={i} variant="outline" className="text-xs">
                           {skill}
                         </Badge>
@@ -353,25 +317,37 @@ const GlobalMap = () => {
                     <div className="text-sm text-muted-foreground">Total Alumni</div>
                   </div>
                   <div className="text-center p-3 bg-gradient-card rounded-lg">
-                    <div className="text-2xl font-bold text-primary">{alumniLocations.length}</div>
-                    <div className="text-sm text-muted-foreground">Cities</div>
+                    <div className="text-2xl font-bold text-primary">{filteredAlumni.length}</div>
+                    <div className="text-sm text-muted-foreground">Filtered</div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">Top Locations:</h4>
-                  {alumniLocations
-                    .sort((a, b) => b.alumni.length - a.alumni.length)
-                    .slice(0, 3)
-                    .map((location) => (
-                      <div key={location.city} className="flex justify-between items-center text-sm">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-primary" />
-                          {location.city}
+                  <h4 className="font-semibold text-sm">Search Results:</h4>
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    {filteredAlumni.slice(0, 5).map((person) => (
+                      <div 
+                        key={person.id} 
+                        className="flex justify-between items-center text-sm p-2 hover:bg-gray-50 rounded cursor-pointer"
+                        onClick={() => setSelectedAlumni(person)}
+                      >
+                        <span className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-gradient-hero rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {person.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <div className="font-medium">{person.name}</div>
+                            <div className="text-xs text-muted-foreground">{person.location}</div>
+                          </div>
                         </span>
-                        <Badge variant="secondary">{location.alumni.length}</Badge>
                       </div>
                     ))}
+                    {filteredAlumni.length > 5 && (
+                      <div className="text-xs text-muted-foreground text-center py-2">
+                        +{filteredAlumni.length - 5} more results
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -379,16 +355,37 @@ const GlobalMap = () => {
             {/* Quick Actions */}
             <Card className="shadow-elegant">
               <CardHeader>
-                <CardTitle>Map Actions</CardTitle>
+                <CardTitle>Map Controls</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full" size="sm">
-                  <Layers className="w-4 h-4 mr-2" />
-                  Toggle Layers
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="sm"
+                  onClick={() => {
+                    if (map) {
+                      map.setCenter({ lat: 30.7333, lng: 76.7794 });
+                      map.setZoom(6);
+                    }
+                  }}
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Reset View
                 </Button>
-                <Button variant="outline" className="w-full" size="sm">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="sm"
+                  onClick={() => {
+                    if (map && selectedAlumni) {
+                      map.setCenter({ lat: selectedAlumni.latitude, lng: selectedAlumni.longitude });
+                      map.setZoom(12);
+                    }
+                  }}
+                  disabled={!selectedAlumni}
+                >
                   <Search className="w-4 h-4 mr-2" />
-                  Search Locations
+                  Focus Selected
                 </Button>
                 <Button variant="outline" className="w-full" size="sm">
                   <MessageCircle className="w-4 h-4 mr-2" />
