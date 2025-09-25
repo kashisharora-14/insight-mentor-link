@@ -29,7 +29,7 @@ const Navigation = () => {
 
   const getAllNavItems = () => [
     { name: "Home", path: "/", icon: GraduationCap, roles: ['student', 'alumni', 'admin'] },
-    { name: "Alumni Directory", path: "/alumni", icon: Users, roles: ['student', 'alumni', 'admin'] },
+    { name: "Alumni Directory", path: "/alumni", icon: Users, roles: ['student', 'admin'] },
     { name: "My Profile", path: "/alumni-profile", icon: User, roles: ['alumni'] },
     { name: "Find Mentors", path: "/mentorship", icon: MessageCircle, roles: ['student'] },
     { name: "Mentorship Requests", path: "/alumni-dashboard", icon: MessageCircle, roles: ['alumni'] },
