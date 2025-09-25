@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type UserRole = 'student' | 'alumni';
+export type UserRole = 'student' | 'alumni' | 'admin';
 
 export interface User {
   id: string;
@@ -39,6 +39,14 @@ const mockUsers: Record<string, User> = {
     department: 'Computer Science',
     batchYear: 2018,
     profession: 'Software Engineer'
+  },
+  'admin@demo.com': {
+    id: '3',
+    name: 'Admin User',
+    email: 'admin@demo.com',
+    role: 'admin' as UserRole,
+    department: 'Administration',
+    profession: 'System Administrator'
   }
 };
 

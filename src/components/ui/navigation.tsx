@@ -27,19 +27,35 @@ const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = [
-    { name: "Home", path: "/", icon: GraduationCap },
-    { name: "Alumni Directory", path: "/alumni", icon: Users },
-    { name: "My Profile", path: "/alumni-profile", icon: User },
-    { name: "Mentorship", path: "/mentorship", icon: MessageCircle },
-    { name: "Events", path: "/events", icon: Calendar },
-    { name: "Jobs", path: "/jobs", icon: Briefcase },
-    { name: "Gift Shop", path: "/gift-shop", icon: Shopping },
-    { name: "Donations", path: "/donations", icon: Heart },
-    { name: "AI Mentor", path: "/ai-chat", icon: MessageCircle },
-    { name: "Global Map", path: "/map", icon: Map },
-    { name: "Admin", path: "/admin-dashboard", icon: Settings },
+  const getAllNavItems = () => [
+    { name: "Home", path: "/", icon: GraduationCap, roles: ['student', 'alumni', 'admin'] },
+    { name: "Alumni Directory", path: "/alumni", icon: Users, roles: ['student', 'alumni', 'admin'] },
+    { name: "My Profile", path: "/alumni-profile", icon: User, roles: ['alumni'] },
+    { name: "Mentorship", path: "/mentorship", icon: MessageCircle, roles: ['student', 'alumni'] },
+    { name: "Events", path: "/events", icon: Calendar, roles: ['student', 'alumni', 'admin'] },
+    { name: "Jobs", path: "/jobs", icon: Briefcase, roles: ['student', 'alumni'] },
+    { name: "Gift Shop", path: "/gift-shop", icon: Shopping, roles: ['student', 'alumni', 'admin'] },
+    { name: "Donations", path: "/donations", icon: Heart, roles: ['student', 'alumni', 'admin'] },
+    { name: "AI Mentor", path: "/ai-chat", icon: MessageCircle, roles: ['student', 'alumni'] },
+    { name: "Global Map", path: "/map", icon: Map, roles: ['student', 'alumni', 'admin'] },
+    { name: "Admin", path: "/admin-dashboard", icon: Settings, roles: ['admin'] },
   ];
+
+  const getFilteredNavItems = () => {
+    const allItems = getAllNavItems();
+    
+    if (!isAuthenticated || !user) {
+      // Show public items for non-authenticated users
+      return allItems.filter(item => 
+        ['Home', 'Alumni Directory', 'Events', 'Gift Shop', 'Donations', 'Global Map'].includes(item.name)
+      );
+    }
+    
+    // Filter items based on user role
+    return allItems.filter(item => item.roles.includes(user.role));
+  };
+
+  const navItems = getFilteredNavItems();
 
   return (
     <nav className="bg-white/95 backdrop-blur-sm border-b border-border sticky top-0 z-50 shadow-sm">
@@ -83,6 +99,7 @@ const Navigation = () => {
                 </Link>
                 <Badge variant="secondary" className={`${
                   user.role === 'alumni' ? 'bg-green-100 text-green-800' :
+                  user.role === 'admin' ? 'bg-red-100 text-red-800' :
                   'bg-blue-100 text-blue-800'
                 }`}>
                   {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
