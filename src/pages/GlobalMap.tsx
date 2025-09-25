@@ -7,44 +7,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { alumni } from "@/data/mockData";
 import { MapPin, Users, Globe, MessageCircle, Search, User, Briefcase } from "lucide-react";
-import { Loader } from "@googlemaps/js-api-loader";
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for default markers in Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const GlobalMap = () => {
   const [selectedAlumni, setSelectedAlumni] = useState<typeof alumni[0] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
+  const [map, setMap] = useState<L.Map | null>(null);
+  const [markers, setMarkers] = useState<L.Marker[]>([]);
   const mapRef = useRef<HTMLDivElement>(null);
 
-  // Initialize Google Maps
+  // Initialize Leaflet Map
   useEffect(() => {
-    const initializeMap = async () => {
-      const loader = new Loader({
-        apiKey: "AIzaSyBQZGTfN8QtXNON5BzP6z5TxZNP5k5Ck8o", // You'll need to get your own API key
-        version: "weekly",
-        libraries: ["places"]
-      });
+    if (mapRef.current && !map) {
+      // Create map centered on India (since many alumni are there)
+      const mapInstance = L.map(mapRef.current).setView([20.5937, 78.9629], 5);
 
-      const { Map } = await loader.importLibrary("maps");
-      const { AdvancedMarkerElement } = await loader.importLibrary("marker");
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(mapInstance);
 
-      if (mapRef.current) {
-        const mapInstance = new Map(mapRef.current, {
-          center: { lat: 30.7333, lng: 76.7794 }, // Chandigarh coordinates
-          zoom: 6,
-          mapId: "DEMO_MAP_ID",
-        });
+      setMap(mapInstance);
 
-        setMap(mapInstance);
-
-        // Add markers for each alumni
-        const newMarkers: google.maps.Marker[] = [];
-        
-        for (const person of alumni) {
-          // Create custom marker content
-          const markerContent = document.createElement('div');
-          markerContent.className = 'custom-marker';
-          markerContent.innerHTML = `
+      // Add markers for each alumni
+      const newMarkers: L.Marker[] = [];
+      
+      alumni.forEach((person) => {
+        // Create custom icon with initials
+        const customIcon = L.divIcon({
+          html: `
             <div style="
               width: 40px;
               height: 40px;
@@ -60,119 +61,120 @@ const GlobalMap = () => {
               box-shadow: 0 2px 10px rgba(0,0,0,0.3);
               cursor: pointer;
               transition: transform 0.2s;
+              font-family: system-ui, -apple-system, sans-serif;
             ">
               ${person.name.split(' ').map(n => n[0]).join('')}
             </div>
-          `;
+          `,
+          className: 'custom-div-icon',
+          iconSize: [40, 40],
+          iconAnchor: [20, 40],
+          popupAnchor: [0, -40]
+        });
 
-          // Add hover effect
-          markerContent.addEventListener('mouseenter', () => {
-            markerContent.style.transform = 'scale(1.1)';
-          });
-          markerContent.addEventListener('mouseleave', () => {
-            markerContent.style.transform = 'scale(1)';
-          });
+        const marker = L.marker([person.latitude, person.longitude], {
+          icon: customIcon
+        }).addTo(mapInstance);
 
-          const marker = new AdvancedMarkerElement({
-            map: mapInstance,
-            position: { lat: person.latitude, lng: person.longitude },
-            content: markerContent,
-            title: person.name
-          });
-
-          // Create info window
-          const infoWindow = new google.maps.InfoWindow({
-            content: `
-              <div style="padding: 12px; max-width: 300px;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                  <div style="
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    font-size: 10px;
-                  ">
-                    ${person.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <h4 style="margin: 0; font-weight: 600; color: #1f2937;">${person.name}</h4>
-                    <p style="margin: 0; font-size: 12px; color: #6b7280;">${person.department} • ${person.batchYear}</p>
-                  </div>
-                </div>
-                <p style="margin: 4px 0; font-size: 14px; color: #374151;">${person.profession}</p>
-                <p style="margin: 4px 0; font-size: 12px; color: #6b7280; display: flex; align-items: center;">
-                  <span style="margin-right: 4px;">📍</span>${person.location}
-                </p>
-                <div style="margin: 8px 0;">
-                  ${person.skills.slice(0, 3).map(skill => 
-                    `<span style="
-                      display: inline-block;
-                      background: #dbeafe;
-                      color: #1e40af;
-                      padding: 2px 8px;
-                      border-radius: 12px;
-                      font-size: 10px;
-                      margin: 2px 2px 2px 0;
-                    ">${skill}</span>`
-                  ).join('')}
-                </div>
-                <button 
-                  onclick="selectAlumni(${person.id})"
-                  style="
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    border: none;
-                    padding: 6px 12px;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    width: 100%;
-                    margin-top: 8px;
-                  "
-                >
-                  View Profile
-                </button>
+        // Create popup content
+        const popupContent = `
+          <div style="padding: 12px; max-width: 280px; font-family: system-ui, -apple-system, sans-serif;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+              <div style="
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 10px;
+              ">
+                ${person.name.split(' ').map(n => n[0]).join('')}
               </div>
-            `
-          });
+              <div>
+                <h4 style="margin: 0; font-weight: 600; color: #1f2937; font-size: 14px;">${person.name}</h4>
+                <p style="margin: 0; font-size: 11px; color: #6b7280;">${person.department} • ${person.batchYear}</p>
+              </div>
+            </div>
+            <p style="margin: 4px 0; font-size: 12px; color: #374151; font-weight: 500;">${person.profession}</p>
+            <p style="margin: 4px 0; font-size: 11px; color: #6b7280; display: flex; align-items: center;">
+              <span style="margin-right: 4px;">📍</span>${person.location}
+            </p>
+            <div style="margin: 8px 0; display: flex; flex-wrap: gap: 2px;">
+              ${person.skills.slice(0, 3).map(skill => 
+                `<span style="
+                  display: inline-block;
+                  background: #dbeafe;
+                  color: #1e40af;
+                  padding: 2px 6px;
+                  border-radius: 10px;
+                  font-size: 9px;
+                  font-weight: 500;
+                ">${skill}</span>`
+              ).join('')}
+            </div>
+            <p style="margin: 8px 0 12px 0; font-size: 11px; color: #4b5563; line-height: 1.4;">
+              ${person.bio.substring(0, 100)}${person.bio.length > 100 ? '...' : ''}
+            </p>
+            <button 
+              onclick="window.selectAlumni(${person.id})"
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-size: 11px;
+                cursor: pointer;
+                width: 100%;
+                font-weight: 600;
+                transition: opacity 0.2s;
+              "
+              onmouseover="this.style.opacity='0.9'"
+              onmouseout="this.style.opacity='1'"
+            >
+              View Profile
+            </button>
+          </div>
+        `;
 
-          // Add click listener to marker
-          marker.addListener("click", () => {
-            // Close any open info windows
-            markers.forEach(m => {
-              if ((m as any).infoWindow) {
-                (m as any).infoWindow.close();
-              }
-            });
-            
-            infoWindow.open(mapInstance, marker);
-            setSelectedAlumni(person);
-          });
+        marker.bindPopup(popupContent, {
+          maxWidth: 300,
+          className: 'custom-popup'
+        });
 
-          // Store info window reference
-          (marker as any).infoWindow = infoWindow;
-          newMarkers.push(marker as any);
-        }
+        // Add click event
+        marker.on('click', () => {
+          setSelectedAlumni(person);
+        });
 
-        setMarkers(newMarkers);
+        newMarkers.push(marker);
+      });
 
-        // Make selectAlumni function globally available
-        (window as any).selectAlumni = (id: number) => {
-          const alumni_member = alumni.find(a => a.id === id);
-          if (alumni_member) {
-            setSelectedAlumni(alumni_member);
+      setMarkers(newMarkers);
+
+      // Make selectAlumni function globally available
+      (window as any).selectAlumni = (id: number) => {
+        const alumni_member = alumni.find(a => a.id === id);
+        if (alumni_member) {
+          setSelectedAlumni(alumni_member);
+          // Center map on selected alumni
+          if (mapInstance) {
+            mapInstance.setView([alumni_member.latitude, alumni_member.longitude], 10);
           }
-        };
+        }
+      };
+    }
+
+    return () => {
+      if (map) {
+        map.remove();
       }
     };
-
-    initializeMap().catch(console.error);
-  }, []);
+  }, [mapRef.current]);
 
   // Filter functionality
   const filteredAlumni = alumni.filter(person =>
@@ -188,7 +190,12 @@ const GlobalMap = () => {
       markers.forEach((marker, index) => {
         const person = alumni[index];
         const isVisible = filteredAlumni.some(filtered => filtered.id === person.id);
-        marker.setMap(isVisible ? map : null);
+        
+        if (isVisible) {
+          marker.addTo(map);
+        } else {
+          map.removeLayer(marker);
+        }
       });
     }
   }, [searchTerm, map, markers, filteredAlumni]);
@@ -206,12 +213,12 @@ const GlobalMap = () => {
             Global Alumni Network
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Explore our worldwide community of {totalAlumni} alumni across the globe on real map locations.
+            Explore our worldwide community of {totalAlumni} alumni across the globe on interactive map.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Google Maps Container */}
+          {/* Map Container */}
           <div className="lg:col-span-3">
             <Card className="shadow-elegant overflow-hidden">
               <CardHeader className="bg-white border-b p-4">
@@ -235,10 +242,10 @@ const GlobalMap = () => {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {/* Google Maps Container */}
+                {/* Leaflet Map Container */}
                 <div 
                   ref={mapRef}
-                  className="w-full h-[600px] bg-gray-100"
+                  className="w-full h-[600px] bg-gray-100 z-0"
                   style={{ minHeight: '600px' }}
                 />
               </CardContent>
@@ -259,7 +266,7 @@ const GlobalMap = () => {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                         {selectedAlumni.name.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
@@ -293,7 +300,7 @@ const GlobalMap = () => {
                       ))}
                     </div>
 
-                    <Button className="w-full bg-gradient-hero hover:opacity-90" size="sm">
+                    <Button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:opacity-90" size="sm">
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Connect
                     </Button>
@@ -312,11 +319,11 @@ const GlobalMap = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center p-3 bg-gradient-card rounded-lg">
+                  <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-primary">{totalAlumni}</div>
                     <div className="text-sm text-muted-foreground">Total Alumni</div>
                   </div>
-                  <div className="text-center p-3 bg-gradient-card rounded-lg">
+                  <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-primary">{filteredAlumni.length}</div>
                     <div className="text-sm text-muted-foreground">Filtered</div>
                   </div>
@@ -329,10 +336,15 @@ const GlobalMap = () => {
                       <div 
                         key={person.id} 
                         className="flex justify-between items-center text-sm p-2 hover:bg-gray-50 rounded cursor-pointer"
-                        onClick={() => setSelectedAlumni(person)}
+                        onClick={() => {
+                          setSelectedAlumni(person);
+                          if (map) {
+                            map.setView([person.latitude, person.longitude], 12);
+                          }
+                        }}
                       >
                         <span className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-gradient-hero rounded-full flex items-center justify-center text-white text-xs font-bold">
+                          <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                             {person.name.split(' ').map(n => n[0]).join('')}
                           </div>
                           <div>
@@ -364,8 +376,7 @@ const GlobalMap = () => {
                   size="sm"
                   onClick={() => {
                     if (map) {
-                      map.setCenter({ lat: 30.7333, lng: 76.7794 });
-                      map.setZoom(6);
+                      map.setView([20.5937, 78.9629], 5);
                     }
                   }}
                 >
@@ -378,8 +389,7 @@ const GlobalMap = () => {
                   size="sm"
                   onClick={() => {
                     if (map && selectedAlumni) {
-                      map.setCenter({ lat: selectedAlumni.latitude, lng: selectedAlumni.longitude });
-                      map.setZoom(12);
+                      map.setView([selectedAlumni.latitude, selectedAlumni.longitude], 12);
                     }
                   }}
                   disabled={!selectedAlumni}
@@ -396,6 +406,24 @@ const GlobalMap = () => {
           </div>
         </div>
       </div>
+
+      {/* Custom CSS for leaflet popup */}
+      <style>{`
+        .custom-popup .leaflet-popup-content-wrapper {
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .custom-popup .leaflet-popup-tip {
+          background: white;
+        }
+        .custom-div-icon {
+          background: transparent !important;
+          border: none !important;
+        }
+        .custom-div-icon:hover {
+          transform: scale(1.1);
+        }
+      `}</style>
     </div>
   );
 };
