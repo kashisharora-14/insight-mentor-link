@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Dummy credentials for demo  
 const mockUsers: Record<string, User> = {
   'student@demo.com': {
-    id: '1',
+    id: '550e8400-e29b-41d4-a716-446655440001',
     name: 'Alex Johnson',
     email: 'student@demo.com',
     role: 'student' as UserRole,
@@ -32,7 +32,7 @@ const mockUsers: Record<string, User> = {
     batchYear: 2025
   },
   'alumni@demo.com': {
-    id: '2', 
+    id: '550e8400-e29b-41d4-a716-446655440002', 
     name: 'Dr. Sarah Chen',
     email: 'alumni@demo.com',
     role: 'alumni' as UserRole,
@@ -41,7 +41,7 @@ const mockUsers: Record<string, User> = {
     profession: 'Software Engineer'
   },
   'admin@demo.com': {
-    id: '3',
+    id: '550e8400-e29b-41d4-a716-446655440003',
     name: 'Admin User',
     email: 'admin@demo.com',
     role: 'admin' as UserRole,

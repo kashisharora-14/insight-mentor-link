@@ -4,10 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, MapPin, Clock, ExternalLink, Filter, Users, CheckCircle } from "lucide-react";
+import { Calendar, MapPin, Clock, ExternalLink, Filter, Users, CheckCircle, Plus } from "lucide-react";
 
 interface Event {
   id: string;
@@ -35,6 +39,16 @@ const Events = () => {
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    date_time: '',
+    location: '',
+    department: '',
+    max_attendees: '',
+    registration_link: ''
+  });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -151,6 +165,59 @@ const Events = () => {
     return registrations.some(reg => reg.event_id === eventId);
   };
 
+  const handlePostEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to post an event.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const eventData = {
+        title: newEvent.title,
+        description: newEvent.description,
+        date_time: newEvent.date_time,
+        location: newEvent.location,
+        department: newEvent.department,
+        registration_link: newEvent.registration_link,
+        is_active: false, // Requires admin approval
+        organizer_id: user.id
+      };
+
+      const { error } = await supabase.from('events').insert(eventData);
+
+      if (error) throw error;
+
+      toast({
+        title: "Event submitted!",
+        description: "Your event has been submitted for admin approval.",
+      });
+
+      setIsPostDialogOpen(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        date_time: '',
+        location: '',
+        department: '',
+        max_attendees: '',
+        registration_link: ''
+      });
+      fetchEvents();
+    } catch (error) {
+      toast({
+        title: "Error posting event",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredEvents = events.filter(event => 
     selectedDepartment === "all" || event.department === selectedDepartment
   );
@@ -197,13 +264,121 @@ const Events = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            University Events
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover upcoming events, workshops, and networking opportunities across all departments.
-          </p>
+        <div className="flex justify-between items-center mb-12">
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-bold text-foreground mb-4">
+              University Events
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              {user?.role === 'alumni' 
+                ? 'Discover and post events for the university community' 
+                : 'Discover upcoming events, workshops, and networking opportunities across all departments.'
+              }
+            </p>
+          </div>
+          {user?.role === 'alumni' && (
+            <Dialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Post Event
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Post a New Event</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handlePostEvent} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="title">Event Title</Label>
+                      <Input
+                        id="title"
+                        value={newEvent.title}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="department">Department</Label>
+                      <Input
+                        id="department"
+                        value={newEvent.department}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, department: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={newEvent.description}
+                      onChange={(e) => setNewEvent(prev => ({ ...prev, description: e.target.value }))}
+                      rows={3}
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="datetime">Date & Time</Label>
+                      <Input
+                        id="datetime"
+                        type="datetime-local"
+                        value={newEvent.date_time}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, date_time: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="location">Location</Label>
+                      <Input
+                        id="location"
+                        value={newEvent.location}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="e.g., Main Auditorium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="maxAttendees">Max Attendees (optional)</Label>
+                      <Input
+                        id="maxAttendees"
+                        type="number"
+                        value={newEvent.max_attendees}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, max_attendees: e.target.value }))}
+                        placeholder="e.g., 100"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="registrationLink">Registration Link (optional)</Label>
+                      <Input
+                        id="registrationLink"
+                        type="url"
+                        value={newEvent.registration_link}
+                        onChange={(e) => setNewEvent(prev => ({ ...prev, registration_link: e.target.value }))}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Note:</strong> Your event will be submitted for admin approval before being published.
+                    </p>
+                  </div>
+
+                  <Button type="submit" className="w-full">
+                    Submit Event for Approval
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {/* Filter */}

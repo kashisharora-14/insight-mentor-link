@@ -50,7 +50,7 @@ const Mentorship = () => {
   const [mentors, setMentors] = useState<Profile[]>([]);
   const [myRequests, setMyRequests] = useState<MentorshipRequest[]>([]);
   const [messages, setMessages] = useState<{ [key: string]: Message[] }>({});
-  const [activeTab, setActiveTab] = useState<'find-mentors' | 'my-requests' | 'my-mentorships'>('find-mentors');
+  const [activeTab, setActiveTab] = useState<'find-mentors' | 'my-requests' | 'my-mentorships' | 'incoming-requests'>('find-mentors');
   const [searchTerm, setSearchTerm] = useState('');
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [selectedMentor, setSelectedMentor] = useState<Profile | null>(null);
@@ -66,6 +66,12 @@ const Mentorship = () => {
     if (user) {
       fetchMentors();
       fetchMyRequests();
+      // Set default tab based on user role
+      if (user.role === 'alumni') {
+        setActiveTab('incoming-requests');
+      } else {
+        setActiveTab('find-mentors');
+      }
     }
   }, [user]);
 
@@ -246,21 +252,33 @@ const Mentorship = () => {
 
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-8 border-b">
-          <Button
-            variant={activeTab === 'find-mentors' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('find-mentors')}
-            className="mb-2"
-          >
-            <Search className="w-4 h-4 mr-2" />
-            Find Mentors
-          </Button>
+          {user?.role === 'student' && (
+            <Button
+              variant={activeTab === 'find-mentors' ? 'default' : 'ghost'}
+              onClick={() => setActiveTab('find-mentors')}
+              className="mb-2"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              Find Mentors
+            </Button>
+          )}
+          {user?.role === 'alumni' && (
+            <Button
+              variant={activeTab === 'incoming-requests' ? 'default' : 'ghost'}
+              onClick={() => setActiveTab('incoming-requests')}
+              className="mb-2"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Incoming Requests
+            </Button>
+          )}
           <Button
             variant={activeTab === 'my-requests' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('my-requests')}
             className="mb-2"
           >
             <Users className="w-4 h-4 mr-2" />
-            My Requests
+            {user?.role === 'alumni' ? 'My Accepted Students' : 'My Requests'}
           </Button>
           <Button
             variant={activeTab === 'my-mentorships' ? 'default' : 'ghost'}
@@ -272,8 +290,53 @@ const Mentorship = () => {
           </Button>
         </div>
 
-        {/* Find Mentors Tab */}
-        {activeTab === 'find-mentors' && (
+        {/* Incoming Requests Tab (Alumni only) */}
+        {activeTab === 'incoming-requests' && user?.role === 'alumni' && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold mb-4">Mentorship Requests</h2>
+            {myRequests.filter(r => r.mentor_id === user?.id && r.status === 'pending').map((request) => (
+              <Card key={request.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle>{request.field_of_interest}</CardTitle>
+                      <CardDescription>
+                        Request from: {request.student_profile?.name}
+                      </CardDescription>
+                    </div>
+                    <Badge variant="secondary">Pending</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">{request.description}</p>
+                  <div className="text-sm text-muted-foreground mb-4">
+                    Student: {request.student_profile?.name} • {request.student_profile?.department} • Class of {request.student_profile?.graduation_year}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={() => handleStatusUpdate(request.id, 'approved')}>
+                      Accept Request
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleStatusUpdate(request.id, 'declined')}
+                    >
+                      Decline
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {myRequests.filter(r => r.mentor_id === user?.id && r.status === 'pending').length === 0 && (
+              <div className="text-center py-12">
+                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No pending mentorship requests.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Find Mentors Tab (Students only) */}
+        {activeTab === 'find-mentors' && user?.role === 'student' && (
           <div className="space-y-6">
             {/* Search */}
             <div className="flex gap-4">
