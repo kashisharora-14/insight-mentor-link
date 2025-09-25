@@ -181,6 +181,140 @@ export type Database = {
         }
         Relationships: []
       }
+      mentorship_requests: {
+        Row: {
+          created_at: string
+          description: string | null
+          field_of_interest: string
+          id: string
+          mentor_id: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          field_of_interest: string
+          id?: string
+          mentor_id?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          field_of_interest?: string
+          id?: string
+          mentor_id?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_requests_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mentorship_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      mentorship_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          mentorship_request_id: string
+          next_session_plan: string | null
+          notes: string | null
+          session_date: string
+          skills_discussed: string[] | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          mentorship_request_id: string
+          next_session_plan?: string | null
+          notes?: string | null
+          session_date: string
+          skills_discussed?: string[] | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          mentorship_request_id?: string
+          next_session_plan?: string | null
+          notes?: string | null
+          session_date?: string
+          skills_discussed?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_sessions_mentorship_request_id_fkey"
+            columns: ["mentorship_request_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          mentorship_request_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          mentorship_request_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          mentorship_request_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_mentorship_request_id_fkey"
+            columns: ["mentorship_request_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -289,6 +423,66 @@ export type Database = {
           price?: number
           stock_quantity?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          bio: string | null
+          company: string | null
+          created_at: string
+          current_job: string | null
+          department: string | null
+          email: string
+          graduation_year: number | null
+          id: string
+          is_mentor_available: boolean | null
+          is_verified: boolean | null
+          linkedin_profile: string | null
+          name: string
+          phone: string | null
+          role: string
+          skills: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          company?: string | null
+          created_at?: string
+          current_job?: string | null
+          department?: string | null
+          email: string
+          graduation_year?: number | null
+          id?: string
+          is_mentor_available?: boolean | null
+          is_verified?: boolean | null
+          linkedin_profile?: string | null
+          name: string
+          phone?: string | null
+          role: string
+          skills?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          company?: string | null
+          created_at?: string
+          current_job?: string | null
+          department?: string | null
+          email?: string
+          graduation_year?: number | null
+          id?: string
+          is_mentor_available?: boolean | null
+          is_verified?: boolean | null
+          linkedin_profile?: string | null
+          name?: string
+          phone?: string | null
+          role?: string
+          skills?: string[] | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

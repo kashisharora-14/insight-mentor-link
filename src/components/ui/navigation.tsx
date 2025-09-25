@@ -30,12 +30,15 @@ const Navigation = () => {
   const navItems = [
     { name: "Home", path: "/", icon: GraduationCap },
     { name: "Alumni Directory", path: "/alumni", icon: Users },
+    { name: "My Profile", path: "/alumni-profile", icon: User },
+    { name: "Mentorship", path: "/mentorship", icon: MessageCircle },
     { name: "Events", path: "/events", icon: Calendar },
     { name: "Jobs", path: "/jobs", icon: Briefcase },
     { name: "Gift Shop", path: "/gift-shop", icon: Shopping },
     { name: "Donations", path: "/donations", icon: Heart },
     { name: "AI Mentor", path: "/ai-chat", icon: MessageCircle },
     { name: "Global Map", path: "/map", icon: Map },
+    { name: "Admin", path: "/admin-dashboard", icon: Settings },
   ];
 
   return (

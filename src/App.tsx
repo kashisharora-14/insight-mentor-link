@@ -17,6 +17,9 @@ import AlumniDashboard from "./pages/AlumniDashboard";
 import Donations from "./pages/Donations";
 import GiftShop from "./pages/GiftShop";
 import JobBoard from "./pages/JobBoard";
+import AlumniProfile from "./pages/AlumniProfile";
+import Mentorship from "./pages/Mentorship";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +58,9 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route path="/alumni-profile" element={<AlumniProfile />} />
+            <Route path="/mentorship" element={<Mentorship />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
