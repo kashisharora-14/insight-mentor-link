@@ -43,14 +43,14 @@ const Navigation = () => {
 
   const getFilteredNavItems = () => {
     const allItems = getAllNavItems();
-    
+
     if (!isAuthenticated || !user) {
       // Show public items for non-authenticated users
       return allItems.filter(item => 
         ['Home', 'Alumni Directory', 'Events', 'Gift Shop', 'Donations', 'Global Map'].includes(item.name)
       );
     }
-    
+
     // Filter items based on user role
     return allItems.filter(item => item.roles.includes(user.role));
   };
@@ -145,60 +145,53 @@ const Navigation = () => {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-border">
-              {navItems.map((item) => (
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-background border-t">
+              <Link
+                to="/dashboard"
+                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Dashboard
+              </Link>
+              {user?.role === 'student' && (
                 <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
-                    isActive(item.path)
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                  }`}
+                  to="/mentorship"
+                  className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.name}</span>
+                  Find Mentors
                 </Link>
-              ))}
-              <div className="pt-4 border-t border-border">
-                {isAuthenticated && user ? (
-                  <>
-                    <div className="px-3 py-2 mb-2">
-                      <p className="font-medium">{user.name}</p>
-                      <Badge variant="secondary" className="text-xs">
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                      </Badge>
-                    </div>
-                    <Link to="/dashboard" onClick={() => setIsOpen(false)}>
-                      <Button variant="ghost" size="sm" className="w-full justify-start mb-2">
-                        <User className="w-4 h-4 mr-2" />
-                        Dashboard
-                      </Button>
-                    </Link>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        logout();
-                        navigate('/');
-                        setIsOpen(false);
-                      }}
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <Link to="/login" onClick={() => setIsOpen(false)}>
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <User className="w-4 h-4 mr-2" />
-                      Login
-                    </Button>
-                  </Link>
-                )}
-              </div>
+              )}
+              {user?.role === 'alumni' && (
+                <Link
+                  to="/alumni-dashboard"
+                  className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Mentorship Requests
+                </Link>
+              )}
+              <Link
+                to="/events"
+                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Events
+              </Link>
+              <Link
+                to="/job-board"
+                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Job Board
+              </Link>
+              <Link
+                to="/ai-chat"
+                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                AI Assistant
+              </Link>
             </div>
           </div>
         )}
