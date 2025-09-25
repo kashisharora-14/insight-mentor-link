@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { mentorshipRequests, alumni } from "@/data/mockData";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   User, 
   MessageCircle, 
@@ -27,22 +28,91 @@ import {
   UserPlus
 } from "lucide-react";
 
+interface MentorshipRequest {
+  id: string;
+  student_id: string;
+  mentor_id?: string;
+  field_of_interest: string;
+  description: string;
+  status: string;
+  created_at: string;
+  student_profile?: {
+    name: string;
+    department: string;
+    graduation_year: number;
+  };
+}
+
 const AlumniDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
-  const [acceptingRequest, setAcceptingRequest] = useState<number | null>(null);
-  const [decliningRequest, setDecliningRequest] = useState<number | null>(null);
-  const [referringRequest, setReferringRequest] = useState<number | null>(null);
+  const [acceptingRequest, setAcceptingRequest] = useState<string | null>(null);
+  const [decliningRequest, setDecliningRequest] = useState<string | null>(null);
+  const [referringRequest, setReferringRequest] = useState<string | null>(null);
   const [meetingLink, setMeetingLink] = useState("");
   const [declineReason, setDeclineReason] = useState("");
   const [referralEmail, setReferralEmail] = useState("");
   const [referralNote, setReferralNote] = useState("");
+  const [alumniRequests, setAlumniRequests] = useState<MentorshipRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentAlumni, setCurrentAlumni] = useState<any>(null);
   const { toast } = useToast();
-  
-  // Mock current alumni
-  const currentAlumni = alumni[0]; // Dr. Sarah Chen
-  
-  // Filter requests for current alumni
-  const alumniRequests = mentorshipRequests.filter(req => req.alumniId === currentAlumni.id);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchCurrentAlumni();
+      fetchMentorshipRequests();
+    }
+  }, [user]);
+
+  const fetchCurrentAlumni = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching alumni profile:', error);
+    } else {
+      setCurrentAlumni(data);
+    }
+  };
+
+  const fetchMentorshipRequests = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('mentorship_requests')
+      .select('*')
+      .eq('mentor_id', user.id);
+
+    if (error) {
+      console.error('Error fetching mentorship requests:', error);
+    } else {
+      // Fetch student profiles for each request
+      const requestsWithProfiles = await Promise.all(
+        (data || []).map(async (request) => {
+          const { data: studentData } = await supabase
+            .from('profiles')
+            .select('name, department, graduation_year')
+            .eq('user_id', request.student_id)
+            .single();
+          
+          return {
+            ...request,
+            student_profile: studentData
+          };
+        })
+      );
+      
+      setAlumniRequests(requestsWithProfiles);
+    }
+    setLoading(false);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -69,7 +139,7 @@ const AlumniDashboard = () => {
     );
   };
 
-  const handleAcceptRequest = (requestId: number) => {
+  const handleAcceptRequest = async (requestId: string) => {
     if (!meetingLink.trim()) {
       toast({
         title: "Meeting Link Required",
@@ -79,18 +149,32 @@ const AlumniDashboard = () => {
       return;
     }
     
-    // Mock function - would update request status in real implementation
-    console.log("Accepting request:", requestId, "with meeting link:", meetingLink);
-    toast({
-      title: "Request Accepted",
-      description: "Meeting scheduled successfully. Student will be notified.",
-    });
+    const { error } = await supabase
+      .from('mentorship_requests')
+      .update({ 
+        status: 'approved'
+      })
+      .eq('id', requestId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to accept request.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Request Accepted",
+        description: "Meeting scheduled successfully. Student will be notified.",
+      });
+      fetchMentorshipRequests();
+    }
     
     setAcceptingRequest(null);
     setMeetingLink("");
   };
 
-  const handleDeclineRequest = (requestId: number) => {
+  const handleDeclineRequest = async (requestId: string) => {
     if (!declineReason.trim()) {
       toast({
         title: "Reason Required",
@@ -100,18 +184,32 @@ const AlumniDashboard = () => {
       return;
     }
     
-    // Mock function - would update request status in real implementation  
-    console.log("Declining request:", requestId, "with reason:", declineReason);
-    toast({
-      title: "Request Declined",
-      description: "Student has been notified with your feedback.",
-    });
+    const { error } = await supabase
+      .from('mentorship_requests')
+      .update({ 
+        status: 'rejected'
+      })
+      .eq('id', requestId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to decline request.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Request Declined",
+        description: "Student has been notified with your feedback.",
+      });
+      fetchMentorshipRequests();
+    }
     
     setDecliningRequest(null);
     setDeclineReason("");
   };
 
-  const handleReferralSubmit = (requestId: number) => {
+  const handleReferralSubmit = async (requestId: string) => {
     if (!referralEmail.trim() || !referralNote.trim()) {
       toast({
         title: "Complete Information Required",
@@ -121,12 +219,45 @@ const AlumniDashboard = () => {
       return;
     }
     
-    // Mock function - would send referral to another alumni
-    console.log("Referring request:", requestId, "to:", referralEmail, "note:", referralNote);
-    toast({
-      title: "Referral Sent",
-      description: "The request has been forwarded to another alumnus.",
-    });
+    // Find the alumni by email
+    const { data: referralAlumni, error: alumniError } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('email', referralEmail)
+      .eq('role', 'alumni')
+      .single();
+
+    if (alumniError || !referralAlumni) {
+      toast({
+        title: "Alumni Not Found",
+        description: "Could not find an alumni with that email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Update the request to point to the new mentor
+    const { error } = await supabase
+      .from('mentorship_requests')
+      .update({ 
+        mentor_id: referralAlumni.user_id,
+        status: 'pending'
+      })
+      .eq('id', requestId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refer request.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Referral Sent",
+        description: "The request has been forwarded to another alumnus.",
+      });
+      fetchMentorshipRequests();
+    }
     
     setReferringRequest(null);
     setReferralEmail("");
@@ -142,7 +273,7 @@ const AlumniDashboard = () => {
     },
     {
       title: "Active Sessions",
-      value: alumniRequests.filter(r => r.status === "accepted").length,
+      value: alumniRequests.filter(r => r.status === "approved").length,
       icon: MessageCircle,
       color: "text-success"
     },
@@ -169,10 +300,10 @@ const AlumniDashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Welcome, {currentAlumni.name}! 🎓
+              Welcome, {currentAlumni?.name || 'Alumni'}! 🎓
             </h1>
             <p className="text-muted-foreground mt-1">
-              {currentAlumni.profession} • {currentAlumni.department} '{currentAlumni.batchYear}
+              {currentAlumni?.current_job} • {currentAlumni?.department} '{currentAlumni?.graduation_year}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -181,7 +312,7 @@ const AlumniDashboard = () => {
               Notifications
             </Button>
             <div className="w-12 h-12 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold">
-              {currentAlumni.name.split(' ').map(n => n[0]).join('')}
+              {currentAlumni?.name ? currentAlumni.name.split(' ').map(n => n[0]).join('') : 'A'}
             </div>
           </div>
         </div>
@@ -221,7 +352,12 @@ const AlumniDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {alumniRequests.length === 0 ? (
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading requests...</p>
+                  </div>
+                ) : alumniRequests.length === 0 ? (
                   <div className="text-center py-8">
                     <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">No pending requests at the moment.</p>
@@ -237,12 +373,12 @@ const AlumniDashboard = () => {
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                {request.studentName.split(' ').map(n => n[0]).join('')}
+                                {request.student_profile?.name ? request.student_profile.name.split(' ').map(n => n[0]).join('') : 'S'}
                               </div>
                               <div>
-                                <h3 className="font-semibold">{request.studentName}</h3>
+                                <h3 className="font-semibold">{request.student_profile?.name || 'Student'}</h3>
                                 <p className="text-sm text-muted-foreground">
-                                  Requested on {new Date(request.createdAt).toLocaleDateString()}
+                                  Requested on {new Date(request.created_at).toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
@@ -254,19 +390,21 @@ const AlumniDashboard = () => {
 
                           <div className="space-y-3">
                             <div>
-                              <h4 className="font-medium text-sm mb-1">Purpose:</h4>
-                              <p className="text-sm text-muted-foreground">{request.purpose}</p>
+                              <h4 className="font-medium text-sm mb-1">Field of Interest:</h4>
+                              <p className="text-sm text-muted-foreground">{request.field_of_interest}</p>
                             </div>
                             
                             <div>
-                              <h4 className="font-medium text-sm mb-1">Preferred Time:</h4>
-                              <p className="text-sm text-muted-foreground">{request.preferredSlots}</p>
+                              <h4 className="font-medium text-sm mb-1">Student Details:</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {request.student_profile?.department} • Class of {request.student_profile?.graduation_year}
+                              </p>
                             </div>
 
-                            {request.question && (
+                            {request.description && (
                               <div>
-                                <h4 className="font-medium text-sm mb-1">Question:</h4>
-                                <p className="text-sm text-muted-foreground">{request.question}</p>
+                                <h4 className="font-medium text-sm mb-1">Description:</h4>
+                                <p className="text-sm text-muted-foreground">{request.description}</p>
                               </div>
                             )}
                           </div>
@@ -439,7 +577,7 @@ const AlumniDashboard = () => {
                   <div>
                     <label className="text-sm font-medium">Bio</label>
                     <Textarea 
-                      defaultValue={currentAlumni.bio}
+                      defaultValue={currentAlumni?.bio || ''}
                       placeholder="Tell students about your experience..."
                       className="mt-1"
                     />
@@ -447,14 +585,14 @@ const AlumniDashboard = () => {
                   <div>
                     <label className="text-sm font-medium">Current Position</label>
                     <Input 
-                      defaultValue={currentAlumni.profession}
+                      defaultValue={currentAlumni?.current_job || ''}
                       className="mt-1"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Location</label>
+                    <label className="text-sm font-medium">Company</label>
                     <Input 
-                      defaultValue={currentAlumni.location}
+                      defaultValue={currentAlumni?.company || ''}
                       className="mt-1"
                     />
                   </div>
@@ -492,11 +630,11 @@ const AlumniDashboard = () => {
                   <div>
                     <label className="text-sm font-medium">Areas of Expertise</label>
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {currentAlumni.skills.map((skill, index) => (
+                      {currentAlumni?.skills?.map((skill, index) => (
                         <Badge key={index} variant="outline">
                           {skill}
                         </Badge>
-                      ))}
+                      )) || <p className="text-sm text-muted-foreground">No skills listed</p>}
                     </div>
                   </div>
                   <Button variant="outline" className="w-full">

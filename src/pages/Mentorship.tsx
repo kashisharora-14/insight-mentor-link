@@ -166,7 +166,8 @@ const Mentorship = () => {
         student_id: user.id,
         mentor_id: selectedMentor.user_id,
         field_of_interest: requestForm.field_of_interest,
-        description: requestForm.description
+        description: requestForm.description,
+        status: 'pending'
       });
 
     if (error) {
