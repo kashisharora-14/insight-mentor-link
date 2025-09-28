@@ -71,10 +71,10 @@ const Home = () => {
   ];
 
   const stats = [
-    { number: "10,000+", label: "Alumni Network" },
-    { number: "2,500+", label: "Successful Connections" },
-    { number: "50+", label: "Countries" },
-    { number: "98%", label: "Satisfaction Rate" }
+    { number: "50,000+", label: "Alumni Statewide" },
+    { number: "25+", label: "Universities Connected" },
+    { number: "100+", label: "Cities Covered" },
+    { number: "98%", label: "Data Accuracy" }
   ];
 
   return (
@@ -96,13 +96,13 @@ const Home = () => {
               🎯 SIH 2025 Project
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Connect with Alumni,
+              Central Punjab Alumni
               <br />
-              <span className="text-accent">Shape Your Future</span>
+              <span className="text-accent">Data Management System</span>
             </h1>
             <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
-              AI-powered alumni-student mentorship platform connecting the next generation 
-              with industry leaders for career guidance, networking, and professional growth.
+              SIH 2025 - Unified alumni database and mentorship platform for all Punjab universities, 
+              connecting students with industry leaders across the state for career guidance and professional growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/login">
@@ -132,29 +132,29 @@ const Home = () => {
         </div>
       </section>
 
-      {/* University Campus Section */}
+      {/* Central System Overview Section */}
       <section className="py-16 bg-muted/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Panjab University, Chandigarh
+              Central Alumni Data Management - Punjab State
             </h2>
             <p className="text-xl text-muted-foreground">
-              A prestigious institution with a legacy of excellence and innovation
+              A unified platform connecting alumni across all Punjab universities and institutions
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="relative overflow-hidden rounded-xl shadow-elegant group">
               <img 
-                src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                alt="University Main Building"
+                src="/attached_assets/image_1759089891441.png"
+                alt="Panjab University Main Building"
                 className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-4 left-4 text-white">
-                <h3 className="text-xl font-semibold">Main Campus</h3>
-                <p className="text-white/80">Historic Architecture</p>
+                <h3 className="text-xl font-semibold">Panjab University</h3>
+                <p className="text-white/80">Chandigarh</p>
               </div>
             </div>
             
@@ -166,21 +166,21 @@ const Home = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-4 left-4 text-white">
-                <h3 className="text-xl font-semibold">Central Library</h3>
-                <p className="text-white/80">Knowledge Hub</p>
+                <h3 className="text-xl font-semibold">Central Libraries</h3>
+                <p className="text-white/80">Knowledge Network</p>
               </div>
             </div>
             
             <div className="relative overflow-hidden rounded-xl shadow-elegant group">
               <img 
                 src="https://images.unsplash.com/photo-1567306301408-9b74779a11af?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                alt="Student Life"
+                alt="Student Community"
                 className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-4 left-4 text-white">
-                <h3 className="text-xl font-semibold">Campus Life</h3>
-                <p className="text-white/80">Vibrant Community</p>
+                <h3 className="text-xl font-semibold">Alumni Network</h3>
+                <p className="text-white/80">Statewide Community</p>
               </div>
             </div>
           </div>

@@ -283,9 +283,9 @@ const AdminDashboard = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Central Admin Dashboard</h1>
           <p className="text-muted-foreground">
-            Manage alumni profiles, events, donations, and mentorship programs
+            Punjab Alumni Data Management System - SIH 2025 | Manage statewide alumni network, verification processes, and analytics
           </p>
         </div>
 
@@ -352,13 +352,234 @@ const AdminDashboard = () => {
         </div>
 
         {/* Detailed Management */}
-        <Tabs defaultValue="profiles" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="verification" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="verification">Verification</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="profiles">Profiles</TabsTrigger>
             <TabsTrigger value="donations">Donations</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="mentorships">Mentorships</TabsTrigger>
           </TabsList>
+
+          {/* Verification Tab */}
+          <TabsContent value="verification">
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pending Verifications</CardTitle>
+                  <CardDescription>Alumni profiles requiring verification</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {profiles.filter(p => !p.is_verified && p.role === 'alumni').slice(0, 5).map((profile) => (
+                      <div key={profile.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{profile.name}</h4>
+                          <p className="text-sm text-muted-foreground">{profile.current_job} at {profile.company}</p>
+                          <p className="text-xs text-muted-foreground">{profile.department} • Class of {profile.graduation_year}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => toggleProfileVerification(profile.id, profile.is_verified)}>
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Verify
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <MessageSquare className="w-4 h-4 mr-1" />
+                            Contact
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Document Verification</CardTitle>
+                  <CardDescription>Review submitted documents</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Degree Certificate</h4>
+                          <p className="text-sm text-muted-foreground">Submitted by John Doe</p>
+                        </div>
+                        <Badge variant="secondary">Pending</Badge>
+                      </div>
+                    </div>
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Employment Letter</h4>
+                          <p className="text-sm text-muted-foreground">Submitted by Jane Smith</p>
+                        </div>
+                        <Badge variant="default">Approved</Badge>
+                      </div>
+                    </div>
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">ID Verification</h4>
+                          <p className="text-sm text-muted-foreground">Submitted by Mike Johnson</p>
+                        </div>
+                        <Badge variant="destructive">Rejected</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Bulk Verification Actions</CardTitle>
+                <CardDescription>Manage multiple verifications at once</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4">
+                  <Button>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve Selected
+                  </Button>
+                  <Button variant="destructive">
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject Selected
+                  </Button>
+                  <Button variant="outline">
+                    Export Verification Report
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>University Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Panjab University</span>
+                      <span className="text-sm font-medium">45%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Punjabi University</span>
+                      <span className="text-sm font-medium">25%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Guru Nanak Dev University</span>
+                      <span className="text-sm font-medium">20%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Others</span>
+                      <span className="text-sm font-medium">10%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Geographic Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Chandigarh</span>
+                      <span className="text-sm font-medium">30%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Ludhiana</span>
+                      <span className="text-sm font-medium">20%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Amritsar</span>
+                      <span className="text-sm font-medium">15%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">International</span>
+                      <span className="text-sm font-medium">35%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Industry Analysis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Technology</span>
+                      <span className="text-sm font-medium">35%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Finance</span>
+                      <span className="text-sm font-medium">20%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Healthcare</span>
+                      <span className="text-sm font-medium">15%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Others</span>
+                      <span className="text-sm font-medium">30%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Monthly Registration Trends</CardTitle>
+                  <CardDescription>New alumni registrations over time</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center text-muted-foreground">
+                    📊 Chart would be rendered here with actual data
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Platform Engagement</CardTitle>
+                  <CardDescription>User activity and engagement metrics</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>Daily Active Users</span>
+                      <span className="font-medium">2,450</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Monthly Active Users</span>
+                      <span className="font-medium">12,800</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Profile Completion Rate</span>
+                      <span className="font-medium">78%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Mentorship Success Rate</span>
+                      <span className="font-medium">85%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* Profiles Tab */}
           <TabsContent value="profiles">
