@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,13 +17,64 @@ import {
 import CareerRoadmapForm from "./CareerRoadmapForm";
 import RoadmapVisualization from "./RoadmapVisualization";
 import { generateCareerRoadmap, mockAlumniRecommendations, mockOpportunityRecommendations } from "@/data/roadmapData";
+import { supabase } from "@/integrations/supabase/client";
 import type { CareerRoadmap as CareerRoadmapType, RoadmapItem, RoadmapInputForm, AlumniRecommendation, OpportunityRecommendation } from "@/types/roadmap";
+
+const ROADMAP_STORAGE_KEY = "career-roadmap";
 
 const CareerRoadmap = () => {
   const [activeTab, setActiveTab] = useState<"generator" | "roadmap" | "recommendations">("generator");
   const [currentRoadmap, setCurrentRoadmap] = useState<CareerRoadmapType | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasExistingRoadmap, setHasExistingRoadmap] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load roadmap on component mount
+  useEffect(() => {
+    loadRoadmap();
+  }, []);
+
+  const loadRoadmap = async () => {
+    setIsLoading(true);
+    try {
+      // First try to load from localStorage
+      const savedRoadmap = localStorage.getItem(ROADMAP_STORAGE_KEY);
+      if (savedRoadmap) {
+        const parsedRoadmap = JSON.parse(savedRoadmap);
+        // Convert date strings back to Date objects
+        parsedRoadmap.createdAt = new Date(parsedRoadmap.createdAt);
+        parsedRoadmap.updatedAt = new Date(parsedRoadmap.updatedAt);
+        setCurrentRoadmap(parsedRoadmap);
+        setHasExistingRoadmap(true);
+        setActiveTab("roadmap");
+      }
+      
+      // TODO: Load from database when user authentication is implemented
+      // const { data: user } = await supabase.auth.getUser();
+      // if (user.user) {
+      //   loadFromDatabase(user.user.id);
+      // }
+    } catch (error) {
+      console.error("Error loading roadmap:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveRoadmap = async (roadmap: CareerRoadmapType) => {
+    try {
+      // Save to localStorage
+      localStorage.setItem(ROADMAP_STORAGE_KEY, JSON.stringify(roadmap));
+      
+      // TODO: Save to database when user authentication is implemented
+      // const { data: user } = await supabase.auth.getUser();
+      // if (user.user) {
+      //   await saveToDatabase(roadmap, user.user.id);
+      // }
+    } catch (error) {
+      console.error("Error saving roadmap:", error);
+    }
+  };
 
   const handleFormSubmit = async (formData: RoadmapInputForm) => {
     setIsGenerating(true);
@@ -36,6 +87,9 @@ const CareerRoadmap = () => {
       setCurrentRoadmap(generatedRoadmap);
       setHasExistingRoadmap(true);
       setActiveTab("roadmap");
+      
+      // Save roadmap to localStorage and database
+      await saveRoadmap(generatedRoadmap);
     } catch (error) {
       console.error("Error generating roadmap:", error);
     } finally {
@@ -43,7 +97,7 @@ const CareerRoadmap = () => {
     }
   };
 
-  const handleItemUpdate = (itemId: string, status: RoadmapItem['status']) => {
+  const handleItemUpdate = async (itemId: string, status: RoadmapItem['status']) => {
     if (!currentRoadmap) return;
 
     const updatedItems = currentRoadmap.roadmapItems.map(item => 
@@ -70,13 +124,29 @@ const CareerRoadmap = () => {
     };
 
     setCurrentRoadmap(updatedRoadmap);
+    
+    // Save updated roadmap
+    await saveRoadmap(updatedRoadmap);
   };
 
   const handleRegenerateRoadmap = () => {
+    // Clear saved roadmap
+    localStorage.removeItem(ROADMAP_STORAGE_KEY);
     setCurrentRoadmap(null);
     setHasExistingRoadmap(false);
     setActiveTab("generator");
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your roadmap...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!hasExistingRoadmap && activeTab === "generator") {
     return (
