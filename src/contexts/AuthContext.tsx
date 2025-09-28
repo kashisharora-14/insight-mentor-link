@@ -23,22 +23,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Dummy credentials for demo  
 const mockUsers = {
-  'student@example.com': {
+  'student@demo.com': {
     id: '1',
     name: 'John Student',
-    email: 'student@example.com',
+    email: 'student@demo.com',
     role: 'student' as const
   },
-  'alumni@example.com': {
+  'alumni@demo.com': {
     id: '2',
     name: 'Jane Alumni',
-    email: 'alumni@example.com',
+    email: 'alumni@demo.com',
     role: 'alumni' as const
   },
-  'admin@example.com': {
+  'admin@demo.com': {
     id: '3',
     name: 'Admin User',
-    email: 'admin@example.com',
+    email: 'admin@demo.com',
     role: 'admin' as const
   }
 };
