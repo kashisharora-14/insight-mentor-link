@@ -1,6 +1,7 @@
 modules = ["nodejs-20", "python-3.11", "web"]
 [agent]
 expertMode = true
+integrations = ["javascript_supabase:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
@@ -42,3 +43,7 @@ externalPort = 80
 [[ports]]
 localPort = 5001
 externalPort = 3000
+
+[[ports]]
+localPort = 42435
+externalPort = 3001
