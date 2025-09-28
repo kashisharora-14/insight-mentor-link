@@ -53,6 +53,14 @@ const Navigation = () => {
     }
 
     // Filter items based on user role
+    if (user.role === 'admin') {
+      // Admin should only see admin-specific items
+      return allItems.filter(item => 
+        ['Home', 'Events', 'Global Map', 'Admin'].includes(item.name)
+      );
+    }
+
+    // For other roles, filter based on role permissions
     return allItems.filter(item => item.roles.includes(user.role));
   };
 

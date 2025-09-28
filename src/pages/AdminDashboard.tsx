@@ -356,7 +356,7 @@ const AdminDashboard = () => {
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="verification">Verification</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="profiles">Profiles</TabsTrigger>
+            <TabsTrigger value="profiles">User Management</TabsTrigger>
             <TabsTrigger value="donations">Donations</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="mentorships">Mentorships</TabsTrigger>
