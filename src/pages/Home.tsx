@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/ui/navigation";
+import confetti from "canvas-confetti";
 import { 
   GraduationCap, 
   Users, 
@@ -17,6 +18,25 @@ import {
 } from "lucide-react";
 
 const Home = () => {
+  const triggerConfetti = () => {
+    // Burst confetti effect
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+    
+    // Secondary burst with different colors
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        spread: 40,
+        origin: { y: 0.7 },
+        colors: ['#2563eb', '#f59e0b', '#10b981']
+      });
+    }, 250);
+  };
+
   const features = [
     {
       icon: Users,
@@ -63,7 +83,13 @@ const Home = () => {
       
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-hero">
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2086&q=80')`
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-black/50"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <Badge className="mb-6 bg-white/20 text-white border-white/30">
@@ -80,18 +106,82 @@ const Home = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/login">
-                <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-glow">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-primary hover:bg-white/90 shadow-glow"
+                  onClick={triggerConfetti}
+                >
                   <GraduationCap className="w-5 h-5 mr-2" />
                   Get Started
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
               <Link to="/alumni">
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white/30 text-white hover:bg-white/10"
+                  onClick={triggerConfetti}
+                >
                   <Users className="w-5 h-5 mr-2" />
                   Explore Alumni
                 </Button>
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* University Campus Section */}
+      <section className="py-16 bg-muted/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Panjab University, Chandigarh
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              A prestigious institution with a legacy of excellence and innovation
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <div className="relative overflow-hidden rounded-xl shadow-elegant group">
+              <img 
+                src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                alt="University Main Building"
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-4 left-4 text-white">
+                <h3 className="text-xl font-semibold">Main Campus</h3>
+                <p className="text-white/80">Historic Architecture</p>
+              </div>
+            </div>
+            
+            <div className="relative overflow-hidden rounded-xl shadow-elegant group">
+              <img 
+                src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                alt="University Library"
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-4 left-4 text-white">
+                <h3 className="text-xl font-semibold">Central Library</h3>
+                <p className="text-white/80">Knowledge Hub</p>
+              </div>
+            </div>
+            
+            <div className="relative overflow-hidden rounded-xl shadow-elegant group">
+              <img 
+                src="https://images.unsplash.com/photo-1567306301408-9b74779a11af?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                alt="Student Life"
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-4 left-4 text-white">
+                <h3 className="text-xl font-semibold">Campus Life</h3>
+                <p className="text-white/80">Vibrant Community</p>
+              </div>
             </div>
           </div>
         </div>
@@ -130,7 +220,11 @@ const Home = () => {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="bg-gradient-card border-0 shadow-elegant hover:shadow-glow transition-all duration-300 group">
+              <Card 
+                key={index} 
+                className="bg-gradient-card border-0 shadow-elegant hover:shadow-glow transition-all duration-300 group cursor-pointer"
+                onClick={triggerConfetti}
+              >
                 <CardContent className="p-8 text-center">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
                     <feature.icon className="w-8 h-8 text-primary" />
@@ -203,13 +297,22 @@ const Home = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/alumni">
-              <Button size="lg" className="bg-white text-primary hover:bg-white/90">
+              <Button 
+                size="lg" 
+                className="bg-white text-primary hover:bg-white/90"
+                onClick={triggerConfetti}
+              >
                 <Users className="w-5 h-5 mr-2" />
                 Explore Alumni
               </Button>
             </Link>
             <Link to="/ai-chat">
-              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-white/30 text-white hover:bg-white/10"
+                onClick={triggerConfetti}
+              >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 Try AI Mentor
               </Button>
