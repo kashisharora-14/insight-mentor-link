@@ -17,8 +17,10 @@ import {
   Users,
   TrendingUp,
   BookOpen,
-  Target
+  Target,
+  Route
 } from "lucide-react";
+import CareerRoadmap from "@/components/CareerRoadmap";
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
@@ -123,9 +125,13 @@ const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="requests">Mentorship Requests</TabsTrigger>
             <TabsTrigger value="connections">My Connections</TabsTrigger>
+            <TabsTrigger value="roadmap" className="flex items-center gap-2">
+              <Route className="w-4 h-4" />
+              Career Roadmap
+            </TabsTrigger>
             <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
           </TabsList>
 
@@ -331,6 +337,11 @@ const StudentDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Career Roadmap Tab */}
+          <TabsContent value="roadmap">
+            <CareerRoadmap />
           </TabsContent>
         </Tabs>
       </div>
