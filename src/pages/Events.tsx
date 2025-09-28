@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, MapPin, Clock, ExternalLink, Filter, Users, CheckCircle, Plus } from "lucide-react";
+import { mockEvents, eventTypes, departments } from "@/data/mockEvents";
+import { Calendar, MapPin, Clock, ExternalLink, Filter, Users, CheckCircle, Plus, Search, Tag } from "lucide-react";
 
 interface Event {
   id: string;
@@ -24,6 +25,8 @@ interface Event {
   registration_link?: string;
   is_active: boolean;
   max_attendees?: number;
+  type?: string;
+  tags?: string[];
 }
 
 interface EventRegistration {
@@ -35,10 +38,11 @@ interface EventRegistration {
 
 const Events = () => {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [events, setEvents] = useState<Event[]>([]);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
-  const [departments, setDepartments] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -53,32 +57,34 @@ const Events = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchEvents();
+    // Use mock data for now
+    setEvents(mockEvents);
     if (user) {
       fetchRegistrations();
     }
   }, [user]);
 
   const fetchEvents = async () => {
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .eq('is_active', true)
-      .order('date_time');
+    // For production, uncomment the Supabase code below
+    // const { data, error } = await supabase
+    //   .from('events')
+    //   .select('*')
+    //   .eq('is_active', true)
+    //   .order('date_time');
 
-    if (error) {
-      console.error('Error fetching events:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load events.",
-        variant: "destructive",
-      });
-    } else {
-      setEvents(data || []);
-      // Extract unique departments
-      const uniqueDepts = [...new Set(data?.map(e => e.department).filter(Boolean))] as string[];
-      setDepartments(uniqueDepts);
-    }
+    // if (error) {
+    //   console.error('Error fetching events:', error);
+    //   toast({
+    //     title: "Error",
+    //     description: "Failed to load events.",
+    //     variant: "destructive",
+    //   });
+    // } else {
+    //   setEvents(data || []);
+    // }
+    
+    // Using mock data for demonstration
+    setEvents(mockEvents);
     setLoading(false);
   };
 
@@ -218,9 +224,16 @@ const Events = () => {
     }
   };
 
-  const filteredEvents = events.filter(event => 
-    selectedDepartment === "all" || event.department === selectedDepartment
-  );
+  const filteredEvents = events.filter(event => {
+    const matchesDepartment = selectedDepartment === "all" || event.department === selectedDepartment;
+    const matchesType = selectedType === "all" || event.type === selectedType;
+    const matchesSearch = searchQuery === "" || 
+      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return matchesDepartment && matchesType && matchesSearch;
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -384,29 +397,114 @@ const Events = () => {
         {/* Filter */}
         <Card className="mb-8 shadow-elegant">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-6">
               <Filter className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Filter Events</h3>
+              <h3 className="text-lg font-semibold">Filter & Search Events</h3>
             </div>
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger className="max-w-xs">
-                <SelectValue placeholder="All Departments" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                {departments.map(dept => (
-                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
+              {/* Search */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Search Events</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by title, description, or tags..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Department Filter */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Department</Label>
+                <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Departments" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    {departments.map(dept => (
+                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Event Type Filter */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Event Type</Label>
+                <Select value={selectedType} onValueChange={setSelectedType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {eventTypes.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Active Filters Display */}
+            {(selectedDepartment !== "all" || selectedType !== "all" || searchQuery) && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-muted-foreground">Active filters:</span>
+                {selectedDepartment !== "all" && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    {selectedDepartment}
+                    <button onClick={() => setSelectedDepartment("all")} className="ml-1 hover:bg-muted rounded-full">
+                      ×
+                    </button>
+                  </Badge>
+                )}
+                {selectedType !== "all" && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    {selectedType}
+                    <button onClick={() => setSelectedType("all")} className="ml-1 hover:bg-muted rounded-full">
+                      ×
+                    </button>
+                  </Badge>
+                )}
+                {searchQuery && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    "{searchQuery}"
+                    <button onClick={() => setSearchQuery("")} className="ml-1 hover:bg-muted rounded-full">
+                      ×
+                    </button>
+                  </Badge>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => {
+                    setSelectedDepartment("all");
+                    setSelectedType("all");
+                    setSearchQuery("");
+                  }}
+                  className="text-xs"
+                >
+                  Clear all
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Results Count */}
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <p className="text-muted-foreground">
-            Showing {filteredEvents.length} upcoming events
+            Showing {filteredEvents.length} of {events.length} events
           </p>
+          {filteredEvents.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {filteredEvents.length === events.length ? "All events" : "Filtered results"}
+            </p>
+          )}
         </div>
 
         {/* Events Grid */}
@@ -418,9 +516,16 @@ const Events = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Calendar className="w-12 h-12 text-white" />
                 </div>
-                <Badge className="absolute top-4 left-4 bg-white/20 text-white border-white/30">
-                  {event.department}
-                </Badge>
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <Badge className="bg-white/20 text-white border-white/30">
+                    {event.department}
+                  </Badge>
+                  {event.type && (
+                    <Badge className="bg-primary/80 text-white border-primary/30">
+                      {event.type}
+                    </Badge>
+                  )}
+                </div>
               </div>
               
               <CardContent className="p-6">
@@ -454,6 +559,28 @@ const Events = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Tags */}
+                {event.tags && event.tags.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-1 mb-2">
+                      <Tag className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Tags:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {event.tags.slice(0, 3).map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {event.tags.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{event.tags.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   {isRegistered(event.id) ? (
