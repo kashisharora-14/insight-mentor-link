@@ -147,40 +147,40 @@ const Home = () => {
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="relative overflow-hidden rounded-xl shadow-elegant group">
               <img 
+                src="/attached_assets/image_1759090315853.png"
+                alt="University Library Study Area"
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div className="absolute bottom-4 left-4 text-white">
+                <h3 className="text-xl font-semibold">Academic Excellence</h3>
+                <p className="text-white/80">Modern Study Spaces</p>
+              </div>
+            </div>
+            
+            <div className="relative overflow-hidden rounded-xl shadow-elegant group">
+              <img 
                 src="/attached_assets/image_1759089891441.png"
-                alt="Panjab University Main Building"
+                alt="Panjab University Campus"
                 className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-4 left-4 text-white">
                 <h3 className="text-xl font-semibold">Panjab University</h3>
-                <p className="text-white/80">Chandigarh</p>
+                <p className="text-white/80">Historic Campus</p>
               </div>
             </div>
             
             <div className="relative overflow-hidden rounded-xl shadow-elegant group">
               <img 
-                src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                alt="University Library"
+                src="https://images.unsplash.com/photo-1523050854058-8df90110c9d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                alt="Alumni Success Stories"
                 className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <div className="absolute bottom-4 left-4 text-white">
-                <h3 className="text-xl font-semibold">Central Libraries</h3>
-                <p className="text-white/80">Knowledge Network</p>
-              </div>
-            </div>
-            
-            <div className="relative overflow-hidden rounded-xl shadow-elegant group">
-              <img 
-                src="https://images.unsplash.com/photo-1567306301408-9b74779a11af?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                alt="Student Community"
-                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              <div className="absolute bottom-4 left-4 text-white">
-                <h3 className="text-xl font-semibold">Alumni Network</h3>
-                <p className="text-white/80">Statewide Community</p>
+                <h3 className="text-xl font-semibold">Alumni Success</h3>
+                <p className="text-white/80">Global Leaders</p>
               </div>
             </div>
           </div>

@@ -22,31 +22,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Dummy credentials for demo  
-const mockUsers: Record<string, User> = {
-  'student@demo.com': {
-    id: '550e8400-e29b-41d4-a716-446655440001',
-    name: 'Alex Johnson',
-    email: 'student@demo.com',
-    role: 'student' as UserRole,
-    department: 'Computer Science',
-    batchYear: 2025
+const mockUsers = {
+  'student@example.com': {
+    id: '1',
+    name: 'John Student',
+    email: 'student@example.com',
+    role: 'student' as const
   },
-  'alumni@demo.com': {
-    id: '550e8400-e29b-41d4-a716-446655440002', 
-    name: 'Dr. Sarah Chen',
-    email: 'alumni@demo.com',
-    role: 'alumni' as UserRole,
-    department: 'Computer Science',
-    batchYear: 2018,
-    profession: 'Software Engineer'
+  'alumni@example.com': {
+    id: '2',
+    name: 'Jane Alumni',
+    email: 'alumni@example.com',
+    role: 'alumni' as const
   },
-  'admin@demo.com': {
-    id: '550e8400-e29b-41d4-a716-446655440003',
+  'admin@example.com': {
+    id: '3',
     name: 'Admin User',
-    email: 'admin@demo.com',
-    role: 'admin' as UserRole,
-    department: 'Administration',
-    profession: 'System Administrator'
+    email: 'admin@example.com',
+    role: 'admin' as const
   }
 };
 
