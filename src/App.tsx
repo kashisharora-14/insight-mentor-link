@@ -60,7 +60,14 @@ const App = () => (
             />
             <Route path="/alumni-profile" element={<AlumniProfile />} />
             <Route path="/mentorship" element={<Mentorship />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route 
+              path="/admin-dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

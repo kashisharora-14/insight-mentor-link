@@ -66,14 +66,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     // Demo login - accept any password for demo users
     const demoUser = mockUsers[email as keyof typeof mockUsers];
-    
+
     if (demoUser && password === 'demo123') {
       setUser(demoUser);
       setIsAuthenticated(true);
       localStorage.setItem('authUser', JSON.stringify(demoUser));
       return true;
     }
-    
+
     return false;
   };
 
