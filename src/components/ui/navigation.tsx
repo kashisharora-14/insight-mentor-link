@@ -75,7 +75,7 @@ const Navigation = () => {
             <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-xl text-primary">AlumniConnect</span>
+            <span className="font-bold text-xl text-primary">Re-Connect</span>
           </Link>
 
           {/* Desktop Navigation */}

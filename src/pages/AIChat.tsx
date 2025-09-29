@@ -89,7 +89,7 @@ How can I assist you today?`;
   };
 
   const getPersonalizedSuggestions = () => {
-    if (!user) return ["Tell me about AlumniConnect", "How does this work?"];
+    if (!user) return ["Tell me about Re-Connect", "How does this work?"];
 
     switch (user.role) {
       case 'student':

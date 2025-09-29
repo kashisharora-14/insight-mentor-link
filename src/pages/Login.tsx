@@ -26,7 +26,7 @@ const Login = () => {
       if (success) {
         toast({
           title: "Login successful!",
-          description: "Welcome back to AlumniConnect",
+          description: "Welcome back to Re-Connect",
         });
         navigate('/dashboard');
       } else {
@@ -82,7 +82,7 @@ const Login = () => {
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <GraduationCap className="w-7 h-7 text-white" />
             </div>
-            <span className="font-bold text-2xl text-white">AlumniConnect</span>
+            <span className="font-bold text-2xl text-white">Re-Connect</span>
           </Link>
           <p className="text-white/80 mt-2">Sign in to your account</p>
         </div>
