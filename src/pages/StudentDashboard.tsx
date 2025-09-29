@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Navigation from "@/components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarC
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
+  const isMobile = useIsMobile();
 
   // Mock current student
   const currentStudent = students[0];
@@ -212,32 +214,51 @@ const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1">
-            <TabsTrigger value="requests" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">Mentorship</span>
-              <span className="sm:hidden">Mentor</span>
+          <TabsList className={isMobile 
+            ? "flex w-full overflow-x-auto overflow-y-hidden p-1 gap-1 scrollbar-hide" 
+            : "grid w-full grid-cols-6"
+          }>
+            <TabsTrigger value="requests" className={isMobile 
+              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
+              : "flex items-center gap-2"
+            }>
+              <MessageCircle className="w-4 h-4" />
+              {isMobile ? "Help" : "Mentorship"}
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs sm:text-sm">
-              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Analytics</span>
-              <span className="sm:hidden">Stats</span>
+            <TabsTrigger value="analytics" className={isMobile 
+              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
+              : "flex items-center gap-2"
+            }>
+              <BarChart3 className="w-4 h-4" />
+              {isMobile ? "Stats" : "Analytics"}
             </TabsTrigger>
-            <TabsTrigger value="connections" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">Connections</span>
-              <span className="sm:hidden">Network</span>
+            <TabsTrigger value="connections" className={isMobile 
+              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
+              : "flex items-center gap-2"
+            }>
+              <Users className="w-4 h-4" />
+              {isMobile ? "Net" : "Connections"}
             </TabsTrigger>
-            <TabsTrigger value="roadmap" className="flex items-center gap-1 text-xs sm:text-sm">
-              <Route className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Roadmap</span>
-              <span className="sm:hidden">Path</span>
+            <TabsTrigger value="roadmap" className={isMobile 
+              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
+              : "flex items-center gap-2"
+            }>
+              <Route className="w-4 h-4" />
+              {isMobile ? "Path" : "Roadmap"}
             </TabsTrigger>
-            <TabsTrigger value="recommendations" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">AI Recommendations</span>
-              <span className="sm:hidden">AI Tips</span>
+            <TabsTrigger value="recommendations" className={isMobile 
+              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
+              : "flex items-center gap-2"
+            }>
+              <Brain className="w-4 h-4" />
+              {isMobile ? "AI" : "AI Recommendations"}
             </TabsTrigger>
-            <TabsTrigger value="achievements" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">Achievements</span>
-              <span className="sm:hidden">Awards</span>
+            <TabsTrigger value="achievements" className={isMobile 
+              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
+              : "flex items-center gap-2"
+            }>
+              <Award className="w-4 h-4" />
+              {isMobile ? "Awards" : "Achievements"}
             </TabsTrigger>
           </TabsList>
 
