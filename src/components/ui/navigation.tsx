@@ -34,7 +34,7 @@ const Navigation = () => {
     { name: "Find Mentors", path: "/mentorship", icon: MessageCircle, roles: ['student'] },
     { name: "Mentorship Requests", path: "/alumni-dashboard", icon: MessageCircle, roles: ['alumni'] },
     { name: "Events", path: "/events", icon: Calendar, roles: ['student', 'alumni', 'admin'] },
-    { name: "Jobs", path: "/jobs", icon: Briefcase, roles: ['student', 'alumni'] },
+    { name: "Jobs", path: "/job-board", icon: Briefcase, roles: ['student', 'alumni'] },
     { name: "Gift Shop", path: "/gift-shop", icon: Shopping, roles: ['student', 'alumni', 'admin'] },
     { name: "Donations", path: "/donations", icon: Heart, roles: ['student', 'alumni', 'admin'] },
     { name: "AI Mentor", path: "/ai-chat", icon: MessageCircle, roles: ['student', 'alumni'] },
@@ -155,52 +155,74 @@ const Navigation = () => {
         {isOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-background border-t">
-              <Link
-                to="/dashboard"
-                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Dashboard
-              </Link>
-              {user?.role === 'student' && (
+              {/* Navigation Items */}
+              {navItems.map((item) => (
                 <Link
-                  to="/mentorship"
-                  className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                  key={item.name}
+                  to={item.path}
+                  className={`flex items-center space-x-3 px-3 py-3 text-base font-medium rounded-md transition-colors ${
+                    isActive(item.path)
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
-                  Find Mentors
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.name}</span>
                 </Link>
-              )}
-              {user?.role === 'alumni' && (
-                <Link
-                  to="/alumni-dashboard"
-                  className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Mentorship Requests
-                </Link>
-              )}
-              <Link
-                to="/events"
-                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Events
-              </Link>
-              <Link
-                to="/job-board"
-                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Job Board
-              </Link>
-              <Link
-                to="/ai-chat"
-                className="block px-3 py-2 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                AI Assistant
-              </Link>
+              ))}
+              
+              {/* Mobile Auth Section */}
+              <div className="border-t border-border pt-3 mt-3">
+                {isAuthenticated && user ? (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center space-x-3 px-3 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="w-5 h-5" />
+                      <div className="flex items-center space-x-2">
+                        <span>{user.name}</span>
+                        <Badge variant="secondary" className={`text-xs ${
+                          user.role === 'alumni' ? 'bg-green-100 text-green-800' :
+                          user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        </Badge>
+                      </div>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        navigate('/');
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center space-x-3 px-3 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors w-full text-left"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="flex items-center space-x-3 px-3 py-3 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="w-5 h-5" />
+                      <div className="flex items-center space-x-2">
+                        <span>Login</span>
+                        <Badge variant="secondary" className="bg-accent/20 text-accent-foreground text-xs">
+                          Demo Mode
+                        </Badge>
+                      </div>
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}

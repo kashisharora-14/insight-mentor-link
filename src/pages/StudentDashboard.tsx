@@ -212,19 +212,33 @@ const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="requests">Mentorship</TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              Analytics
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1">
+            <TabsTrigger value="requests" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Mentorship</span>
+              <span className="sm:hidden">Mentor</span>
             </TabsTrigger>
-            <TabsTrigger value="connections">Connections</TabsTrigger>
-            <TabsTrigger value="roadmap" className="flex items-center gap-2">
-              <Route className="w-4 h-4" />
-              Roadmap
+            <TabsTrigger value="analytics" className="flex items-center gap-1 text-xs sm:text-sm">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Analytics</span>
+              <span className="sm:hidden">Stats</span>
             </TabsTrigger>
-            <TabsTrigger value="recommendations">AI Recommendations</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            <TabsTrigger value="connections" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Connections</span>
+              <span className="sm:hidden">Network</span>
+            </TabsTrigger>
+            <TabsTrigger value="roadmap" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Route className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Roadmap</span>
+              <span className="sm:hidden">Path</span>
+            </TabsTrigger>
+            <TabsTrigger value="recommendations" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">AI Recommendations</span>
+              <span className="sm:hidden">AI Tips</span>
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Achievements</span>
+              <span className="sm:hidden">Awards</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Analytics Tab */}
