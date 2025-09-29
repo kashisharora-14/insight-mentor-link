@@ -305,30 +305,32 @@ const AlumniDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 border-b mb-6">
+        <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 border-b mb-6">
           <button
             onClick={() => setActiveTab("requests")}
-            className={`px-4 py-2 font-medium text-sm rounded-t-lg ${
+            className={`px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm rounded-t-lg w-full sm:w-auto ${
               activeTab === "requests"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Pending Requests ({pendingRequests.length})
+            <span className="hidden sm:inline">Pending Requests</span>
+            <span className="sm:hidden">Pending</span> ({pendingRequests.length})
           </button>
           <button
             onClick={() => setActiveTab("active")}
-            className={`px-4 py-2 font-medium text-sm rounded-t-lg ${
+            className={`px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm rounded-t-lg w-full sm:w-auto ${
               activeTab === "active"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Active Mentorships ({acceptedRequests.length})
+            <span className="hidden sm:inline">Active Mentorships</span>
+            <span className="sm:hidden">Active</span> ({acceptedRequests.length})
           </button>
           <button
             onClick={() => setActiveTab("completed")}
-            className={`px-4 py-2 font-medium text-sm rounded-t-lg ${
+            className={`px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm rounded-t-lg w-full sm:w-auto ${
               activeTab === "completed"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
