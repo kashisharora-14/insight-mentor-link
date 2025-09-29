@@ -108,7 +108,7 @@ const Home = () => {
               <Link to="/login">
                 <Button 
                   size="lg" 
-                  className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-glow"
+                  className="bg-orange-500 text-white hover:bg-orange-600 shadow-glow"
                   onClick={triggerConfetti}
                 >
                   <GraduationCap className="w-5 h-5 mr-2" />
