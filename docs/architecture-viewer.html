@@ -1,0 +1,373 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Re-Connect System Architecture Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #4facfe;
+        }
+        h2 {
+            color: #667eea;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .diagram {
+            margin: 30px 0;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .mermaid {
+            text-align: center;
+        }
+        .description {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4facfe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ Re-Connect System Architecture & Workflow Diagrams</h1>
+        
+        <h2>High-Level System Architecture</h2>
+        <div class="description">
+            This diagram shows the overall system architecture including frontend, backend, authentication, and deployment layers.
+        </div>
+        <div class="diagram">
+            <div class="mermaid">
+graph TB
+    subgraph "Frontend Layer"
+        A[React 18 + TypeScript]
+        B[Tailwind CSS + shadcn/ui]
+        C[React Router]
+        D[TanStack Query]
+        E[Vite Build Tool]
+    end
+    
+    subgraph "Authentication & Security"
+        F[Supabase Auth]
+        G[Row Level Security]
+        H[JWT Tokens]
+    end
+    
+    subgraph "Backend Services"
+        I[Supabase PostgreSQL]
+        J[Real-time Subscriptions]
+        K[RESTful APIs]
+        L[Edge Functions]
+    end
+    
+    subgraph "Data Layer"
+        M[(Profiles Table)]
+        N[(Events Table)]
+        O[(Mentorship Table)]
+        P[(Donations Table)]
+        Q[(Jobs Table)]
+        R[(Roadmaps Table)]
+    end
+    
+    subgraph "External Services"
+        S[AI Chat Bot]
+        T[Email Notifications]
+        U[File Storage]
+        V[Analytics Engine]
+    end
+    
+    subgraph "Deployment"
+        W[Replit Hosting]
+        X[CDN Distribution]
+        Y[Domain Management]
+    end
+    
+    A --> F
+    A --> I
+    D --> K
+    F --> G
+    G --> H
+    I --> M
+    I --> N
+    I --> O
+    I --> P
+    I --> Q
+    I --> R
+    K --> S
+    K --> T
+    I --> U
+    I --> V
+    A --> W
+    W --> X
+    W --> Y
+    
+    style A fill:#667eea
+    style I fill:#764ba2
+    style F fill:#f093fb
+    style W fill:#4facfe
+            </div>
+        </div>
+
+        <h2>Student Journey Workflow</h2>
+        <div class="description">
+            This flowchart shows the complete student journey from registration to career success.
+        </div>
+        <div class="diagram">
+            <div class="mermaid">
+flowchart TD
+    A[Student Registration] --> B{Profile Verification}
+    B -->|Approved| C[Complete Profile]
+    B -->|Pending| D[Wait for Verification]
+    C --> E[Browse Alumni Directory]
+    E --> F[Search Mentors by Skills]
+    F --> G[Send Mentorship Request]
+    G --> H{Mentor Response}
+    H -->|Accepted| I[Start Mentorship Sessions]
+    H -->|Rejected| J[Find Alternative Mentor]
+    I --> K[Track Career Progress]
+    K --> L[Generate AI Roadmap]
+    L --> M[Participate in Events]
+    M --> N[Apply for Jobs]
+    N --> O[Career Success]
+    
+    style A fill:#667eea
+    style O fill:#4facfe
+    style I fill:#f093fb
+            </div>
+        </div>
+
+        <h2>Alumni Engagement Workflow</h2>
+        <div class="description">
+            This diagram illustrates how alumni engage with the platform through mentoring, job posting, events, and donations.
+        </div>
+        <div class="diagram">
+            <div class="mermaid">
+flowchart TD
+    A[Alumni Registration] --> B[Profile Verification]
+    B --> C[Complete Professional Profile]
+    C --> D{Choose Engagement Type}
+    D -->|Mentoring| E[Enable Mentor Status]
+    D -->|Job Posting| F[Post Job Opportunities]
+    D -->|Events| G[Create/Attend Events]
+    D -->|Donations| H[Make Contributions]
+    E --> I[Receive Mentorship Requests]
+    I --> J[Review Student Profiles]
+    J --> K{Accept Request?}
+    K -->|Yes| L[Schedule Sessions]
+    K -->|No| M[Decline with Feedback]
+    L --> N[Conduct Mentoring]
+    N --> O[Track Impact Metrics]
+    F --> P[Alumni Job Board]
+    G --> Q[Event Management]
+    H --> R[Donation Tracking]
+    
+    style A fill:#764ba2
+    style N fill:#f093fb
+    style O fill:#4facfe
+            </div>
+        </div>
+
+        <h2>Database Schema Architecture</h2>
+        <div class="description">
+            Entity-Relationship diagram showing core tables and their relationships in the system.
+        </div>
+        <div class="diagram">
+            <div class="mermaid">
+erDiagram
+    PROFILES ||--o{ MENTORSHIP_REQUESTS : creates
+    PROFILES ||--o{ MENTORSHIP_REQUESTS : receives
+    PROFILES ||--o{ EVENTS : organizes
+    PROFILES ||--o{ JOBS : posts
+    PROFILES ||--o{ DONATIONS : makes
+    PROFILES ||--o{ CAREER_ROADMAPS : owns
+    
+    MENTORSHIP_REQUESTS ||--o{ MENTORSHIP_SESSIONS : has
+    MENTORSHIP_REQUESTS ||--o{ MESSAGES : contains
+    CAREER_ROADMAPS ||--o{ ROADMAP_ITEMS : includes
+    CAREER_ROADMAPS ||--o{ YEARLY_MILESTONES : tracks
+    EVENTS ||--o{ EVENT_REGISTRATIONS : receives
+    
+    PROFILES {
+        uuid id PK
+        uuid user_id FK
+        string name
+        string email
+        enum role
+        int graduation_year
+        string department
+        string current_job
+        string company
+        array skills
+        bool is_verified
+        bool is_mentor_available
+    }
+    
+    MENTORSHIP_REQUESTS {
+        uuid id PK
+        uuid student_id FK
+        uuid mentor_id FK
+        string field_of_interest
+        text description
+        enum status
+        timestamp created_at
+    }
+    
+    EVENTS {
+        uuid id PK
+        string title
+        text description
+        timestamp date_time
+        string location
+        string department
+        bool is_active
+    }
+    
+    CAREER_ROADMAPS {
+        uuid id PK
+        uuid student_id FK
+        string title
+        string target_position
+        int timeframe
+        json current_skills
+        json progress
+    }
+            </div>
+        </div>
+
+        <h2>Authentication & Security Flow</h2>
+        <div class="description">
+            This diagram shows the security architecture and authentication flow with role-based access control.
+        </div>
+        <div class="diagram">
+            <div class="mermaid">
+flowchart TD
+    A[User Access] --> B{Authenticated?}
+    B -->|No| C[Login Page]
+    B -->|Yes| D[Role Check]
+    C --> E[Supabase Auth]
+    E --> F[JWT Generation]
+    F --> G[Session Storage]
+    G --> D
+    D --> H{Role Type}
+    H -->|Student| I[Student Dashboard]
+    H -->|Alumni| J[Alumni Dashboard]
+    H -->|Admin| K[Admin Dashboard]
+    
+    I --> L[RLS Student Policies]
+    J --> M[RLS Alumni Policies]
+    K --> N[RLS Admin Policies]
+    
+    L --> O[Student Data Access]
+    M --> P[Alumni Data Access]
+    N --> Q[Full System Access]
+    
+    style E fill:#667eea
+    style L fill:#4facfe
+    style M fill:#f093fb
+    style N fill:#764ba2
+            </div>
+        </div>
+
+        <h2>AI Integration & Analytics Flow</h2>
+        <div class="description">
+            This flowchart demonstrates how AI processes user queries and generates insights for career guidance and mentor matching.
+        </div>
+        <div class="diagram">
+            <div class="mermaid">
+flowchart LR
+    A[Student Input] --> B[AI Chat Interface]
+    B --> C[Process Query]
+    C --> D{Query Type}
+    D -->|Career Advice| E[Generate Roadmap]
+    D -->|Mentor Match| F[Algorithm Processing]
+    D -->|General Help| G[Knowledge Base]
+    E --> H[Career Path Analysis]
+    F --> I[Skill Matching]
+    G --> J[FAQ Response]
+    H --> K[Personalized Roadmap]
+    I --> L[Mentor Recommendations]
+    J --> M[Instant Response]
+    
+    style B fill:#667eea
+    style K fill:#4facfe
+    style L fill:#f093fb
+            </div>
+        </div>
+
+        <h2>Real-time Data Flow</h2>
+        <div class="description">
+            Sequence diagram showing real-time communication between students and mentors through the platform.
+        </div>
+        <div class="diagram">
+            <div class="mermaid">
+sequenceDiagram
+    participant S as Student
+    participant F as Frontend
+    participant A as Auth
+    participant D as Database
+    participant R as Real-time
+    participant M as Mentor
+    
+    S->>F: Login Request
+    F->>A: Authenticate
+    A->>D: Verify Credentials
+    D->>A: Return User Data
+    A->>F: JWT Token
+    F->>S: Dashboard Access
+    
+    S->>F: Send Mentorship Request
+    F->>D: Insert Request
+    D->>R: Trigger Notification
+    R->>M: Real-time Alert
+    M->>F: View Request
+    M->>D: Update Status
+    D->>R: Status Change
+    R->>S: Notification Update
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#333',
+                primaryBorderColor: '#4facfe',
+                lineColor: '#764ba2',
+                secondaryColor: '#f093fb',
+                tertiaryColor: '#4facfe'
+            }
+        });
+    </script>
+</body>
+</html>
