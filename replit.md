@@ -70,6 +70,9 @@ For testing purposes, the application includes mock authentication:
 - Application tested and working with mock authentication system
 - Deployment configured for autoscale with npm build and preview commands
 - All workflows functioning correctly
+- **Fixed Vercel deployment issues**:
+  - Moved static images from root `attached_assets/` to `public/attached_assets/` for proper serving
+  - Created `vercel.json` with client-side routing configuration to fix refresh errors
 
 ## User Preferences
 - No specific preferences documented yet
