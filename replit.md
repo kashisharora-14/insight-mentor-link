@@ -73,6 +73,10 @@ For testing purposes, the application includes mock authentication:
 - **Fixed Vercel deployment issues**:
   - Moved static images from root `attached_assets/` to `public/attached_assets/` for proper serving
   - Created `vercel.json` with client-side routing configuration to fix refresh errors
+- **Removed all Lovable branding for production**:
+  - Updated HTML meta tags (title, description, author, OpenGraph, Twitter)
+  - Removed lovable-tagger plugin from Vite configuration
+  - Uninstalled lovable-tagger package dependency
 
 ## User Preferences
 - No specific preferences documented yet
