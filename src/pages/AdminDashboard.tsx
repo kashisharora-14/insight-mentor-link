@@ -189,31 +189,23 @@ const AdminDashboard = () => {
   };
 
   const fetchStats = async () => {
-    // Fetch all stats in parallel
-    const [profilesRes, donationsRes, eventsRes, productsRes, mentorshipsRes] = await Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact' }),
-      supabase.from('donations').select('amount', { count: 'exact' }),
-      supabase.from('events').select('*', { count: 'exact' }),
-      supabase.from('products').select('*', { count: 'exact' }),
-      supabase.from('mentorship_requests').select('*', { count: 'exact' })
-    ]);
-
-    const verifiedCount = profilesRes.data?.filter(p => p.is_verified).length || 0;
-    const totalDonationAmount = donationsRes.data?.reduce((sum, d) => sum + d.amount, 0) || 0;
-    const activeMentorships = mentorshipsRes.data?.filter(m => m.status === 'approved').length || 0;
-    const pendingRequests = mentorshipsRes.data?.filter(m => m.status === 'pending').length || 0;
-
-    // Calculate AI-driven metrics
-    const totalUsers = profilesRes.count || 0;
-    const engagementRate = totalUsers > 0 ? Math.round(((activeMentorships + (eventsRes.count || 0)) / totalUsers) * 100) : 0;
-    const monthlyGrowth = 12.5; // Mock calculation - in real app, compare with previous month
+    // Mock stats based on dummy data
+    const totalProfiles = 12;
+    const verifiedProfiles = 8;
+    const totalDonationAmount = 216000;
+    const totalEvents = 10;
+    const totalProducts = 15;
+    const activeMentorships = 4;
+    const pendingRequests = 4;
+    const engagementRate = 78;
+    const monthlyGrowth = 12.5;
 
     setStats({
-      totalProfiles: profilesRes.count || 0,
-      verifiedProfiles: verifiedCount,
+      totalProfiles,
+      verifiedProfiles,
       totalDonations: totalDonationAmount,
-      totalEvents: eventsRes.count || 0,
-      totalProducts: productsRes.count || 0,
+      totalEvents,
+      totalProducts,
       activeMentorships,
       pendingRequests,
       engagementRate,
@@ -223,74 +215,533 @@ const AdminDashboard = () => {
   };
 
   const fetchProfiles = async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      console.error('Error fetching profiles:', error);
-    } else {
-      setProfiles(data || []);
-    }
+    // Mock comprehensive profile data
+    const mockProfiles: Profile[] = [
+      {
+        id: '1',
+        user_id: 'user-1',
+        name: 'Dr. Sarah Chen',
+        email: 'sarah.chen@gmail.com',
+        role: 'alumni',
+        graduation_year: 2015,
+        department: 'UICET',
+        current_job: 'Senior Software Engineer',
+        company: 'Google',
+        is_verified: true,
+        is_mentor_available: true,
+        created_at: '2024-01-10T10:30:00Z'
+      },
+      {
+        id: '2',
+        user_id: 'user-2',
+        name: 'Prof. Raj Sharma',
+        email: 'raj.sharma@business.com',
+        role: 'alumni',
+        graduation_year: 2012,
+        department: 'UBS',
+        current_job: 'Investment Banking Director',
+        company: 'Goldman Sachs',
+        is_verified: true,
+        is_mentor_available: true,
+        created_at: '2024-01-08T14:20:00Z'
+      },
+      {
+        id: '3',
+        user_id: 'user-3',
+        name: 'Dr. Priya Patel',
+        email: 'priya.patel@lawfirm.com',
+        role: 'alumni',
+        graduation_year: 2014,
+        department: 'Law',
+        current_job: 'Corporate Lawyer',
+        company: 'Baker McKenzie',
+        is_verified: true,
+        is_mentor_available: true,
+        created_at: '2024-01-05T09:15:00Z'
+      },
+      {
+        id: '4',
+        user_id: 'user-4',
+        name: 'Arjun Kumar',
+        email: 'arjun.kumar@microsoft.com',
+        role: 'alumni',
+        graduation_year: 2016,
+        department: 'UIET',
+        current_job: 'Product Manager',
+        company: 'Microsoft',
+        is_verified: false,
+        is_mentor_available: true,
+        created_at: '2024-01-15T16:45:00Z'
+      },
+      {
+        id: '5',
+        user_id: 'user-5',
+        name: 'Maya Singh',
+        email: 'maya.singh@ogilvy.com',
+        role: 'alumni',
+        graduation_year: 2013,
+        department: 'Arts',
+        current_job: 'Creative Director',
+        company: 'Ogilvy',
+        is_verified: true,
+        is_mentor_available: false,
+        created_at: '2024-01-12T11:30:00Z'
+      },
+      {
+        id: '6',
+        user_id: 'user-6',
+        name: 'Vikram Agarwal',
+        email: 'vikram.agarwal@netflix.com',
+        role: 'alumni',
+        graduation_year: 2017,
+        department: 'UICET',
+        current_job: 'Data Scientist',
+        company: 'Netflix',
+        is_verified: false,
+        is_mentor_available: true,
+        created_at: '2024-01-18T13:25:00Z'
+      },
+      {
+        id: '7',
+        user_id: 'user-7',
+        name: 'Aarav Mehta',
+        email: 'aarav.mehta@student.edu',
+        role: 'student',
+        graduation_year: 2025,
+        department: 'UICET',
+        current_job: undefined,
+        company: undefined,
+        is_verified: true,
+        is_mentor_available: false,
+        created_at: '2024-01-20T08:15:00Z'
+      },
+      {
+        id: '8',
+        user_id: 'user-8',
+        name: 'Anisha Verma',
+        email: 'anisha.verma@student.edu',
+        role: 'student',
+        graduation_year: 2026,
+        department: 'UBS',
+        current_job: undefined,
+        company: undefined,
+        is_verified: true,
+        is_mentor_available: false,
+        created_at: '2024-01-22T12:40:00Z'
+      },
+      {
+        id: '9',
+        user_id: 'user-9',
+        name: 'Rahul Kumar',
+        email: 'rahul.kumar@student.edu',
+        role: 'student',
+        graduation_year: 2026,
+        department: 'UICET',
+        current_job: undefined,
+        company: undefined,
+        is_verified: false,
+        is_mentor_available: false,
+        created_at: '2024-01-25T15:20:00Z'
+      },
+      {
+        id: '10',
+        user_id: 'user-10',
+        name: 'Neha Gupta',
+        email: 'neha.gupta@mckinsey.com',
+        role: 'alumni',
+        graduation_year: 2019,
+        department: 'UBS',
+        current_job: 'Management Consultant',
+        company: 'McKinsey & Company',
+        is_verified: false,
+        is_mentor_available: true,
+        created_at: '2024-01-28T10:10:00Z'
+      },
+      {
+        id: '11',
+        user_id: 'user-11',
+        name: 'Kiran Verma',
+        email: 'kiran.verma@highcourt.gov.in',
+        role: 'alumni',
+        graduation_year: 2015,
+        department: 'Law',
+        current_job: 'Senior Advocate',
+        company: 'Punjab & Haryana High Court',
+        is_verified: true,
+        is_mentor_available: true,
+        created_at: '2024-01-30T14:35:00Z'
+      },
+      {
+        id: '12',
+        user_id: 'user-12',
+        name: 'Preet Kaur',
+        email: 'preet.kaur@student.edu',
+        role: 'student',
+        graduation_year: 2025,
+        department: 'Arts',
+        current_job: undefined,
+        company: undefined,
+        is_verified: true,
+        is_mentor_available: false,
+        created_at: '2024-02-01T09:20:00Z'
+      }
+    ];
+    
+    setProfiles(mockProfiles);
   };
 
   const fetchDonations = async () => {
-    const { data, error } = await supabase
-      .from('donations')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      console.error('Error fetching donations:', error);
-    } else {
-      setDonations(data || []);
-    }
+    // Mock comprehensive donations data
+    const mockDonations: Donation[] = [
+      {
+        id: '1',
+        donor_name: 'Dr. Sarah Chen',
+        donor_email: 'sarah.chen@gmail.com',
+        amount: 25000,
+        message: 'Happy to support the next generation of computer scientists. This university shaped my career at Google.',
+        is_anonymous: false,
+        created_at: '2024-02-15T10:30:00Z'
+      },
+      {
+        id: '2',
+        donor_name: 'Anonymous',
+        donor_email: 'donor@anonymous.com',
+        amount: 50000,
+        message: 'For the scholarship fund. Education should be accessible to all deserving students.',
+        is_anonymous: true,
+        created_at: '2024-02-10T14:20:00Z'
+      },
+      {
+        id: '3',
+        donor_name: 'Prof. Raj Sharma',
+        donor_email: 'raj.sharma@business.com',
+        amount: 15000,
+        message: 'Supporting the business school library expansion project.',
+        is_anonymous: false,
+        created_at: '2024-02-08T11:45:00Z'
+      },
+      {
+        id: '4',
+        donor_name: 'Maya Singh',
+        donor_email: 'maya.singh@ogilvy.com',
+        amount: 8000,
+        message: 'For the arts department creative studio renovation.',
+        is_anonymous: false,
+        created_at: '2024-02-05T16:30:00Z'
+      },
+      {
+        id: '5',
+        donor_name: 'Arjun Kumar',
+        donor_email: 'arjun.kumar@microsoft.com',
+        amount: 12000,
+        message: 'Contribution to the tech innovation lab. Keep building amazing things!',
+        is_anonymous: false,
+        created_at: '2024-02-01T09:15:00Z'
+      },
+      {
+        id: '6',
+        donor_name: 'Anonymous',
+        donor_email: 'donor2@anonymous.com',
+        amount: 30000,
+        message: 'Emergency student support fund.',
+        is_anonymous: true,
+        created_at: '2024-01-28T13:20:00Z'
+      },
+      {
+        id: '7',
+        donor_name: 'Dr. Priya Patel',
+        donor_email: 'priya.patel@lawfirm.com',
+        amount: 20000,
+        message: 'Moot court competition sponsorship. Legal education excellence!',
+        is_anonymous: false,
+        created_at: '2024-01-25T12:10:00Z'
+      },
+      {
+        id: '8',
+        donor_name: 'Vikram Agarwal',
+        donor_email: 'vikram.agarwal@netflix.com',
+        amount: 18000,
+        message: 'Data science workshop series funding.',
+        is_anonymous: false,
+        created_at: '2024-01-20T15:45:00Z'
+      },
+      {
+        id: '9',
+        donor_name: 'Neha Gupta',
+        donor_email: 'neha.gupta@mckinsey.com',
+        amount: 22000,
+        message: 'Entrepreneurship incubator support. Build the future!',
+        is_anonymous: false,
+        created_at: '2024-01-18T08:30:00Z'
+      },
+      {
+        id: '10',
+        donor_name: 'Kiran Verma',
+        donor_email: 'kiran.verma@highcourt.gov.in',
+        amount: 16000,
+        message: 'Legal aid clinic establishment fund.',
+        is_anonymous: false,
+        created_at: '2024-01-15T10:25:00Z'
+      }
+    ];
+    
+    setDonations(mockDonations);
   };
 
   const fetchEvents = async () => {
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .order('date_time', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      console.error('Error fetching events:', error);
-    } else {
-      setEvents(data || []);
-    }
+    // Mock comprehensive events data
+    const mockEvents: Event[] = [
+      {
+        id: '1',
+        title: 'Annual Tech Conference 2024',
+        date_time: '2024-04-15T09:00:00Z',
+        location: 'University Auditorium',
+        department: 'UICET',
+        is_active: true,
+        created_at: '2024-02-01T10:00:00Z'
+      },
+      {
+        id: '2',
+        title: 'Finance Career Fair',
+        date_time: '2024-04-28T10:00:00Z',
+        location: 'Business School Campus',
+        department: 'UBS',
+        is_active: true,
+        created_at: '2024-02-05T14:30:00Z'
+      },
+      {
+        id: '3',
+        title: 'Legal Workshop: Corporate Law Trends',
+        date_time: '2024-04-10T14:00:00Z',
+        location: 'Law Faculty Building',
+        department: 'Law',
+        is_active: true,
+        created_at: '2024-02-08T11:15:00Z'
+      },
+      {
+        id: '4',
+        title: 'Engineering Innovation Summit',
+        date_time: '2024-05-05T11:00:00Z',
+        location: 'Engineering Complex',
+        department: 'UIET',
+        is_active: true,
+        created_at: '2024-02-10T16:45:00Z'
+      },
+      {
+        id: '5',
+        title: 'Arts & Culture Festival',
+        date_time: '2024-04-25T18:00:00Z',
+        location: 'Cultural Center',
+        department: 'Arts',
+        is_active: true,
+        created_at: '2024-02-12T13:20:00Z'
+      },
+      {
+        id: '6',
+        title: 'AI & Machine Learning Workshop',
+        date_time: '2024-05-12T09:00:00Z',
+        location: 'Computer Lab Block A',
+        department: 'UICET',
+        is_active: false,
+        created_at: '2024-02-15T10:30:00Z'
+      },
+      {
+        id: '7',
+        title: 'Startup Pitch Competition',
+        date_time: '2024-04-30T14:00:00Z',
+        location: 'Innovation Hub',
+        department: 'UBS',
+        is_active: true,
+        created_at: '2024-02-18T09:45:00Z'
+      },
+      {
+        id: '8',
+        title: 'Cybersecurity Bootcamp',
+        date_time: '2024-05-18T09:00:00Z',
+        location: 'Security Lab',
+        department: 'UIET',
+        is_active: true,
+        created_at: '2024-02-20T15:15:00Z'
+      },
+      {
+        id: '9',
+        title: 'International Law Symposium',
+        date_time: '2024-05-08T10:00:00Z',
+        location: 'International Relations Center',
+        department: 'Law',
+        is_active: true,
+        created_at: '2024-02-22T12:30:00Z'
+      },
+      {
+        id: '10',
+        title: 'Alumni Networking Night',
+        date_time: '2024-04-18T19:00:00Z',
+        location: 'University Club',
+        department: undefined,
+        is_active: true,
+        created_at: '2024-02-25T14:20:00Z'
+      }
+    ];
+    
+    setEvents(mockEvents);
   };
 
   const fetchMentorshipRequests = async () => {
-    const { data, error } = await supabase
-      .from('mentorship_requests')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      console.error('Error fetching mentorship requests:', error);
-    } else {
-      // Fetch profile details separately to avoid complex joins
-      const requestsWithProfiles = await Promise.all(
-        (data || []).map(async (request) => {
-          const [studentRes, mentorRes] = await Promise.all([
-            supabase.from('profiles').select('name, email, department').eq('user_id', request.student_id).single(),
-            request.mentor_id ? supabase.from('profiles').select('name, email, current_job, company').eq('user_id', request.mentor_id).single() : Promise.resolve({ data: null })
-          ]);
-
-          return {
-            ...request,
-            student_profile: studentRes.data,
-            mentor_profile: mentorRes.data
-          };
-        })
-      );
-      setMentorshipRequests(requestsWithProfiles);
-    }
+    // Mock comprehensive mentorship requests data
+    const mockMentorshipRequests: MentorshipRequest[] = [
+      {
+        id: '1',
+        student_id: 'user-7',
+        mentor_id: 'user-1',
+        field_of_interest: 'Machine Learning and AI',
+        description: 'I am passionate about AI/ML and want to understand how to transition from academic projects to industry-level ML systems.',
+        status: 'approved',
+        created_at: '2024-02-15T10:30:00Z',
+        student_profile: {
+          name: 'Aarav Mehta',
+          email: 'aarav.mehta@student.edu',
+          department: 'UICET'
+        },
+        mentor_profile: {
+          name: 'Dr. Sarah Chen',
+          email: 'sarah.chen@gmail.com',
+          current_job: 'Senior Software Engineer',
+          company: 'Google'
+        }
+      },
+      {
+        id: '2',
+        student_id: 'user-8',
+        mentor_id: 'user-2',
+        field_of_interest: 'Investment Banking',
+        description: 'Seeking guidance on breaking into investment banking and understanding the skills needed for success in this field.',
+        status: 'pending',
+        created_at: '2024-02-18T14:20:00Z',
+        student_profile: {
+          name: 'Anisha Verma',
+          email: 'anisha.verma@student.edu',
+          department: 'UBS'
+        },
+        mentor_profile: {
+          name: 'Prof. Raj Sharma',
+          email: 'raj.sharma@business.com',
+          current_job: 'Investment Banking Director',
+          company: 'Goldman Sachs'
+        }
+      },
+      {
+        id: '3',
+        student_id: 'user-9',
+        mentor_id: 'user-6',
+        field_of_interest: 'Data Science',
+        description: 'I want to build a career in data science and learn about the practical skills and tools used in the industry.',
+        status: 'pending',
+        created_at: '2024-02-20T16:45:00Z',
+        student_profile: {
+          name: 'Rahul Kumar',
+          email: 'rahul.kumar@student.edu',
+          department: 'UICET'
+        },
+        mentor_profile: {
+          name: 'Vikram Agarwal',
+          email: 'vikram.agarwal@netflix.com',
+          current_job: 'Data Scientist',
+          company: 'Netflix'
+        }
+      },
+      {
+        id: '4',
+        student_id: 'user-12',
+        mentor_id: 'user-5',
+        field_of_interest: 'Creative Direction',
+        description: 'Interested in understanding the creative industry and building a portfolio for brand strategy and digital marketing.',
+        status: 'approved',
+        created_at: '2024-02-22T12:15:00Z',
+        student_profile: {
+          name: 'Preet Kaur',
+          email: 'preet.kaur@student.edu',
+          department: 'Arts'
+        },
+        mentor_profile: {
+          name: 'Maya Singh',
+          email: 'maya.singh@ogilvy.com',
+          current_job: 'Creative Director',
+          company: 'Ogilvy'
+        }
+      },
+      {
+        id: '5',
+        student_id: 'user-7',
+        mentor_id: 'user-4',
+        field_of_interest: 'Product Management',
+        description: 'Want to learn about transitioning from engineering to product management and understanding product strategy.',
+        status: 'completed',
+        created_at: '2024-02-25T09:30:00Z',
+        student_profile: {
+          name: 'Aarav Mehta',
+          email: 'aarav.mehta@student.edu',
+          department: 'UICET'
+        },
+        mentor_profile: {
+          name: 'Arjun Kumar',
+          email: 'arjun.kumar@microsoft.com',
+          current_job: 'Product Manager',
+          company: 'Microsoft'
+        }
+      },
+      {
+        id: '6',
+        student_id: 'user-8',
+        mentor_id: 'user-10',
+        field_of_interest: 'Management Consulting',
+        description: 'Interested in learning about strategy consulting and how to develop analytical and problem-solving skills.',
+        status: 'approved',
+        created_at: '2024-02-28T11:45:00Z',
+        student_profile: {
+          name: 'Anisha Verma',
+          email: 'anisha.verma@student.edu',
+          department: 'UBS'
+        },
+        mentor_profile: {
+          name: 'Neha Gupta',
+          email: 'neha.gupta@mckinsey.com',
+          current_job: 'Management Consultant',
+          company: 'McKinsey & Company'
+        }
+      },
+      {
+        id: '7',
+        student_id: 'user-9',
+        mentor_id: null,
+        field_of_interest: 'Software Engineering',
+        description: 'Looking for guidance on full-stack development and career growth in the tech industry.',
+        status: 'pending',
+        created_at: '2024-03-01T15:20:00Z',
+        student_profile: {
+          name: 'Rahul Kumar',
+          email: 'rahul.kumar@student.edu',
+          department: 'UICET'
+        },
+        mentor_profile: null
+      },
+      {
+        id: '8',
+        student_id: 'user-12',
+        mentor_id: null,
+        field_of_interest: 'Digital Marketing',
+        description: 'Want to understand digital marketing trends and build expertise in social media and content strategy.',
+        status: 'pending',
+        created_at: '2024-03-03T13:10:00Z',
+        student_profile: {
+          name: 'Preet Kaur',
+          email: 'preet.kaur@student.edu',
+          department: 'Arts'
+        },
+        mentor_profile: null
+      }
+    ];
+    
+    setMentorshipRequests(mockMentorshipRequests);
   };
 
   const toggleProfileVerification = async (profileId: string, isVerified: boolean) => {
