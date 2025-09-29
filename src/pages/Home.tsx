@@ -147,7 +147,7 @@ const Home = () => {
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="relative overflow-hidden rounded-xl shadow-elegant group">
               <img 
-                src="/attached_assets/image_1759090315853.png"
+                src="/attached_assets/image_1759155346714.png"
                 alt="University Library Study Area"
                 className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
               />
@@ -173,7 +173,7 @@ const Home = () => {
             
             <div className="relative overflow-hidden rounded-xl shadow-elegant group">
               <img 
-                src="https://images.unsplash.com/photo-1523050854058-8df90110c9d1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                src="/attached_assets/image_1759155272244.png"
                 alt="Alumni Success Stories"
                 className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
               />
