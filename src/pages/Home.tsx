@@ -299,7 +299,7 @@ const Home = () => {
             <Link to="/alumni">
               <Button 
                 size="lg" 
-                className="bg-white text-primary hover:bg-white/90"
+                className="bg-orange-500 text-white hover:bg-orange-600"
                 onClick={triggerConfetti}
               >
                 <Users className="w-5 h-5 mr-2" />
@@ -310,7 +310,7 @@ const Home = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white/30 text-white hover:bg-white/10"
+                className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white bg-white/10 backdrop-blur-sm"
                 onClick={triggerConfetti}
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
