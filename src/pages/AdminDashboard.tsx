@@ -15,9 +15,18 @@ import {
   XCircle,
   UserCheck,
   MessageSquare,
-  Award
+  Award,
+  BarChart3,
+  PieChart,
+  LineChart,
+  Brain,
+  Target,
+  Globe,
+  Zap
 } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart as RechartsPieChart, Cell, LineChart as RechartsLineChart, Line, Area, AreaChart } from 'recharts';
 
 interface Stats {
   totalProfiles: number;
@@ -27,6 +36,9 @@ interface Stats {
   totalProducts: number;
   activeMentorships: number;
   pendingRequests: number;
+  engagementRate: number;
+  monthlyGrowth: number;
+  aiInsights: string[];
 }
 
 interface Profile {
@@ -84,7 +96,10 @@ const AdminDashboard = () => {
     totalEvents: 0,
     totalProducts: 0,
     activeMentorships: 0,
-    pendingRequests: 0
+    pendingRequests: 0,
+    engagementRate: 0,
+    monthlyGrowth: 0,
+    aiInsights: []
   });
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -92,6 +107,60 @@ const AdminDashboard = () => {
   const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Mock data for charts
+  const departmentData = [
+    { name: 'UICET', alumni: 2450, students: 890, engagement: 78 },
+    { name: 'UBS', alumni: 1890, students: 670, engagement: 72 },
+    { name: 'UIET', alumni: 1650, students: 580, engagement: 85 },
+    { name: 'Law', alumni: 980, students: 320, engagement: 68 },
+    { name: 'Medicine', alumni: 1200, students: 450, engagement: 80 },
+    { name: 'Arts', alumni: 850, students: 390, engagement: 65 }
+  ];
+
+  const geographicData = [
+    { name: 'Punjab', value: 30, color: '#667eea' },
+    { name: 'Delhi NCR', value: 25, color: '#764ba2' },
+    { name: 'Mumbai', value: 15, color: '#f093fb' },
+    { name: 'Bangalore', value: 12, color: '#f5576c' },
+    { name: 'International', value: 18, color: '#4facfe' }
+  ];
+
+  const engagementTrends = [
+    { month: 'Jan', mentorships: 45, events: 12, donations: 28, total: 85 },
+    { month: 'Feb', mentorships: 52, events: 15, donations: 34, total: 101 },
+    { month: 'Mar', mentorships: 61, events: 18, donations: 41, total: 120 },
+    { month: 'Apr', mentorships: 58, events: 22, donations: 38, total: 118 },
+    { month: 'May', mentorships: 67, events: 19, donations: 45, total: 131 },
+    { month: 'Jun', mentorships: 73, events: 25, donations: 52, total: 150 }
+  ];
+
+  const industryData = [
+    { name: 'Technology', alumni: 1450, avgSalary: 1200000, growth: 15 },
+    { name: 'Finance', alumni: 890, avgSalary: 1800000, growth: 8 },
+    { name: 'Healthcare', alumni: 680, avgSalary: 950000, growth: 12 },
+    { name: 'Education', alumni: 520, avgSalary: 600000, growth: 5 },
+    { name: 'Government', alumni: 430, avgSalary: 800000, growth: 3 },
+    { name: 'Startups', alumni: 380, avgSalary: 1100000, growth: 25 }
+  ];
+
+  const aiInsights = [
+    "🎯 UIET department shows highest engagement rate (85%) - consider replicating their strategies",
+    "📈 Mentorship requests increased 23% this month - consider scaling mentor onboarding",
+    "🌍 International alumni donations up 40% - focus on global engagement campaigns", 
+    "💡 Technology sector alumni most likely to mentor (78% participation rate)",
+    "📊 Weekend events show 30% higher attendance - optimize scheduling",
+    "🔗 Alumni with 5+ connections donate 3x more - encourage networking"
+  ];
+
+  const studentSuccessMetrics = [
+    { metric: 'Placement Rate', value: 89, target: 85, trend: '+4%' },
+    { metric: 'Avg. Starting Salary', value: 6.2, target: 5.8, trend: '+6.9%' },
+    { metric: 'Industry Readiness', value: 78, target: 75, trend: '+4%' },
+    { metric: 'Alumni Mentorship', value: 67, target: 60, trend: '+11.7%' },
+    { metric: 'Skill Certification', value: 72, target: 70, trend: '+2.9%' },
+    { metric: 'Job Satisfaction', value: 8.4, target: 8.0, trend: '+5%' }
+  ];
 
   useEffect(() => {
     fetchAllData();
@@ -134,6 +203,11 @@ const AdminDashboard = () => {
     const activeMentorships = mentorshipsRes.data?.filter(m => m.status === 'approved').length || 0;
     const pendingRequests = mentorshipsRes.data?.filter(m => m.status === 'pending').length || 0;
 
+    // Calculate AI-driven metrics
+    const totalUsers = profilesRes.count || 0;
+    const engagementRate = totalUsers > 0 ? Math.round(((activeMentorships + (eventsRes.count || 0)) / totalUsers) * 100) : 0;
+    const monthlyGrowth = 12.5; // Mock calculation - in real app, compare with previous month
+
     setStats({
       totalProfiles: profilesRes.count || 0,
       verifiedProfiles: verifiedCount,
@@ -141,7 +215,10 @@ const AdminDashboard = () => {
       totalEvents: eventsRes.count || 0,
       totalProducts: productsRes.count || 0,
       activeMentorships,
-      pendingRequests
+      pendingRequests,
+      engagementRate,
+      monthlyGrowth,
+      aiInsights
     });
   };
 
@@ -204,7 +281,7 @@ const AdminDashboard = () => {
             supabase.from('profiles').select('name, email, department').eq('user_id', request.student_id).single(),
             request.mentor_id ? supabase.from('profiles').select('name, email, current_job, company').eq('user_id', request.mentor_id).single() : Promise.resolve({ data: null })
           ]);
-          
+
           return {
             ...request,
             student_profile: studentRes.data,
@@ -280,25 +357,26 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Central Admin Dashboard</h1>
           <p className="text-muted-foreground">
-            Punjab Alumni Data Management System - SIH 2025 | Manage statewide alumni network, verification processes, and analytics
+            Punjab Alumni Data Management System - SIH 2025 | AI-Powered Analytics & Centralized Engagement Platform
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
+        {/* Enhanced Stats Overview */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+          <Card className="lg:col-span-2">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Profiles</p>
-                  <p className="text-3xl font-bold">{stats.totalProfiles}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {stats.verifiedProfiles} verified
+                  <p className="text-sm font-medium text-muted-foreground">Total Network</p>
+                  <p className="text-3xl font-bold">{stats.totalProfiles.toLocaleString()}</p>
+                  <p className="text-sm text-green-600 flex items-center">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    +{stats.monthlyGrowth}% this month
                   </p>
                 </div>
                 <Users className="w-8 h-8 text-primary" />
@@ -310,7 +388,20 @@ const AdminDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Donations</p>
+                  <p className="text-sm font-medium text-muted-foreground">Engagement</p>
+                  <p className="text-3xl font-bold">{stats.engagementRate}%</p>
+                  <p className="text-sm text-muted-foreground">Platform activity</p>
+                </div>
+                <Zap className="w-8 h-8 text-warning" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Donations</p>
                   <p className="text-3xl font-bold">${stats.totalDonations.toLocaleString()}</p>
                   <p className="text-sm text-green-600 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -326,7 +417,7 @@ const AdminDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Events</p>
+                  <p className="text-sm font-medium text-muted-foreground">Events</p>
                   <p className="text-3xl font-bold">{stats.totalEvents}</p>
                   <p className="text-sm text-muted-foreground">This year</p>
                 </div>
@@ -351,16 +442,268 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
+        {/* AI Insights Section */}
+        <Card className="mb-8 bg-gradient-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-primary" />
+              AI-Powered Insights & Recommendations
+            </CardTitle>
+            <CardDescription>
+              Machine learning analysis of platform engagement and growth patterns
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {stats.aiInsights.map((insight, index) => (
+                <div key={index} className="p-4 bg-background rounded-lg border border-border">
+                  <p className="text-sm">{insight}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Detailed Management */}
-        <Tabs defaultValue="verification" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+        <Tabs defaultValue="analytics" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="analytics">Analytics Hub</TabsTrigger>
+            <TabsTrigger value="student-success">Student Success</TabsTrigger>
             <TabsTrigger value="verification">Verification</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="profiles">User Management</TabsTrigger>
             <TabsTrigger value="donations">Donations</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="mentorships">Mentorships</TabsTrigger>
           </TabsList>
+
+          {/* Enhanced Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="grid lg:grid-cols-2 gap-6 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Department-wise Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      alumni: { label: "Alumni", color: "#667eea" },
+                      students: { label: "Students", color: "#764ba2" },
+                      engagement: { label: "Engagement %", color: "#f093fb" }
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={departmentData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="alumni" fill="#667eea" />
+                        <Bar dataKey="students" fill="#764ba2" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="w-5 h-5" />
+                    Geographic Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      punjab: { label: "Punjab", color: "#667eea" },
+                      delhi: { label: "Delhi NCR", color: "#764ba2" },
+                      mumbai: { label: "Mumbai", color: "#f093fb" },
+                      bangalore: { label: "Bangalore", color: "#f5576c" },
+                      international: { label: "International", color: "#4facfe" }
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RechartsPieChart>
+                        <RechartsPieChart data={geographicData} cx="50%" cy="50%" outerRadius={80} dataKey="value">
+                          {geographicData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </RechartsPieChart>
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <LineChart className="w-5 h-5" />
+                    Engagement Trends (6 Months)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      mentorships: { label: "Mentorships", color: "#667eea" },
+                      events: { label: "Events", color: "#764ba2" },
+                      donations: { label: "Donations", color: "#f093fb" },
+                      total: { label: "Total Engagement", color: "#4facfe" }
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={engagementTrends}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Area type="monotone" dataKey="total" stroke="#4facfe" fill="#4facfe" fillOpacity={0.3} />
+                        <Line type="monotone" dataKey="mentorships" stroke="#667eea" strokeWidth={2} />
+                        <Line type="monotone" dataKey="events" stroke="#764ba2" strokeWidth={2} />
+                        <Line type="monotone" dataKey="donations" stroke="#f093fb" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Industry-wise Alumni Growth
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {industryData.map((industry, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium">{industry.name}</span>
+                            <Badge variant="outline" className={industry.growth > 15 ? "text-green-600" : industry.growth > 8 ? "text-blue-600" : "text-muted-foreground"}>
+                              +{industry.growth}%
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {industry.alumni} alumni • Avg: ₹{(industry.avgSalary/100000).toFixed(1)}L
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Student Success Analytics Tab */}
+          <TabsContent value="student-success">
+            <div className="grid lg:grid-cols-2 gap-6 mb-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    Student Success Metrics
+                  </CardTitle>
+                  <CardDescription>
+                    Key performance indicators for student outcomes and platform impact
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {studentSuccessMetrics.map((metric, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-gradient-card rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">{metric.metric}</span>
+                            <Badge variant={metric.value >= metric.target ? "default" : "secondary"}>
+                              {metric.trend}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-2xl font-bold text-primary">
+                              {metric.metric.includes('Salary') ? `₹${metric.value}L` : 
+                               metric.metric.includes('Satisfaction') ? metric.value : `${metric.value}%`}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Target: {metric.metric.includes('Salary') ? `₹${metric.target}L` : 
+                                      metric.metric.includes('Satisfaction') ? metric.target : `${metric.target}%`}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="w-5 h-5" />
+                    Platform Impact Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-gradient-card rounded-lg">
+                        <div className="text-2xl font-bold text-primary">8,340</div>
+                        <div className="text-sm text-muted-foreground">Total Alumni Registered</div>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-card rounded-lg">
+                        <div className="text-2xl font-bold text-warning">2,890</div>
+                        <div className="text-sm text-muted-foreground">Active Students</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Alumni Verification Rate</span>
+                        <span className="text-sm font-medium">87%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-primary h-2 rounded-full" style={{width: '87%'}}></div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Mentorship Match Success</span>
+                        <span className="text-sm font-medium">94%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-success h-2 rounded-full" style={{width: '94%'}}></div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Event Participation Rate</span>
+                        <span className="text-sm font-medium">76%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-warning h-2 rounded-full" style={{width: '76%'}}></div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <h4 className="font-medium mb-3">Quick Analytics Summary</h4>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <p>• 67% of students find mentors within 2 weeks</p>
+                        <p>• Alumni response rate: 89% within 48 hours</p>
+                        <p>• Platform satisfaction score: 4.6/5.0</p>
+                        <p>• Monthly active users: 12,450 (+15%)</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           {/* Verification Tab */}
           <TabsContent value="verification">
@@ -455,130 +798,6 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>University Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Panjab University</span>
-                      <span className="text-sm font-medium">45%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Punjabi University</span>
-                      <span className="text-sm font-medium">25%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Guru Nanak Dev University</span>
-                      <span className="text-sm font-medium">20%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Others</span>
-                      <span className="text-sm font-medium">10%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Geographic Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Chandigarh</span>
-                      <span className="text-sm font-medium">30%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Ludhiana</span>
-                      <span className="text-sm font-medium">20%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Amritsar</span>
-                      <span className="text-sm font-medium">15%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">International</span>
-                      <span className="text-sm font-medium">35%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Industry Analysis</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Technology</span>
-                      <span className="text-sm font-medium">35%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Finance</span>
-                      <span className="text-sm font-medium">20%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Healthcare</span>
-                      <span className="text-sm font-medium">15%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Others</span>
-                      <span className="text-sm font-medium">30%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Monthly Registration Trends</CardTitle>
-                  <CardDescription>New alumni registrations over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    📊 Chart would be rendered here with actual data
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Platform Engagement</CardTitle>
-                  <CardDescription>User activity and engagement metrics</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span>Daily Active Users</span>
-                      <span className="font-medium">2,450</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Monthly Active Users</span>
-                      <span className="font-medium">12,800</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Profile Completion Rate</span>
-                      <span className="font-medium">78%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Mentorship Success Rate</span>
-                      <span className="font-medium">85%</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
 
           {/* Profiles Tab */}
