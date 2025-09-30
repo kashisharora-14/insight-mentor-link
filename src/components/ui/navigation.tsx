@@ -74,8 +74,12 @@ const Navigation = () => {
           <Link to="/" className="flex items-center space-x-2">
             <img 
               src="/logo-reconnect.png" 
-              alt="Re-Connect Logo" 
+              alt="Re-Connect Alumni Platform Logo" 
               className="w-10 h-10 object-contain"
+              onError={(e) => {
+                console.error('Logo failed to load');
+                e.currentTarget.style.display = 'none';
+              }}
             />
             <span className="font-bold text-xl text-primary">Re-Connect</span>
           </Link>
