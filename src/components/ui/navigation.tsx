@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
-  GraduationCap, 
+  Home,
   Users, 
   Calendar, 
   MessageCircle, 
@@ -28,7 +28,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const getAllNavItems = () => [
-    { name: "Home", path: "/", icon: GraduationCap, roles: ['student', 'alumni', 'admin'] },
+    { name: "Home", path: "/", icon: Home, roles: ['student', 'alumni', 'admin'] },
     { name: "Alumni Directory", path: "/alumni", icon: Users, roles: ['student', 'admin'] },
     { name: "My Profile", path: "/alumni-profile", icon: User, roles: ['alumni'] },
     { name: "Find Mentors", path: "/mentorship", icon: MessageCircle, roles: ['student'] },
@@ -86,15 +86,15 @@ const Navigation = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   isActive(item.path)
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                    ? "text-primary bg-primary/10 shadow-sm"
+                    : "text-gray-600 hover:text-primary hover:bg-gray-50"
                 }`}
               >
                 <item.icon className="w-4 h-4" />
@@ -167,10 +167,10 @@ const Navigation = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`flex items-center space-x-3 px-3 py-3 text-base font-medium rounded-md transition-colors ${
+                  className={`flex items-center space-x-3 px-4 py-3 text-base font-medium rounded-lg transition-all ${
                     isActive(item.path)
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "text-primary bg-primary/10 shadow-sm"
+                      : "text-gray-600 hover:text-primary hover:bg-gray-50"
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
