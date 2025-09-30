@@ -72,9 +72,11 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
+            <img 
+              src="/logo-reconnect.png" 
+              alt="Re-Connect Logo" 
+              className="w-10 h-10 object-contain"
+            />
             <span className="font-bold text-xl text-primary">Re-Connect</span>
           </Link>
 
