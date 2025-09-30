@@ -77,8 +77,9 @@ const Navigation = () => {
               alt="Re-Connect Alumni Platform Logo" 
               className="w-12 h-12 object-contain"
               onError={(e) => {
-                console.error('Logo failed to load, using fallback');
-                e.currentTarget.outerHTML = '<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">RC</div>';
+                console.error('Logo failed to load');
+                const target = e.currentTarget as HTMLImageElement;
+                target.style.display = 'none';
               }}
             />
             <span className="font-bold text-xl text-primary">Re-Connect</span>
