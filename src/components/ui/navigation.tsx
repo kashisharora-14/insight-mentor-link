@@ -16,7 +16,8 @@ import {
   Settings,
   Briefcase,
   ShoppingBag as Shopping,
-  Heart
+  Heart,
+  GraduationCap
 } from "lucide-react";
 
 const Navigation = () => {
@@ -72,16 +73,7 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <img 
-              src="/reconnect-logo.png" 
-              alt="Re-Connect Alumni Platform Logo" 
-              className="w-12 h-12 object-contain"
-              onError={(e) => {
-                console.error('Logo failed to load');
-                const target = e.currentTarget as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
+            <GraduationCap className="w-8 h-8 text-primary" />
             <span className="font-bold text-xl text-primary">Re-Connect</span>
           </Link>
 
