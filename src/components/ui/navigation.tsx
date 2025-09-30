@@ -73,12 +73,12 @@ const Navigation = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/logo-reconnect.png" 
+              src="/logo.svg" 
               alt="Re-Connect Alumni Platform Logo" 
               className="w-10 h-10 object-contain"
               onError={(e) => {
-                console.error('Logo failed to load');
-                e.currentTarget.style.display = 'none';
+                console.error('Logo failed to load, using fallback');
+                e.currentTarget.outerHTML = '<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">RC</div>';
               }}
             />
             <span className="font-bold text-xl text-primary">Re-Connect</span>
