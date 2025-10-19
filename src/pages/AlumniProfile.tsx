@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+// import { supabase } from '@/integrations/supabase/client'; // Replaced with API client
 import { User, Building, Calendar, LinkedinIcon, Phone, Mail, Edit3, Save, X } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { useAuth } from '@/contexts/AuthContext';

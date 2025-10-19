@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { apiClient } from '@/services/apiClient';
 
 export type UserRole = 'student' | 'alumni' | 'admin';
 
@@ -10,74 +11,164 @@ export interface User {
   department?: string;
   batchYear?: number;
   profession?: string;
+  verification_status?: string;
+  email_verified?: boolean;
+  student_id?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  sendLoginCode: (identifier: string) => Promise<{ userId: string; email: string; success: boolean; error?: string }>;
+  verifyLoginCode: (userId: string, code: string) => Promise<boolean>;
+  sendRegistrationCode: (email: string, name: string, studentId?: string, role?: string) => Promise<{ success: boolean; error?: string }>;
+  completeRegistration: (email: string, code: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
+  // Legacy method for backward compatibility
+  login: (email: string, password: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Dummy credentials for demo  
-const mockUsers = {
-  'student@demo.com': {
-    id: '1',
-    name: 'John Student',
-    email: 'student@demo.com',
-    role: 'student' as const
-  },
-  'alumni@demo.com': {
-    id: '2',
-    name: 'Jane Alumni',
-    email: 'alumni@demo.com',
-    role: 'alumni' as const
-  },
-  'admin@demo.com': {
-    id: '3',
-    name: 'Admin User',
-    email: 'admin@demo.com',
-    role: 'admin' as const
-  }
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in (localStorage)
-    const savedUser = localStorage.getItem('authUser');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    }
+    // Check if user is already logged in and validate token
+    const initializeAuth = async () => {
+      try {
+        if (apiClient.isAuthenticated()) {
+          const userData = await apiClient.getCurrentUser();
+          setUser(userData.user);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error);
+        // Clear invalid tokens
+        apiClient.clearAuthToken();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Demo login - accept any password for demo users
-    const demoUser = mockUsers[email as keyof typeof mockUsers];
-
-    if (demoUser && password === 'demo123') {
-      setUser(demoUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('authUser', JSON.stringify(demoUser));
-      return true;
+  const sendLoginCode = async (identifier: string) => {
+    try {
+      const response = await apiClient.sendLoginCode(identifier);
+      return {
+        userId: response.user_id,
+        email: response.email,
+        success: true
+      };
+    } catch (error: any) {
+      return {
+        userId: '',
+        email: '',
+        success: false,
+        error: error.message || 'Failed to send login code'
+      };
     }
-
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('authUser');
+  const verifyLoginCode = async (userId: string, code: string): Promise<boolean> => {
+    try {
+      const tokens = await apiClient.verifyLoginCode(userId, code);
+      setUser(tokens.user);
+      setIsAuthenticated(true);
+      return true;
+    } catch (error: any) {
+      console.error('Login verification failed:', error);
+      return false;
+    }
   };
+
+  const sendRegistrationCode = async (
+    email: string, 
+    name: string, 
+    studentId?: string, 
+    role: string = 'student'
+  ) => {
+    try {
+      const response = await apiClient.sendRegistrationCode(email, name, studentId, role);
+      // Assuming the apiClient returns the full response or parsed data
+      return { success: true, ...response };
+    } catch (error: any) {
+      // Attempt to parse the error response from the server
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to send registration code';
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  };
+
+  const completeRegistration = async (
+    email: string, 
+    code: string, 
+    password: string
+  ): Promise<boolean> => {
+    try {
+      await apiClient.completeRegistration(email, code, password);
+      return true;
+    } catch (error: any) {
+      console.error('Registration completion failed:', error);
+      return false;
+    }
+  };
+
+  // Legacy login method for backward compatibility
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const tokens = await apiClient.loginLegacy(email, password);
+      setUser(tokens.user);
+      setIsAuthenticated(true);
+      return true;
+    } catch (error: any) {
+      console.error('Legacy login failed:', error);
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await apiClient.logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
+
+  // Show loading screen while initializing auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      sendLoginCode,
+      verifyLoginCode,
+      sendRegistrationCode,
+      completeRegistration,
+      login, 
+      logout, 
+      isAuthenticated,
+      loading
+    }}>
       {children}
     </AuthContext.Provider>
   );

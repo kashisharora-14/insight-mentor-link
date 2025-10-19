@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+// import { supabase } from "@/integrations/supabase/client"; // Replaced with API client
 import { useAuth } from "@/contexts/AuthContext";
 import { mockEvents, eventTypes, departments } from "@/data/mockEvents";
 import { Calendar, MapPin, Clock, ExternalLink, Filter, Users, CheckCircle, Plus, Search, Tag } from "lucide-react";

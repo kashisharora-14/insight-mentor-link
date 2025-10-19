@@ -709,6 +709,19 @@ const StudentDashboard = () => {
             <CareerRoadmap />
           </TabsContent>
         </Tabs>
+
+        {/* Verification Status Card */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Verification Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Your account is {currentStudent?.verification_status === 'verified' ? 'verified' : 'not verified'}.</p>
+            {currentStudent?.verification_status !== 'verified' && (
+                <p>Please wait for an admin to verify your account.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

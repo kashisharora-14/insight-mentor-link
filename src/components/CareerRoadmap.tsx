@@ -17,7 +17,7 @@ import {
 import CareerRoadmapForm from "./CareerRoadmapForm";
 import RoadmapVisualization from "./RoadmapVisualization";
 import { generateCareerRoadmap, mockAlumniRecommendations, mockOpportunityRecommendations } from "@/data/roadmapData";
-import { supabase } from "@/integrations/supabase/client";
+// import { supabase } from "@/integrations/supabase/client"; // Replaced with API client
 import type { CareerRoadmap as CareerRoadmapType, RoadmapItem, RoadmapInputForm, AlumniRecommendation, OpportunityRecommendation } from "@/types/roadmap";
 
 const ROADMAP_STORAGE_KEY = "career-roadmap";

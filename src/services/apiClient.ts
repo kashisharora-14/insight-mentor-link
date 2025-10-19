@@ -1,0 +1,302 @@
+/**
+ * API Client service to replace Supabase client
+ * Handles communication with Flask backend
+ */
+
+interface ApiResponse<T = any> {
+  message?: string;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: any;
+  };
+}
+
+interface LoginCodeResponse {
+  user_id: string;
+  email: string;
+  code_expires_in: number;
+}
+
+interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+  user: any;
+}
+
+interface RegistrationResponse {
+  email: string;
+  code_expires_in: number;
+}
+
+interface UserData {
+  user: any;
+  verification_status: any;
+  profile: any;
+  can_access_platform: boolean;
+  permissions: any;
+}
+
+class ApiClient {
+  private baseURL: string;
+  private token: string | null = null;
+
+  constructor() {
+    try {
+      this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+      this.loadTokenFromStorage();
+    } catch (error) {
+      console.error('ApiClient initialization failed:', error);
+      this.baseURL = 'http://localhost:5002/api';
+    }
+  }
+
+  private loadTokenFromStorage(): void {
+    try {
+      this.token = localStorage.getItem('access_token');
+    } catch (error) {
+      console.error('Failed to load token from storage:', error);
+      this.token = null;
+    }
+  }
+
+  private saveTokenToStorage(token: string): void {
+    this.token = token;
+    localStorage.setItem('access_token', token);
+  }
+
+  private removeTokenFromStorage(): void {
+    this.token = null;
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('authUser');
+  }
+
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+    
+    const headers = new Headers(options.headers);
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    if (this.token) {
+      headers.set('Authorization', `Bearer ${this.token}`);
+    }
+
+    const config: RequestInit = {
+      ...options,
+      headers,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (response.status === 204 || response.headers.get('content-length') === '0') {
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
+        }
+        // Handle cases where there is no content
+        return {} as T;
+      }
+
+      const data: ApiResponse<T> = await response.json();
+
+      if (!response.ok) {
+        // Handle token expiration
+        if (response.status === 401 && this.token) {
+          await this.tryRefreshToken();
+          // Retry the request with new token
+          if (this.token) {
+            headers.set('Authorization', `Bearer ${this.token}`);
+            const retryResponse = await fetch(url, { ...config, headers });
+            
+            if (retryResponse.status === 204 || retryResponse.headers.get('content-length') === '0') {
+              if (!retryResponse.ok) {
+                throw new Error(`Request failed with status ${retryResponse.status}`);
+              }
+              return {} as T;
+            }
+
+            const retryData: ApiResponse<T> = await retryResponse.json();
+            
+            if (!retryResponse.ok) {
+              throw new Error(retryData.error?.message || 'Request failed after refresh');
+            }
+            
+            return retryData.data as T;
+          }
+        }
+        
+        throw new Error(data.error?.message || 'Request failed');
+      }
+
+      return data.data as T;
+    } catch (error) {
+      console.error('API Request failed:', error);
+      if (error instanceof SyntaxError) {
+        // This happens on empty or non-JSON responses
+        throw new Error("Received an invalid response from the server. This might be a server error.");
+      }
+      throw error;
+    }
+  }
+
+  private async tryRefreshToken(): Promise<void> {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      this.removeTokenFromStorage();
+      return;
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${refreshToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data: ApiResponse<{ access_token: string }> = await response.json();
+        if (data.data?.access_token) {
+          this.saveTokenToStorage(data.data.access_token);
+        }
+      } else {
+        this.removeTokenFromStorage();
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      this.removeTokenFromStorage();
+    }
+  }
+
+  // Authentication methods
+  async sendLoginCode(identifier: string): Promise<LoginCodeResponse> {
+    return this.makeRequest<LoginCodeResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ identifier }),
+    });
+  }
+
+  async verifyLoginCode(userId: string, code: string): Promise<AuthTokens> {
+    const tokens = await this.makeRequest<AuthTokens>('/auth/verify-login-code', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, code }),
+    });
+
+    // Save tokens
+    this.saveTokenToStorage(tokens.access_token);
+    localStorage.setItem('refresh_token', tokens.refresh_token);
+    localStorage.setItem('authUser', JSON.stringify(tokens.user));
+
+    return tokens;   
+  }
+
+  async sendRegistrationCode(
+    email: string,
+    name: string,
+    studentId?: string,
+    role: string = 'student'
+  ): Promise<RegistrationResponse> {
+    return this.makeRequest<RegistrationResponse>('/auth/register/send-code', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        name,
+        student_id: studentId,
+        role,
+      }),
+    });
+  }
+
+  async completeRegistration(
+    email: string,
+    code: string,
+    password: string
+  ): Promise<any> {
+    return this.makeRequest('/auth/complete-registration', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, password }),
+    });
+  }
+
+  async getCurrentUser(): Promise<UserData> {
+    return this.makeRequest<UserData>('/auth/me');
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.makeRequest('/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Logout request failed:', error);
+    } finally {
+      this.removeTokenFromStorage();
+    }
+  }
+
+  // Legacy login method (for backward compatibility)
+  async loginLegacy(identifier: string, password: string): Promise<AuthTokens> {
+    const tokens = await this.makeRequest<AuthTokens>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ identifier, password }),
+    });
+
+    this.saveTokenToStorage(tokens.access_token);
+    localStorage.setItem('refresh_token', tokens.refresh_token);
+    localStorage.setItem('authUser', JSON.stringify(tokens.user));
+
+    return tokens;
+  }
+
+  // Utility methods
+  isAuthenticated(): boolean {
+    return !!this.token;
+  }
+
+  getToken(): string | null {
+    return this.token;
+  }
+
+  setAuthToken(token: string): void {
+    this.saveTokenToStorage(token);
+  }
+
+  clearAuthToken(): void {
+    this.removeTokenFromStorage();
+  }
+
+  // Generic HTTP methods for other API calls
+  async get<T>(endpoint: string): Promise<T> {
+    return this.makeRequest<T>(endpoint, { method: 'GET' });
+  }
+
+  async post<T>(endpoint: string, data: any): Promise<T> {
+    return this.makeRequest<T>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async put<T>(endpoint: string, data: any): Promise<T> {
+    return this.makeRequest<T>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.makeRequest<T>(endpoint, { method: 'DELETE' });
+  }
+}
+
+// Create and export a singleton instance
+export const apiClient = new ApiClient();
+export default apiClient;

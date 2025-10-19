@@ -304,6 +304,19 @@ const AlumniDashboard = () => {
           </Card>
         </div>
 
+        {/* Verification Status Card */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Verification Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Your account is {user?.verification_status === 'verified' ? 'verified' : 'not verified'}.</p>
+            {user?.verification_status !== 'verified' && (
+                <p>Please wait for an admin to verify your account.</p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Tabs */}
         <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 border-b mb-6">
           <button

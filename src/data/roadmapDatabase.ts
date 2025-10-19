@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+// import { supabase } from "@/integrations/supabase/client"; // Replaced with API client
 import type { CareerRoadmap, RoadmapItem, YearlyMilestone } from "@/types/roadmap";
 
 export const saveRoadmapToDatabase = async (roadmap: CareerRoadmap, userId: string) => {
