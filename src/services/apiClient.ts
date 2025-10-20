@@ -340,24 +340,36 @@ class ApiClient {
 
   // Legacy login method (for backward compatibility)
   async loginLegacy(email: string, password: string): Promise<AuthTokens> {
-    // Check if this is an admin login
-    const endpoint = email.includes('admin') ? '/auth/admin-login' : '/auth/login';
+    // Use direct fetch for admin login to avoid double processing
+    const endpoint = email.includes('admin') ? '/auth/admin-login' : '/auth/login-password';
+    const url = `${this.baseURL}${endpoint}`;
 
-    const response = await this.makeRequest(endpoint, {
+    const response = await fetch(url, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ email, password })
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || 'Login failed');
+      throw new Error(error.error || 'Login failed');
     }
 
     const data = await response.json();
-    this.setAuthToken(data.access_token);
-    localStorage.setItem('refresh_token', data.refresh_token);
+    
+    this.setAuthToken(data.token);
+    localStorage.setItem('refresh_token', data.token + '_refresh');
     localStorage.setItem('authUser', JSON.stringify(data.user));
-    return data;
+    
+    return {
+      access_token: data.token,
+      refresh_token: data.token + '_refresh',
+      token_type: 'Bearer',
+      expires_in: 604800,
+      user: data.user
+    };
   }
 
   // Utility methods
