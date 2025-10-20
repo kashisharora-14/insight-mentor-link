@@ -828,20 +828,44 @@ const AdminDashboard = () => {
   // Fetch verification requests
   const fetchVerificationRequests = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('❌ No authentication token found');
+        toast({
+          title: "Authentication Required",
+          description: "Please log in as admin first",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('🔐 Fetching verification requests with token...');
       const response = await fetch('/api/admin/verification-requests', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
+
       if (response.ok) {
         const data = await response.json();
         setVerificationRequests(data);
         console.log('✅ Loaded verification requests:', data);
+      } else if (response.status === 401) {
+        console.error('❌ Unauthorized - invalid or expired token');
+        toast({
+          title: "Session Expired",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/admin-login';
       } else {
         console.error('Failed to fetch verification requests:', response.status, response.statusText);
         toast({
           title: "Error",
-          description: "Failed to load verification requests. Please check your authentication.",
+          description: "Failed to load verification requests",
           variant: "destructive",
         });
       }
@@ -995,6 +1019,29 @@ const AdminDashboard = () => {
 
   // Initial fetch for all data
   useEffect(() => {
+    // Check if admin is authenticated
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
+      console.error('❌ No authentication found, redirecting to admin login');
+      window.location.href = '/admin-login';
+      return;
+    }
+
+    try {
+      const user = JSON.parse(userStr);
+      if (user.role !== 'admin') {
+        console.error('❌ User is not an admin, redirecting');
+        window.location.href = '/';
+        return;
+      }
+    } catch (e) {
+      console.error('❌ Invalid user data, redirecting to admin login');
+      window.location.href = '/admin-login';
+      return;
+    }
+
     fetchAllData();
     fetchVerificationRequests(); // Also fetch verification requests on mount
   }, []);

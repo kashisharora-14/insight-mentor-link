@@ -617,7 +617,7 @@ router.post('/admin-login', async (req, res) => {
 
     const user = userRecord[0];
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-    
+
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid admin credentials' });
     }

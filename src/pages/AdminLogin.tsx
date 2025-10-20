@@ -30,15 +30,19 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok) {
+        // Store token and user info
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        
+        console.log('✅ Admin logged in successfully:', data.user);
         
         toast({
           title: "Admin Login Successful",
           description: "Welcome to the admin dashboard!",
         });
 
-        navigate('/admin');
+        // Force reload to reinitialize auth context
+        window.location.href = '/admin';
       } else {
         toast({
           title: "Login Failed",
@@ -47,6 +51,7 @@ export default function AdminLogin() {
         });
       }
     } catch (error) {
+      console.error('Admin login error:', error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
