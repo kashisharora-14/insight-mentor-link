@@ -81,6 +81,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    console.log('Making API request to:', url);
 
     const headers = new Headers(options.headers);
     if (!headers.has('Content-Type')) {
@@ -140,7 +141,11 @@ class ApiClient {
 
       return data.data as T;
     } catch (error) {
-      console.error('API Request failed:', error);
+      console.error('API Request failed for URL:', url);
+      console.error('Error details:', error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error(`Cannot connect to API server at ${this.baseURL}. Make sure the server is running.`);
+      }
       if (error instanceof SyntaxError) {
         // This happens on empty or non-JSON responses
         throw new Error("Received an invalid response from the server. This might be a server error.");

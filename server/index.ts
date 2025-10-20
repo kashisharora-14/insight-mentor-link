@@ -12,7 +12,7 @@ const PORT = process.env.API_PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5000',
+  origin: true, // Allow all origins in development
   credentials: true,
 }));
 app.use(express.json());
