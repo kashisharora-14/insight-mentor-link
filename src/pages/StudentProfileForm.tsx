@@ -117,13 +117,18 @@ export default function StudentProfileForm() {
       });
 
       if (response.ok) {
+        const data = await response.json();
         toast({
           title: 'Success',
-          description: 'Profile saved successfully!',
+          description: data.message || 'Profile saved successfully!',
         });
-        navigate('/dashboard');
+        // Redirect to student dashboard after a short delay
+        setTimeout(() => {
+          navigate('/student-dashboard');
+        }, 1000);
       } else {
-        throw new Error('Failed to save profile');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save profile');
       }
     } catch (error) {
       toast({
@@ -470,7 +475,7 @@ export default function StudentProfileForm() {
                     </>
                   )}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
+                <Button type="button" variant="outline" onClick={() => navigate('/student-dashboard')}>
                   Cancel
                 </Button>
               </div>

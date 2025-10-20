@@ -1022,7 +1022,7 @@ const AdminDashboard = () => {
     // Check if admin is authenticated
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
-    
+
     if (!token || !userStr) {
       console.error('❌ No authentication found, redirecting to admin login');
       window.location.href = '/admin-login';
@@ -1051,10 +1051,10 @@ const AdminDashboard = () => {
     const handleTabChange = () => {
       fetchVerificationRequests();
     };
-    
+
     // Listen for tab visibility changes
     document.addEventListener('visibilitychange', handleTabChange);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleTabChange);
     };
@@ -1548,18 +1548,19 @@ const AdminDashboard = () => {
                     {verificationRequests.filter((req: any) => req.status === 'pending').map((request: any) => {
                       // Extract user info from the API response or request data
                       const userName = (request.requestData as any)?.name || 
+                                      request.userName || // Use userName if available directly
                                       request.userEmail?.split('@')[0] || 
                                       'User';
                       const userEmail = request.userEmail || 
                                        (request.requestData as any)?.email || 
                                        'Email not available';
-                      
+
                       return (
                         <div key={request.id} className="p-3 border rounded-lg flex items-center justify-between">
                           <div>
-                            <h4 className="font-medium">{userName}</h4>
-                            <p className="text-sm text-muted-foreground">{userEmail}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="font-semibold">{userName || 'Unknown User'}</p>
+                            <p className="text-sm text-muted-foreground">{userEmail || 'Email not available'}</p>
+                            <p className="text-xs text-muted-foreground">
                               Requested: {new Date(request.createdAt).toLocaleDateString()} | 
                               Role: {request.userRole || 'N/A'} | 
                               Student ID: {request.userStudentId || 'N/A'}

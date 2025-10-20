@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navigation from "@/components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -30,15 +30,19 @@ import CareerRoadmap from "@/components/CareerRoadmap";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
 import VerifiedBadge from '@/components/VerifiedBadge'; // Assuming VerifiedBadge component exists
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Mock current student and user context (replace with actual auth context)
   const currentStudent = students[0];
   // Mock user object to simulate auth context for verification status and method
-  const user = {
+  const authUser = { // Renamed to avoid conflict with fetched user
     id: currentStudent.id,
     name: currentStudent.name,
     isVerified: currentStudent.verification_status === 'verified', // Derive from student data
@@ -47,6 +51,8 @@ const StudentDashboard = () => {
       : null, // Or 'pending' if not verified
     department: currentStudent.department,
     batchYear: currentStudent.batchYear,
+    student_id: currentStudent.studentId, // Added student_id for consistency
+    email: currentStudent.email, // Added email for consistency
   };
 
   // Filter requests for current student
@@ -164,17 +170,83 @@ const StudentDashboard = () => {
     }
   ];
 
-  const [studentProfile, setStudentProfile] = useState({
-    name: 'Demo Student',
-    email: 'student@demo.com',
-    studentId: 'CS2021001', // Added studentId
-    rollNumber: 'CS2021001',
-    semester: 6,
-    cgpa: 8.5,
-    attendance: 85,
-    department: 'Computer Science',
-    batchYear: 2021
-  });
+  const [studentProfile, setStudentProfile] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStudentProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/student-profile/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.profile) {
+            setStudentProfile({
+              name: user?.name || 'Student',
+              studentId: user?.student_id || data.profile.rollNumber || 'N/A',
+              email: user?.email || 'N/A',
+              department: data.profile.department || 'Not set',
+              batchYear: data.profile.batchYear || new Date().getFullYear(),
+              semester: data.profile.currentSemester || 1,
+              cgpa: data.profile.cgpa || 'N/A',
+              attendance: 85, // Calculate from attendance records if available
+              hasProfile: true,
+            });
+          } else {
+            // No profile yet - set basic info from user
+            setStudentProfile({
+              name: user?.name || 'Student',
+              studentId: user?.student_id || 'N/A',
+              email: user?.email || 'N/A',
+              department: 'Not set',
+              batchYear: new Date().getFullYear(),
+              semester: 1,
+              cgpa: 'N/A',
+              attendance: 'N/A',
+              hasProfile: false,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching student profile:', error);
+        // Fallback to basic user info
+        setStudentProfile({
+          name: user?.name || 'Student',
+          studentId: user?.student_id || 'N/A',
+          email: user?.email || 'N/A',
+          department: 'Not set',
+          batchYear: new Date().getFullYear(),
+          semester: 1,
+          cgpa: 'N/A',
+          attendance: 'N/A',
+          hasProfile: false,
+        });
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchStudentProfile();
+    }
+  }, [user]);
+
+  if (!user || profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-6">
+          <p className="text-muted-foreground">
+            {!user ? 'Please log in to view your dashboard.' : 'Loading your profile...'}
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -203,17 +275,17 @@ const StudentDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Account Verification Status
-              {user?.isVerified && <VerifiedBadge isVerified={true} verificationMethod={user.verificationMethod} />}
+              {authUser?.isVerified && <VerifiedBadge isVerified={true} verificationMethod={authUser.verificationMethod} />}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {user?.isVerified ? (
+            {authUser?.isVerified ? (
               <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <CheckCircle className="w-6 h-6 text-green-600 mt-0.5" />
                 <div>
                   <p className="font-medium text-green-900">Your account is verified!</p>
                   <p className="text-sm text-green-700 mt-1">
-                    {user.verificationMethod === 'csv_upload' 
+                    {authUser.verificationMethod === 'csv_upload' 
                       ? '✅ Automatically verified via CSV upload - You have full access to all platform features.'
                       : '✅ Manually verified by admin - You have full access to all platform features.'}
                   </p>
@@ -802,16 +874,16 @@ const StudentDashboard = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Student ID:</span>
                       <span className="font-mono font-semibold text-blue-700 dark:text-blue-300">
-                        {studentProfile.studentId}
+                        {studentProfile?.studentId}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Registered Email:</span>
-                      <span className="font-semibold">{studentProfile.email}</span>
+                      <span className="font-semibold">{studentProfile?.email}</span>
                     </div>
                     <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
                       <p className="text-xs text-muted-foreground">
-                        💡 You can login using either your <strong>Student ID</strong> ({studentProfile.studentId}) or <strong>Email</strong> ({studentProfile.email})
+                        💡 You can login using either your <strong>Student ID</strong> ({studentProfile?.studentId}) or <strong>Email</strong> ({studentProfile?.email})
                       </p>
                     </div>
                   </div>
@@ -824,15 +896,15 @@ const StudentDashboard = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Full Name</span>
-                        <span className="font-semibold">{currentStudent.name}</span>
+                        <span className="font-semibold">{studentProfile?.name}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Department</span>
-                        <span className="font-semibold">{currentStudent.department}</span>
+                        <span className="font-semibold">{studentProfile?.department}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Batch Year</span>
-                        <span className="font-semibold">{currentStudent.batchYear}</span>
+                        <span className="font-semibold">{studentProfile?.batchYear}</span>
                       </div>
                     </div>
                   </div>
@@ -842,18 +914,23 @@ const StudentDashboard = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Current Semester</span>
-                        <span className="font-semibold">{studentProfile.semester}</span>
+                        <span className="font-semibold">{studentProfile?.semester}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">CGPA</span>
-                        <span className="font-semibold">{studentProfile.cgpa}</span>
+                        <span className="font-semibold">{studentProfile?.cgpa}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Attendance</span>
-                        <span className="font-semibold">{studentProfile.attendance}%</span>
+                        <span className="font-semibold">{studentProfile?.attendance}%</span>
                       </div>
                     </div>
                   </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={() => navigate('/complete-profile')} className="bg-gradient-hero hover:opacity-90">
+                    {studentProfile?.hasProfile ? 'Edit Profile' : 'Complete Profile'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>

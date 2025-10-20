@@ -19,12 +19,12 @@ router.use(adminMiddleware);
 router.get('/verification-requests', async (req, res) => {
   try {
     console.log('📋 Fetching verification requests...');
-    
+
     // First, get all verification requests to debug
     const allRequests = await db.select().from(verificationRequests);
     console.log(`📊 Total verification requests in DB: ${allRequests.length}`);
     console.log('📊 Request statuses:', allRequests.map(r => ({ id: r.id, status: r.status, userId: r.userId })));
-    
+
     const requests = await db.select({
       id: verificationRequests.id,
       userId: verificationRequests.userId,
@@ -49,7 +49,7 @@ router.get('/verification-requests', async (req, res) => {
         status: r.status 
       })));
     }
-    
+
     res.json(requests);
   } catch (error) {
     console.error('❌ Error fetching verification requests:', error);
@@ -104,7 +104,7 @@ router.post('/verification-requests/:id/approve', async (req, res) => {
     if (userRecord.length > 0) {
       const user = userRecord[0];
       const name = (request[0].requestData as any)?.name || 'User';
-      
+
       try {
         await sendVerificationApprovedEmail(user.email, name);
         console.log(`✅ Verification approval email sent to ${user.email}`);
@@ -156,7 +156,7 @@ router.post('/csv-upload', upload.single('file'), async (req, res) => {
 
     const adminId = req.user!.userId;
     const fileName = req.file.originalname;
-    
+
     const results: any[] = [];
     const errors: any[] = [];
 
@@ -284,7 +284,7 @@ router.get('/users', async (req, res) => {
     const { role, verified } = req.query;
 
     let query = db.select().from(users);
-    
+
     // Apply filters if provided
     const conditions = [];
     if (role) {
