@@ -3,6 +3,9 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
+import studentRoutes from './routes/student';
+import skillsRoutes from './routes/skills';
+import profileRoutes from './routes/profile';
 
 const app = express();
 const PORT = process.env.API_PORT || 3001;
@@ -23,6 +26,9 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/skills', skillsRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
