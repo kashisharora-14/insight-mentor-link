@@ -160,7 +160,7 @@ router.post('/verify-login-code', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: actualUserId, email: validCode.email, role: userDetails?.role || 'student' },
+      { userId: actualUserId, email: validCode.email, name: userDetails?.name, role: userDetails?.role || 'student' },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -174,8 +174,9 @@ router.post('/verify-login-code', async (req, res) => {
         user: {
           id: actualUserId,
           email: validCode.email,
-          name: 'Demo User',
+          name: userDetails?.name || 'User',
           role: userDetails?.role || 'student',
+          studentId: userDetails?.studentId || null,
           isVerified: userDetails?.isVerified || false,
           verificationMethod: userDetails?.verificationMethod || 'pending',
           isEmailVerified: userDetails?.isEmailVerified || true,
@@ -211,8 +212,9 @@ router.get('/me', async (req, res) => {
       data: {
         id: decoded.userId,
         email: decoded.email,
-        name: 'Demo User',
+        name: userDetails?.name || decoded.name || 'User',
         role: decoded.role || 'student',
+        studentId: userDetails?.studentId || null,
         isVerified: userDetails?.isVerified || false,
         verificationMethod: userDetails?.verificationMethod || 'pending',
         isEmailVerified: userDetails?.isEmailVerified || false,
@@ -225,13 +227,16 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// Temporary storage for registration data
+const registrationData = new Map<string, { name: string; studentId?: string; role: string }>();
+
 // STEP 1: Send verification code (for registration)
 router.post('/register/send-code', async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { email, name, studentId, role } = req.body;
 
-    if (!email || !role) {
-      return res.status(400).json({ error: 'Email and role are required' });
+    if (!email || !name || !role) {
+      return res.status(400).json({ error: 'Email, name, and role are required' });
     }
 
     if (!['student', 'alumni'].includes(role)) {
@@ -243,6 +248,9 @@ router.post('/register/send-code', async (req, res) => {
     if (existingUser.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
     }
+
+    // Store registration data temporarily
+    registrationData.set(email, { name, studentId, role });
 
     // Generate and store verification code
     const code = generateCode();
@@ -271,11 +279,19 @@ router.post('/register/send-code', async (req, res) => {
 // STEP 2: Verify code and complete registration
 router.post('/register/verify', async (req, res) => {
   try {
-    const { email, code, password, studentId, name, department, graduationYear } = req.body;
+    const { email, code, password } = req.body;
 
     if (!email || !code || !password) {
       return res.status(400).json({ error: 'Email, code, and password are required' });
     }
+
+    // Get stored registration data
+    const regData = registrationData.get(email);
+    if (!regData) {
+      return res.status(400).json({ error: 'Registration session expired. Please start again.' });
+    }
+
+    const { name, studentId, role } = regData;
 
     // Verify code
     const verificationRecord = await db.select()
@@ -310,16 +326,17 @@ router.post('/register/verify', async (req, res) => {
       .limit(1);
 
     const isAutoApproved = approvedRecord.length > 0;
-    const role = isAutoApproved ? approvedRecord[0].role : (studentId ? 'student' : 'alumni');
+    const finalRole = isAutoApproved ? approvedRecord[0].role : role;
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with name
     const newUser = await db.insert(users).values({
       email,
+      name,
       passwordHash,
-      role,
+      role: finalRole,
       studentId: studentId || null,
       isEmailVerified: true,
       isVerified: isAutoApproved,
@@ -343,16 +360,19 @@ router.post('/register/verify', async (req, res) => {
       // Create verification request for admin review
       await db.insert(verificationRequests).values({
         userId,
-        requestData: { name, department, graduationYear },
+        requestData: { email, name },
       });
     }
 
+    // Clear registration data
+    registrationData.delete(email);
+
     // Send welcome email
-    await sendWelcomeEmail(email, name || 'User', isAutoApproved);
+    await sendWelcomeEmail(email, name, isAutoApproved);
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId, email, role, isVerified: isAutoApproved },
+      { userId, email, name, role: finalRole, isVerified: isAutoApproved },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -363,7 +383,9 @@ router.post('/register/verify', async (req, res) => {
       user: {
         id: userId,
         email,
-        role,
+        name,
+        role: finalRole,
+        studentId: studentId || null,
         isVerified: isAutoApproved,
         isEmailVerified: true,
       },

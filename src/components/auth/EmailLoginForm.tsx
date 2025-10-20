@@ -24,6 +24,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +35,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
 
     setLoading(true);
     setError('');
+    setShowRegisterPrompt(false);
 
     try {
       const result = await sendLoginCode(identifier.trim());
@@ -44,7 +46,13 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
         setStep('code');
         setSuccess(`Login code sent to ${result.email}`);
       } else {
-        setError(result.error || 'Failed to send login code');
+        // Check if error indicates user not found
+        if (result.error?.includes('not found') || result.error?.includes('Student ID not found')) {
+          setShowRegisterPrompt(true);
+          setError('Account not found. Please register first.');
+        } else {
+          setError(result.error || 'Failed to send login code');
+        }
       }
     } catch (error: any) {
       setError(error.message || 'Failed to send login code');
@@ -213,8 +221,19 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
           </form>
         )}
 
+        {showRegisterPrompt && (
+          <Alert className="bg-blue-50 border-blue-200">
+            <AlertDescription className="text-blue-800">
+              <div className="space-y-2">
+                <p className="font-semibold">No account found!</p>
+                <p className="text-sm">Please register first using the <strong>Register</strong> tab above.</p>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="text-center text-sm text-muted-foreground space-y-1">
-          <p>Don't have an account? Contact admin for registration.</p>
+          <p>Don't have an account? Use the <strong>Register</strong> tab above.</p>
           {step === 'code' && (
             <p className="text-xs">
               💡 If you don't receive the code, check your spam folder or verify the email address.

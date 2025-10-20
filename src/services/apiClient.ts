@@ -358,11 +358,11 @@ class ApiClient {
     }
 
     const data = await response.json();
-    
+
     this.setAuthToken(data.token);
     localStorage.setItem('refresh_token', data.token + '_refresh');
     localStorage.setItem('authUser', JSON.stringify(data.user));
-    
+
     return {
       access_token: data.token,
       refresh_token: data.token + '_refresh',
