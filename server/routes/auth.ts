@@ -554,6 +554,96 @@ router.post('/password-reset/verify', async (req, res) => {
   }
 });
 
+// Admin login endpoint
+router.post('/admin-login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Check for test admin credentials
+    if (email === 'admin@example.com' && password === 'admin123') {
+      // Create admin user if doesn't exist
+      let adminUser = await db.select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (adminUser.length === 0) {
+        const passwordHash = await bcrypt.hash(password, 10);
+        const newAdmin = await db.insert(users).values({
+          email,
+          passwordHash,
+          role: 'admin',
+          isEmailVerified: true,
+          isVerified: true,
+          verificationMethod: 'admin',
+        }).returning();
+        adminUser = newAdmin;
+      }
+
+      const token = jwt.sign(
+        { userId: adminUser[0].id, email, role: 'admin', isVerified: true },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        message: 'Admin login successful',
+        token,
+        user: {
+          id: adminUser[0].id,
+          email,
+          role: 'admin',
+          isVerified: true,
+        },
+      });
+    }
+
+    // Regular admin login
+    const userRecord = await db.select()
+      .from(users)
+      .where(and(
+        eq(users.email, email),
+        eq(users.role, 'admin')
+      ))
+      .limit(1);
+
+    if (userRecord.length === 0) {
+      return res.status(401).json({ error: 'Invalid admin credentials' });
+    }
+
+    const user = userRecord[0];
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid admin credentials' });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: 'admin', isVerified: true },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Admin login successful',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: 'admin',
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error('Error during admin login:', error);
+    res.status(500).json({ error: 'Admin login failed' });
+  }
+});
+
 // Logout endpoint
 router.post('/logout', async (req, res) => {
   res.status(204).send();

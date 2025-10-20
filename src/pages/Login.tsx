@@ -215,7 +215,43 @@ const Login = () => {
                     </p>
                   </div>
                   
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    setIsLoading(true);
+                    
+                    try {
+                      const response = await fetch('/api/auth/admin-login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: identifier, password })
+                      });
+                      
+                      const data = await response.json();
+                      
+                      if (response.ok) {
+                        localStorage.setItem('token', data.token);
+                        toast({
+                          title: "Login successful!",
+                          description: "Welcome to Admin Dashboard",
+                        });
+                        navigate('/admin');
+                      } else {
+                        toast({
+                          title: "Login failed",
+                          description: data.error || "Invalid credentials",
+                          variant: "destructive",
+                        });
+                      }
+                    } catch (error) {
+                      toast({
+                        title: "Login error",
+                        description: "Something went wrong",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="admin-email">Admin Email</Label>
                       <Input
@@ -246,6 +282,9 @@ const Login = () => {
                       {isLoading ? "Signing in..." : "Sign In as Admin"}
                     </Button>
                   </form>
+                  <div className="text-xs text-center text-muted-foreground">
+                    <p>Test credentials: admin@example.com / admin123</p>
+                  </div>
                 </div>
               )}
             </div>

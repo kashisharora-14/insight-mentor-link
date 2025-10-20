@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "seed:verification": "tsx server/seed-verification-request.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
