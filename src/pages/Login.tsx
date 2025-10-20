@@ -167,41 +167,17 @@ const Login = () => {
                   <div className="text-center mb-4">
                     <h3 className="text-lg font-semibold mb-2">🎓 Alumni Sign In</h3>
                     <p className="text-sm text-muted-foreground">
-                      Enter your email and password
+                      We'll send a verification code to your email
                     </p>
                   </div>
                   
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="alumni-email">Email Address</Label>
-                      <Input
-                        id="alumni-email"
-                        type="email"
-                        placeholder="alumni@example.com"
-                        value={identifier}
-                        onChange={(e) => setIdentifier(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="alumni-password">Password</Label>
-                      <Input
-                        id="alumni-password"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Signing in..." : "Sign In as Alumni"}
-                    </Button>
-                  </form>
+                  <EmailLoginForm onSuccess={() => {
+                    toast({
+                      title: "Login successful!",
+                      description: "Welcome back to Re-Connect",
+                    });
+                    navigate('/dashboard');
+                  }} />
                 </div>
               )}
 
