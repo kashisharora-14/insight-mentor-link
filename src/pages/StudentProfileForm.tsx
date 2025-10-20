@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -133,7 +132,7 @@ export default function StudentProfileForm() {
 
     try {
       const token = localStorage.getItem('token')
-      
+
       // Convert form data to match backend expectations
       const submitData = {
         ...formData,
@@ -214,7 +213,7 @@ export default function StudentProfileForm() {
               {/* Academic Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Academic Information</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="rollNumber">Roll Number *</Label>
@@ -325,7 +324,7 @@ export default function StudentProfileForm() {
               {/* Personal Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Personal Information</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="dateOfBirth">Date of Birth</Label>
@@ -404,7 +403,7 @@ export default function StudentProfileForm() {
               {/* Contact Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Contact Information</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="phoneNumber">Phone Number</Label>
@@ -478,7 +477,7 @@ export default function StudentProfileForm() {
               {/* Parent/Guardian Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Parent/Guardian Information</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="fatherName">Father's Name</Label>
@@ -539,7 +538,7 @@ export default function StudentProfileForm() {
               {/* Skills & Links */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Skills & Social Links</h3>
-                
+
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <Label htmlFor="technicalSkills">Technical Skills (comma-separated)</Label>
