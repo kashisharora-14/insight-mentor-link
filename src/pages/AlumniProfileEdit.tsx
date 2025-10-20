@@ -190,44 +190,44 @@ export default function AlumniProfileEdit() {
                   </div>
 
                   <div>
-                    <Label htmlFor="graduationYear">Graduation Year *</Label>
+                    <Label htmlFor="graduationYear">Graduation Year (Optional)</Label>
                     <Input
                       id="graduationYear"
                       name="graduationYear"
                       type="number"
                       value={profile.graduationYear}
                       onChange={handleInputChange}
-                      required
                       placeholder="2020"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">If you don't remember, you can skip this</p>
                   </div>
 
                   <div>
-                    <Label htmlFor="degree">Degree *</Label>
+                    <Label htmlFor="degree">Degree (Optional)</Label>
                     <Input
                       id="degree"
                       name="degree"
                       value={profile.degree}
                       onChange={handleInputChange}
-                      required
-                      placeholder="Bachelor of Science"
+                      placeholder="MCA / MSCIT / Bachelor of Science"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">If you don't remember, you can skip this</p>
                   </div>
 
                   <div>
-                    <Label htmlFor="major">Major *</Label>
+                    <Label htmlFor="major">Major (Optional)</Label>
                     <Input
                       id="major"
                       name="major"
                       value={profile.major}
                       onChange={handleInputChange}
-                      required
                       placeholder="Computer Science"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">If you don't remember, you can skip this</p>
                   </div>
 
                   <div>
-                    <Label htmlFor="location">Location</Label>
+                    <Label htmlFor="location">Current Location</Label>
                     <Input
                       id="location"
                       name="location"

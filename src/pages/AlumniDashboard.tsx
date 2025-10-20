@@ -78,77 +78,7 @@ const AlumniDashboard = () => {
         console.error('Error fetching mentorship requests:', error);
       }
 
-      // Fallback to mock data
-      setAlumniRequests([
-        {
-          id: '1',
-          studentName: 'Aarav Mehta',
-          studentEmail: 'aarav.mehta@student.edu',
-          studentDepartment: 'UICET',
-          studentYear: '2025',
-          subject: 'Career guidance in Machine Learning and AI',
-          goals: 'Transition from academic projects to industry-level ML systems',
-          preferredTime: 'Weekends, 10 AM - 12 PM',
-          message: 'Hi! I\'m a final year student passionate about AI/ML. I\'ve worked on several academic projects but want to understand how to build production-ready ML systems. Your experience at Google would be invaluable for my career growth.',
-          status: 'pending',
-          createdAt: '2024-01-15T10:30:00Z',
-          studentProfile: {
-            bio: 'Computer Science student with keen interest in AI/ML and data science.',
-            skills: ['Python', 'TensorFlow', 'Data Analysis', 'Neural Networks']
-          }
-        },
-        {
-          id: '2',
-          studentName: 'Priya Sharma',
-          studentEmail: 'priya.sharma@student.edu',
-          studentDepartment: 'UICET',
-          studentYear: '2024',
-          subject: 'Product Management Career Path',
-          goals: 'Learn about transitioning from engineering to product management',
-          preferredTime: 'Weekdays evenings, 6-8 PM',
-          message: 'Hello! I\'m currently working as a software engineer but interested in moving into product management. Would love to learn about your transition and get advice on building relevant skills.',
-          status: 'accepted',
-          createdAt: '2024-01-10T14:20:00Z',
-          studentProfile: {
-            bio: 'Software Engineer with 2 years experience, aspiring product manager.',
-            skills: ['JavaScript', 'React', 'Product Strategy', 'User Research']
-          }
-        },
-        {
-          id: '3',
-          studentName: 'Rahul Kumar',
-          studentEmail: 'rahul.kumar@student.edu',
-          studentDepartment: 'UICET',
-          studentYear: '2026',
-          subject: 'Data Science Career Guidance',
-          goals: 'Understand industry expectations and build a strong portfolio',
-          preferredTime: 'Any time, very flexible',
-          message: 'I\'m a sophomore interested in data science. I\'ve been learning Python and statistics, but want to understand what skills are most important in the industry and how to build a compelling portfolio.',
-          status: 'pending',
-          createdAt: '2024-01-18T09:15:00Z',
-          studentProfile: {
-            bio: 'Sophomore student passionate about data science and analytics.',
-            skills: ['Python', 'SQL', 'Statistics', 'Pandas']
-          }
-        },
-        {
-          id: '4',
-          studentName: 'Anisha Verma',
-          studentEmail: 'anisha.verma@student.edu',
-          studentDepartment: 'UBS',
-          studentYear: '2024',
-          subject: 'UX Design Career Transition',
-          goals: 'Move from business background to UX design',
-          preferredTime: 'Weekends, morning preferred',
-          message: 'Hi! I have a business background but discovered my passion for UX design. Your journey in design at Adobe inspires me. Could you guide me on making this career transition?',
-          status: 'completed',
-          createdAt: '2024-01-05T16:45:00Z',
-          studentProfile: {
-            bio: 'Business student with growing interest in user experience design.',
-            skills: ['Business Analysis', 'Figma', 'User Research', 'Design Thinking']
-          }
-        }
-      ]);
+      // No fallback to mock data - show empty state if no data
       setLoading(false);
     };
 
@@ -327,22 +257,38 @@ const AlumniDashboard = () => {
                 <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold">4.9</div>
-                <div className="text-sm text-muted-foreground">Avg Rating</div>
+                <div className="text-2xl font-bold">{alumniRequests.length}</div>
+                <div className="text-sm text-muted-foreground">Total Requests</div>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Verification Status Card */}
-        <Card className="mb-8">
+        <Card className="mb-8 border-l-4" style={{
+          borderLeftColor: user?.isVerified ? '#10b981' : '#f59e0b'
+        }}>
           <CardHeader>
-            <CardTitle>Verification Status</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              {user?.isVerified ? (
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              ) : (
+                <Clock className="w-5 h-5 text-orange-500" />
+              )}
+              Verification Status
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Your account is {user?.verification_status === 'verified' ? 'verified' : 'not verified'}.</p>
-            {user?.verification_status !== 'verified' && (
-                <p>Please wait for an admin to verify your account.</p>
+            {user?.isVerified ? (
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <p className="text-green-800 font-semibold">✓ Verified Account</p>
+                <p className="text-green-700 text-sm mt-1">Your profile is verified and visible to students.</p>
+              </div>
+            ) : (
+              <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded">
+                <p className="text-orange-800 font-semibold">⏳ Verification Pending</p>
+                <p className="text-orange-700 text-sm mt-1">Please wait for an admin to verify your account. You'll receive an email once approved.</p>
+              </div>
             )}
           </CardContent>
         </Card>
