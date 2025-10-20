@@ -120,16 +120,50 @@ router.post('/verify-login-code', async (req, res) => {
       });
     }
 
+    let userDetails = null;
+    let actualUserId = validCode.userId;
+
+    // Check if this is a temporary user ID
+    if (validCode.userId.startsWith('temp_')) {
+      // Check if user exists by email
+      const existingUser = await db.select().from(users).where(eq(users.email, validCode.email)).limit(1);
+      
+      if (existingUser.length > 0) {
+        // User exists, use their actual ID
+        userDetails = existingUser[0];
+        actualUserId = userDetails.id;
+      } else {
+        // Create new user with minimal info
+        const newUsers = await db.insert(users).values({
+          email: validCode.email,
+          passwordHash: '', // No password for passwordless login
+          role: 'student',
+          isEmailVerified: true,
+          isVerified: false,
+          verificationMethod: 'pending',
+        }).returning();
+        
+        userDetails = newUsers[0];
+        actualUserId = userDetails.id;
+
+        // Create verification request for admin review
+        await db.insert(verificationRequests).values({
+          userId: actualUserId,
+          requestData: { email: validCode.email },
+        });
+      }
+    } else {
+      // Get existing user details
+      const userRecord = await db.select().from(users).where(eq(users.id, validCode.userId)).limit(1);
+      userDetails = userRecord.length > 0 ? userRecord[0] : null;
+    }
+
     // Generate JWT token
     const token = jwt.sign(
-      { userId: validCode.userId, email: validCode.email, role: 'student' },
+      { userId: actualUserId, email: validCode.email, role: userDetails?.role || 'student' },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
-
-    // Get user details to check verification status
-    const userRecord = await db.select().from(users).where(eq(users.id, validCode.userId)).limit(1);
-    const userDetails = userRecord.length > 0 ? userRecord[0] : null;
 
     res.json({
       data: {
@@ -138,13 +172,13 @@ router.post('/verify-login-code', async (req, res) => {
         token_type: 'Bearer',
         expires_in: 604800,
         user: {
-          id: validCode.userId,
+          id: actualUserId,
           email: validCode.email,
           name: 'Demo User',
           role: userDetails?.role || 'student',
           isVerified: userDetails?.isVerified || false,
           verificationMethod: userDetails?.verificationMethod || 'pending',
-          isEmailVerified: userDetails?.isEmailVerified || false,
+          isEmailVerified: userDetails?.isEmailVerified || true,
         }
       }
     });
