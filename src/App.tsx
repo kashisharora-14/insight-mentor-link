@@ -53,6 +53,7 @@ function App() {
             <Route path="/gift-shop" element={<ProtectedRoute><GiftShop /></ProtectedRoute>} />
             <Route path="/profile/:id" element={<ProtectedRoute><AlumniProfile /></ProtectedRoute>} />
 
+            {/* Catch-all route for 404 - must be last */}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
