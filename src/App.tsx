@@ -20,6 +20,7 @@ import JobBoard from "./pages/JobBoard";
 import AlumniProfile from "./pages/AlumniProfile";
 import Mentorship from "./pages/Mentorship";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => (
             />
             <Route path="/alumni-profile" element={<AlumniProfile />} />
             <Route path="/mentorship" element={<Mentorship />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
             <Route 
               path="/admin-dashboard" 
               element={
