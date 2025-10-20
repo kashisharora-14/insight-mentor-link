@@ -13,6 +13,7 @@ import EmailLoginForm from '@/components/auth/EmailLoginForm';
 import EmailRegistrationForm from '@/components/auth/EmailRegistrationForm';
 
 const Login = () => {
+  const [activeRole, setActiveRole] = useState<'student' | 'alumni' | 'admin'>('student');
   const [step, setStep] = useState<'login' | 'register'>('login');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -51,32 +52,6 @@ const Login = () => {
     }
   };
 
-  const demoCredentials = [
-    {
-      role: 'Student',
-      email: 'student@demo.com',
-      icon: User,
-      color: 'bg-blue-500'
-    },
-    {
-      role: 'Alumni', 
-      email: 'alumni@demo.com',
-      icon: UserCheck,
-      color: 'bg-green-500'
-    },
-    {
-      role: 'Admin',
-      email: 'admin@demo.com',
-      icon: Shield,
-      color: 'bg-red-500'
-    }
-  ];
-
-  const fillCredentials = (demoEmail: string) => {
-    setIdentifier(demoEmail);
-    setPassword('demo123');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -95,132 +70,184 @@ const Login = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
             <CardDescription className="text-center">
-              Choose your preferred sign-in method
+              Select your role to continue
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Temporarily simplified - just show the new email login */}
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              {/* Role Selection Tabs */}
+              <div className="grid grid-cols-3 gap-2">
                 <Button 
-                  variant={step === 'login' ? 'default' : 'outline'}
-                  onClick={() => setStep('login')}
-                  className="flex items-center gap-2"
+                  variant={activeRole === 'student' ? 'default' : 'outline'}
+                  onClick={() => setActiveRole('student')}
+                  className="flex flex-col items-center gap-1 h-auto py-3"
                 >
-                  <Mail className="h-4 w-4" />
-                  Sign In
+                  <User className="h-5 w-5" />
+                  <span className="text-xs">Student</span>
                 </Button>
                 <Button 
-                  variant={step === 'register' ? 'default' : 'outline'}
-                  onClick={() => setStep('register')}
-                  className="flex items-center gap-2"
+                  variant={activeRole === 'alumni' ? 'default' : 'outline'}
+                  onClick={() => setActiveRole('alumni')}
+                  className="flex flex-col items-center gap-1 h-auto py-3"
                 >
-                  <UserPlus className="h-4 w-4" />
-                  Register
+                  <UserCheck className="h-5 w-5" />
+                  <span className="text-xs">Alumni</span>
+                </Button>
+                <Button 
+                  variant={activeRole === 'admin' ? 'default' : 'outline'}
+                  onClick={() => setActiveRole('admin')}
+                  className="flex flex-col items-center gap-1 h-auto py-3"
+                >
+                  <Shield className="h-5 w-5" />
+                  <span className="text-xs">Admin</span>
                 </Button>
               </div>
-              
-              {step === 'login' ? (
-                <div>
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-semibold mb-2">🔐 Sign In</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Students: Use your <strong>student ID</strong> or <strong>registered email</strong>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      A verification code will be sent to your email
-                    </p>
+
+              {/* Student Login */}
+              {activeRole === 'student' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button 
+                      variant={step === 'login' ? 'default' : 'outline'}
+                      onClick={() => setStep('login')}
+                      className="flex items-center gap-2"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Sign In
+                    </Button>
+                    <Button 
+                      variant={step === 'register' ? 'default' : 'outline'}
+                      onClick={() => setStep('register')}
+                      className="flex items-center gap-2"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Register
+                    </Button>
                   </div>
                   
-                  <EmailLoginForm onSuccess={() => {
-                    toast({
-                      title: "Login successful!",
-                      description: "Welcome back to Re-Connect",
-                    });
-                    navigate('/dashboard');
-                  }} />
-                </div>
-              ) : (
-                <div>
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-semibold mb-2">🎓 Join Re-Connect</h3>
-                    <p className="text-sm text-muted-foreground">Create your account to join the alumni network</p>
-                  </div>
-                  
-                  <EmailRegistrationForm onSuccess={() => {
-                    toast({
-                      title: "Registration successful!",
-                      description: "Welcome to Re-Connect! Please sign in.",
-                    });
-                    setStep('login');
-                  }} />
+                  {step === 'login' ? (
+                    <div>
+                      <div className="text-center mb-4">
+                        <h3 className="text-lg font-semibold mb-2">🎓 Student Sign In</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Use your <strong>student ID</strong> or <strong>registered email</strong>
+                        </p>
+                      </div>
+                      
+                      <EmailLoginForm onSuccess={() => {
+                        toast({
+                          title: "Login successful!",
+                          description: "Welcome back to Re-Connect",
+                        });
+                        navigate('/dashboard');
+                      }} />
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-center mb-4">
+                        <h3 className="text-lg font-semibold mb-2">🎓 Student Registration</h3>
+                        <p className="text-sm text-muted-foreground">Create your student account</p>
+                      </div>
+                      
+                      <EmailRegistrationForm onSuccess={() => {
+                        toast({
+                          title: "Registration successful!",
+                          description: "Welcome to Re-Connect! Please sign in.",
+                        });
+                        setStep('login');
+                      }} />
+                    </div>
+                  )}
                 </div>
               )}
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-muted"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">Or use legacy login</span>
-                </div>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="identifier">Email or Student ID (Legacy)</Label>
-                  <Input
-                    id="identifier"
-                    type="text"
-                    placeholder="Enter your email or student ID"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                  variant="outline"
-                >
-                  {isLoading ? "Signing in..." : "Legacy Sign In"}
-                </Button>
-              </form>
 
-              <div className="mt-4 space-y-2">
-                <p className="text-xs text-center text-muted-foreground">Demo Credentials:</p>
-                {demoCredentials.map((cred, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start h-auto p-2"
-                    onClick={() => fillCredentials(cred.email)}
-                  >
-                    <div className={`w-6 h-6 ${cred.color} rounded-full flex items-center justify-center mr-2`}>
-                      <cred.icon className="w-3 h-3 text-white" />
+              {/* Alumni Login */}
+              {activeRole === 'alumni' && (
+                <div className="space-y-4">
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-semibold mb-2">🎓 Alumni Sign In</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your email and password
+                    </p>
+                  </div>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="alumni-email">Email Address</Label>
+                      <Input
+                        id="alumni-email"
+                        type="email"
+                        placeholder="alumni@example.com"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        required
+                      />
                     </div>
-                    <div className="text-left">
-                      <div className="text-xs font-medium">{cred.role}: {cred.email}</div>
+                    <div className="space-y-2">
+                      <Label htmlFor="alumni-password">Password</Label>
+                      <Input
+                        id="alumni-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
                     </div>
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      demo123
-                    </Badge>
-                  </Button>
-                ))}
-              </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing in..." : "Sign In as Alumni"}
+                    </Button>
+                  </form>
+                </div>
+              )}
+
+              {/* Admin Login */}
+              {activeRole === 'admin' && (
+                <div className="space-y-4">
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-semibold mb-2">🛡️ Admin Sign In</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Authorized personnel only
+                    </p>
+                  </div>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="admin-email">Admin Email</Label>
+                      <Input
+                        id="admin-email"
+                        type="email"
+                        placeholder="admin@example.com"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="admin-password">Password</Label>
+                      <Input
+                        id="admin-password"
+                        type="password"
+                        placeholder="Enter admin password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing in..." : "Sign In as Admin"}
+                    </Button>
+                  </form>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 text-center">
