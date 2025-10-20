@@ -146,7 +146,7 @@ class ApiClient {
       console.error('Error details:', error);
       console.error('Error type:', error?.constructor?.name);
       console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
-      
+
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error(`Cannot connect to API server. Make sure the server is running on port 3001.`);
       }
@@ -190,14 +190,14 @@ class ApiClient {
 
   // Authentication methods
   async sendLoginCode(identifier: string): Promise<LoginCodeResponse> {
-    return this.makeRequest<LoginCodeResponse>('/auth/login', {
+    return this.makeRequest<LoginCodeResponse>('/auth/register/send-code', {
       method: 'POST',
       body: JSON.stringify({ identifier }),
     });
   }
 
   async verifyLoginCode(userId: string, code: string): Promise<AuthTokens> {
-    const tokens = await this.makeRequest<AuthTokens>('/auth/verify-login-code', {
+    const tokens = await this.makeRequest<AuthTokens>('/auth/register/verify', {
       method: 'POST',
       body: JSON.stringify({ user_id: userId, code }),
     });

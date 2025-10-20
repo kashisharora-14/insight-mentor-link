@@ -88,6 +88,78 @@ def verify_registration():
         'user': user.to_dict()
     }), 200
 
+@auth.route('/api/auth/login/send-code', methods=['POST'])
+def send_login_code():
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+    
+    # Check if user exists and is verified
+    user = User.query.filter_by(email=email, is_verified=True).first()
+    if not user:
+        return jsonify({'error': 'User not found or not verified'}), 404
+    
+    # Generate verification code
+    code = generate_verification_code()
+    expires_at = datetime.utcnow() + timedelta(minutes=15)
+    
+    # Save verification code
+    verification = VerificationCode(
+        email=email,
+        code=code,
+        expires_at=expires_at
+    )
+    db.session.add(verification)
+    db.session.commit()
+    
+    # TODO: Send email with verification code
+    print(f"Login code for {email}: {code}")
+    
+    return jsonify({
+        'message': 'Login code sent to your email',
+        'expires_in': 900
+    }), 200
+
+@auth.route('/api/auth/login/verify-code', methods=['POST'])
+def verify_login_code():
+    data = request.get_json()
+    email = data.get('email')
+    code = data.get('code')
+    
+    if not all([email, code]):
+        return jsonify({'error': 'Email and code are required'}), 400
+    
+    # Verify code
+    verification = VerificationCode.query.filter_by(
+        email=email,
+        code=code,
+        is_used=False
+    ).first()
+    
+    if not verification or verification.expires_at < datetime.utcnow():
+        return jsonify({'error': 'Invalid or expired verification code'}), 400
+    
+    # Get user
+    user = User.query.filter_by(email=email, is_verified=True).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Mark code as used
+    verification.is_used = True
+    db.session.commit()
+    
+    # Generate tokens
+    access_token = create_access_token(identity=user.id)
+    refresh_token = create_refresh_token(identity=user.id)
+    
+    return jsonify({
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+        'user': user.to_dict()
+    }), 200
+
 @auth.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.get_json()

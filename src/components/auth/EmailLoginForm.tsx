@@ -6,6 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface EmailLoginFormProps {
   onSuccess?: () => void;
@@ -34,7 +37,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
 
     try {
       const result = await sendLoginCode(identifier.trim());
-      
+
       if (result.success) {
         setUserId(result.userId);
         setUserEmail(result.email);
@@ -62,7 +65,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
 
     try {
       const success = await verifyLoginCode(userId, code.trim());
-      
+
       if (success) {
         setSuccess('Login successful!');
         onSuccess?.();
@@ -86,7 +89,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
   const handleResendCode = async () => {
     setLoading(true);
     setError('');
-    
+
     try {
       const result = await sendLoginCode(identifier);
       if (result.success) {
@@ -115,14 +118,14 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
           }
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {error && (
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        
+
         {success && (
           <Alert>
             <AlertDescription className="text-green-600">{success}</AlertDescription>
@@ -143,7 +146,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
                 required
               />
             </div>
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
@@ -171,7 +174,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
                 required
               />
             </div>
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
@@ -182,7 +185,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
                 'Verify & Sign In'
               )}
             </Button>
-            
+
             <div className="flex flex-col gap-2">
               <Button 
                 type="button" 
@@ -193,7 +196,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
               >
                 Resend Code
               </Button>
-              
+
               <Button 
                 type="button" 
                 variant="ghost" 
@@ -206,7 +209,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
             </div>
           </form>
         )}
-        
+
         <div className="text-center text-sm text-muted-foreground">
           <p>Don't have an account? Contact admin for registration.</p>
         </div>
