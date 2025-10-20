@@ -436,6 +436,7 @@ const AdminDashboard = () => {
     ];
 
     setProfiles(mockProfiles);
+    }
   };
 
   const fetchDonations = async () => {
