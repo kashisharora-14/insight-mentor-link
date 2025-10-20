@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         // Clear any invalid tokens first
         const token = localStorage.getItem('authToken');
-        
+
         // Check if token exists and is not malformed
         if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
           console.log('ℹ️ No valid token found, user needs to login');
@@ -120,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const verifyLoginCode = async (userId: string, code: string): Promise<boolean> => {
     try {
       const tokens = await apiClient.verifyLoginCode(userId, code);
-      
+
       // Validate the token before saving
       if (!tokens.access_token || tokens.access_token === 'null' || tokens.access_token === 'undefined') {
         console.error('❌ Received invalid token from server');
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Save the token
       apiClient.setAuthToken(tokens.access_token);
-      
+
       setUser({
         id: tokens.user.id,
         email: tokens.user.email,

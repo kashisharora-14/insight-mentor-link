@@ -199,7 +199,7 @@ router.post('/verify-login-code', async (req, res) => {
     const userName = userDetails?.name || validCode.email.split('@')[0];
 
     const token = jwt.sign(
-      { userId: actualUserId, email: validCode.email, name: userName, role: userDetails?.role || 'student' },
+      { userId: actualUserId, email: validCode.email, name: userName, role: userDetails?.role || 'student', student_id: userDetails?.studentId || null },
       JWT_SECRET
       // No expiration set - token valid until logout
     );
@@ -367,7 +367,7 @@ router.post('/register/verify', async (req, res) => {
       .where(
         and(
           or(
-            eq(approvedUsers.email, email),
+            email ? eq(approvedUsers.email, email) : undefined,
             studentId ? eq(approvedUsers.studentId, studentId) : undefined
           ),
           eq(approvedUsers.isUsed, false)
@@ -422,7 +422,7 @@ router.post('/register/verify', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId, email, name, role: finalRole, isVerified: isAutoApproved },
+      { userId, email, name, role: finalRole, isVerified: isAutoApproved, student_id: studentId || null },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -480,7 +480,7 @@ router.post('/login-password', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role, isVerified: user.isVerified },
+      { userId: user.id, email: user.email, role: user.role, student_id: user.studentId, name: user.name },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -657,7 +657,7 @@ router.post('/admin-login', async (req, res) => {
       }
 
       const token = jwt.sign(
-        { userId: adminUser[0].id, email, role: 'admin', isVerified: true },
+        { userId: adminUser[0].id, email, role: 'admin', isVerified: true, student_id: adminUser[0].studentId, name: adminUser[0].name },
         JWT_SECRET
         // No expiration - token valid until logout
       );
@@ -695,7 +695,7 @@ router.post('/admin-login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: 'admin', isVerified: true },
+      { userId: user.id, email: user.email, role: 'admin', isVerified: true, student_id: user.studentId, name: user.name },
       JWT_SECRET
       // No expiration - token valid until logout
     );
