@@ -204,7 +204,7 @@ const StudentDashboard = () => {
           if (data.profile) {
             setStudentProfile({
               name: user?.name || 'Student',
-              studentId: data.profile.rollNumber || user?.student_id || 'N/A',
+              studentId: data.profile.rollNumber || data.profile.roll_number || user?.student_id || 'Not set',
               email: user?.email || 'N/A',
               department: data.profile.department || 'Not set',
               batchYear: data.profile.batchYear || new Date().getFullYear(),
@@ -216,7 +216,7 @@ const StudentDashboard = () => {
             // No profile yet - set basic info from user
             setStudentProfile({
               name: user?.name || 'Student',
-              studentId: user?.student_id || 'N/A',
+              studentId: user?.student_id || 'Please complete your profile',
               email: user?.email || 'N/A',
               department: 'Not set',
               batchYear: new Date().getFullYear(),
@@ -229,7 +229,7 @@ const StudentDashboard = () => {
           // Profile endpoint error - use basic user info
           setStudentProfile({
             name: user?.name || 'Student',
-            studentId: user?.student_id || 'N/A',
+            studentId: user?.student_id || 'Please complete your profile',
             email: user?.email || 'N/A',
             department: 'Not set',
             batchYear: new Date().getFullYear(),
@@ -243,7 +243,7 @@ const StudentDashboard = () => {
         // Fallback to basic user info
         setStudentProfile({
           name: user?.name || 'Student',
-          studentId: user?.student_id || 'N/A',
+          studentId: user?.student_id || 'Please complete your profile',
           email: user?.email || 'N/A',
           department: 'Not set',
           batchYear: new Date().getFullYear(),
