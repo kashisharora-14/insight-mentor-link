@@ -274,8 +274,8 @@ router.post('/register/send-code', async (req, res) => {
   try {
     const { email, name, studentId, role } = req.body;
 
-    if (!email || !name || !role) {
-      return res.status(400).json({ error: 'Email, name, and role are required' });
+    if (!email || !name || !role || !studentId) {
+      return res.status(400).json({ error: 'Email, name, student ID, and role are required' });
     }
 
     const nameValidation = validateName(name);
@@ -291,6 +291,12 @@ router.post('/register/send-code', async (req, res) => {
     const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (existingUser.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Check if student ID already exists (must be unique)
+    const existingStudentId = await db.select().from(users).where(eq(users.studentId, studentId)).limit(1);
+    if (existingStudentId.length > 0) {
+      return res.status(400).json({ error: 'Student ID already registered. Each student must have a unique ID.' });
     }
 
     // Store registration data temporarily

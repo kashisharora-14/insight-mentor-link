@@ -34,7 +34,7 @@ export default function EmailRegistrationForm({ onSuccess }: EmailRegistrationFo
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.trim() || !name.trim()) {
+    if (!email.trim() || !name.trim() || !studentId.trim()) {
       setError('Please fill in all required fields');
       return;
     }
@@ -189,20 +189,19 @@ export default function EmailRegistrationForm({ onSuccess }: EmailRegistrationFo
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="studentId">Student ID {role === 'student' ? '(Recommended)' : '(Optional)'}</Label>
+              <Label htmlFor="studentId">Student ID *</Label>
               <Input
                 id="studentId"
                 type="text"
-                placeholder="e.g., CS2021001"
+                placeholder="e.g., CS1077"
                 value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
+                onChange={(e) => setStudentId(e.target.value.toUpperCase())}
                 disabled={loading}
+                required
               />
-              {role === 'student' && (
-                <p className="text-xs text-muted-foreground">
-                  💡 Add your student ID to login using either student ID or email
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                💡 Your unique student ID is required and must be different for each student
+              </p>
             </div>
             
             <div className="space-y-2">
