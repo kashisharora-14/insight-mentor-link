@@ -54,49 +54,57 @@ const App = () => (
             <Route path="/donations" element={<Donations />} />
             <Route path="/gift-shop" element={<GiftShop />} />
             <Route path="/jobs" element={<JobBoard />} />
-            <Route 
-              path="/student-dashboard" 
+            <Route
+              path="/student-dashboard"
               element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <StudentDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/alumni-dashboard" 
+            <Route
+              path="/complete-profile"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentProfileForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/alumni-dashboard"
               element={
                 <ProtectedRoute allowedRoles={['alumni']}>
                   <AlumniDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route path="/alumni-profile" element={<AlumniProfile />} />
             <Route path="/mentorship" element={<Mentorship />} />
             <Route path="/admin-login" element={<AdminLogin />} />
-            <Route 
-              path="/admin-dashboard" 
+            <Route
+              path="/admin-dashboard"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/admin" 
+            <Route
+              path="/admin"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route 
-              path="/student-profile" 
+            <Route
+              path="/student-profile"
               element={
                 <ProtectedRoute>
                   <StudentProfileForm />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

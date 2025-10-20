@@ -90,14 +90,58 @@ export default function StudentProfileForm() {
       if (response.ok) {
         const data = await response.json();
         if (data.profile) {
+          // Map the database fields to form fields
           setFormData(prev => ({
             ...prev,
-            ...data.profile,
+            rollNumber: data.profile.rollNumber || '',
+            department: data.profile.department || '',
+            batchYear: data.profile.batchYear || new Date().getFullYear(),
+            currentSemester: data.profile.currentSemester || 1,
+            cgpa: data.profile.cgpa || '',
+            currentBacklog: data.profile.currentBacklog || 0,
+            dateOfBirth: data.profile.dateOfBirth || '',
+            gender: data.profile.gender || '',
+            bloodGroup: data.profile.bloodGroup || '',
+            category: data.profile.category || '',
+            nationality: data.profile.nationality || 'Indian',
+            religion: data.profile.religion || '',
+            phoneNumber: data.profile.phoneNumber || '',
+            alternateEmail: data.profile.alternateEmail || '',
+            permanentAddress: data.profile.permanentAddress || '',
+            currentAddress: data.profile.currentAddress || '',
+            city: data.profile.city || '',
+            state: data.profile.state || '',
+            pincode: data.profile.pincode || '',
+            fatherName: data.profile.fatherName || '',
+            fatherOccupation: data.profile.fatherOccupation || '',
+            fatherPhone: data.profile.fatherPhone || '',
+            motherName: data.profile.motherName || '',
+            motherOccupation: data.profile.motherOccupation || '',
+            motherPhone: data.profile.motherPhone || '',
+            guardianName: data.profile.guardianName || '',
+            guardianRelation: data.profile.guardianRelation || '',
+            guardianPhone: data.profile.guardianPhone || '',
+            admissionType: data.profile.admissionType || '',
+            scholarshipStatus: data.profile.scholarshipStatus || '',
+            hostelResident: data.profile.hostelResident || false,
+            hostelRoomNumber: data.profile.hostelRoomNumber || '',
+            transportMode: data.profile.transportMode || '',
+            technicalSkills: data.profile.technicalSkills || [],
+            softSkills: data.profile.softSkills || [],
+            interests: data.profile.interests || [],
+            careerGoals: data.profile.careerGoals || '',
+            linkedinUrl: data.profile.linkedinUrl || '',
+            githubUrl: data.profile.githubUrl || '',
+            portfolioUrl: data.profile.portfolioUrl || '',
           }));
         }
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+      toast({
+        title: 'Notice',
+        description: 'Starting with a fresh profile form.',
+      });
     }
   };
 
@@ -203,6 +247,8 @@ export default function StudentProfileForm() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Computer Science">Computer Science</SelectItem>
+                          <SelectItem value="MCA">MCA</SelectItem>
+                          <SelectItem value="MSc-IT">MSc-IT</SelectItem>
                           <SelectItem value="Electronics">Electronics</SelectItem>
                           <SelectItem value="Mechanical">Mechanical</SelectItem>
                           <SelectItem value="Civil">Civil</SelectItem>

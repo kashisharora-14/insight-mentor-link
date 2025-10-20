@@ -37,7 +37,42 @@ router.get('/profile', authenticate, async (req: any, res) => {
       return res.json({ profile: null });
     }
 
-    res.json({ profile: profile[0] });
+    // Return profile with camelCase field names
+    res.json({ 
+      profile: {
+        ...profile[0],
+        rollNumber: profile[0].rollNumber,
+        currentSemester: profile[0].currentSemester,
+        currentBacklog: profile[0].currentBacklog,
+        dateOfBirth: profile[0].dateOfBirth,
+        bloodGroup: profile[0].bloodGroup,
+        phoneNumber: profile[0].phoneNumber,
+        alternateEmail: profile[0].alternateEmail,
+        permanentAddress: profile[0].permanentAddress,
+        currentAddress: profile[0].currentAddress,
+        batchYear: profile[0].batchYear,
+        fatherName: profile[0].fatherName,
+        fatherOccupation: profile[0].fatherOccupation,
+        fatherPhone: profile[0].fatherPhone,
+        motherName: profile[0].motherName,
+        motherOccupation: profile[0].motherOccupation,
+        motherPhone: profile[0].motherPhone,
+        guardianName: profile[0].guardianName,
+        guardianRelation: profile[0].guardianRelation,
+        guardianPhone: profile[0].guardianPhone,
+        admissionType: profile[0].admissionType,
+        scholarshipStatus: profile[0].scholarshipStatus,
+        hostelResident: profile[0].hostelResident,
+        hostelRoomNumber: profile[0].hostelRoomNumber,
+        transportMode: profile[0].transportMode,
+        technicalSkills: profile[0].technicalSkills,
+        softSkills: profile[0].softSkills,
+        careerGoals: profile[0].careerGoals,
+        linkedinUrl: profile[0].linkedinUrl,
+        githubUrl: profile[0].githubUrl,
+        portfolioUrl: profile[0].portfolioUrl,
+      }
+    });
   } catch (error) {
     console.error('Error fetching student profile:', error);
     res.status(500).json({ error: 'Failed to fetch profile' });

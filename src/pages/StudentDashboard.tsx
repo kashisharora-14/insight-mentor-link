@@ -188,13 +188,13 @@ const StudentDashboard = () => {
           if (data.profile) {
             setStudentProfile({
               name: user?.name || 'Student',
-              studentId: user?.student_id || data.profile.rollNumber || 'N/A',
+              studentId: data.profile.rollNumber || user?.student_id || 'N/A',
               email: user?.email || 'N/A',
               department: data.profile.department || 'Not set',
               batchYear: data.profile.batchYear || new Date().getFullYear(),
               semester: data.profile.currentSemester || 1,
               cgpa: data.profile.cgpa || 'N/A',
-              attendance: 85, // Calculate from attendance records if available
+              attendance: 'N/A', // Calculate from attendance records if available
               hasProfile: true,
             });
           } else {
@@ -211,6 +211,19 @@ const StudentDashboard = () => {
               hasProfile: false,
             });
           }
+        } else {
+          // Profile endpoint error - use basic user info
+          setStudentProfile({
+            name: user?.name || 'Student',
+            studentId: user?.student_id || 'N/A',
+            email: user?.email || 'N/A',
+            department: 'Not set',
+            batchYear: new Date().getFullYear(),
+            semester: 1,
+            cgpa: 'N/A',
+            attendance: 'N/A',
+            hasProfile: false,
+          });
         }
       } catch (error) {
         console.error('Error fetching student profile:', error);
@@ -257,10 +270,10 @@ const StudentDashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Welcome back, {currentStudent.name}! 👋
+              Welcome back, {studentProfile?.name || 'Student'}! 👋
             </h1>
             <p className="text-muted-foreground mt-1">
-              {currentStudent.department} • Batch {currentStudent.batchYear}
+              {studentProfile?.department || 'Not set'} • Batch {studentProfile?.batchYear || new Date().getFullYear()}
             </p>
           </div>
           <div className="flex items-center gap-3">
