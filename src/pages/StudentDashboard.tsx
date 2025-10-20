@@ -25,7 +25,9 @@ import {
   Award,
   Zap,
   Shield, // Import Shield icon
-  Info // Import Info icon
+  Info, // Import Info icon
+  ShieldCheck, // Import ShieldCheck icon
+  ShieldAlert // Import ShieldAlert icon
 } from "lucide-react";
 import CareerRoadmap from "@/components/CareerRoadmap";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -264,6 +266,42 @@ const StudentDashboard = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user?.role !== 'student') {
+      navigate('/dashboard');
+    }
+
+    // Refresh user data to get latest verification status
+    const checkVerificationStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('📊 Updated user verification status:', userData.isVerified);
+
+          // Update the user in the auth context if verification status changed
+          if (userData.isVerified !== user?.isVerified) {
+            console.log('✅ Verification status updated - user is now verified!');
+            // Force a page reload to update the UI with new user data
+            window.location.reload();
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check verification status:', error);
+      }
+    };
+
+    // Check verification status on mount
+    if (user && !user.isVerified) {
+      checkVerificationStatus();
+    }
+  }, [user, navigate]);
+
   if (!user || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -303,33 +341,38 @@ const StudentDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Account Verification Status
-              {authUser?.isVerified && <VerifiedBadge isVerified={true} verificationMethod={authUser.verificationMethod} />}
+              {user?.isVerified && <VerifiedBadge isVerified={true} verificationMethod={user.verificationMethod} />}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {authUser?.isVerified ? (
-              <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600 mt-0.5" />
-                <div>
-                  <p className="font-medium text-green-900">Your account is verified!</p>
-                  <p className="text-sm text-green-700 mt-1">
-                    {authUser.verificationMethod === 'csv_upload' 
-                      ? '✅ Automatically verified via CSV upload - You have full access to all platform features.'
-                      : '✅ Manually verified by admin - You have full access to all platform features.'}
+            {user?.isVerified ? (
+              <div className="flex items-start gap-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <ShieldCheck className="w-5 h-5 text-green-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-green-900 mb-2">Account Verified ✓</h3>
+                  <p className="text-sm text-green-700 mb-3">
+                    Your account has been verified by the administration. You now have full access to all features.
                   </p>
+                  <div className="text-xs text-green-600">
+                    Verification Method: {user?.verificationMethod === 'admin_manual' ? 'Manually approved by admin' : 
+                                         user?.verificationMethod === 'csv_upload' ? 'Verified via CSV upload' : 
+                                         'Verified'}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <Clock className="w-6 h-6 text-yellow-600 mt-0.5" />
-                <div>
-                  <p className="font-medium text-yellow-900">Verification Pending</p>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    ⏳ Your account is awaiting admin approval. You'll receive an email notification once verified.
+              <div className="flex items-start gap-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-yellow-900 mb-2">Verification Pending</h3>
+                  <p className="text-sm text-yellow-700 mb-3">
+                    <ShieldAlert className="w-4 h-4 inline mr-1" />
+                    Your account is awaiting admin approval. You'll receive an email notification once verified.
                   </p>
-                  <p className="text-xs text-yellow-600 mt-2">
-                    💡 While waiting, you can explore limited features. Full access will be granted after verification.
-                  </p>
+                  <div className="text-xs text-yellow-600">
+                    <ShieldCheck className="w-4 h-4 inline mr-1" />
+                    While waiting, you can explore limited features. Full access will be granted after verification.
+                  </div>
                 </div>
               </div>
             )}
