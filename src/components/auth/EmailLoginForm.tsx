@@ -12,9 +12,10 @@ import { useNavigate } from "react-router-dom";
 
 interface EmailLoginFormProps {
   onSuccess?: () => void;
+  role?: 'student' | 'alumni' | 'admin';
 }
 
-export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
+export default function EmailLoginForm({ onSuccess, role = 'student' }: EmailLoginFormProps) {
   const { sendLoginCode, verifyLoginCode } = useAuth();
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [loginMethod, setLoginMethod] = useState<'email' | 'studentId'>('email');
@@ -39,7 +40,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
     setShowRegisterPrompt(false);
 
     try {
-      const result = await sendLoginCode(identifier.trim());
+      const result = await sendLoginCode(identifier.trim(), role);
 
       if (result.success) {
         setUserId(result.userId);
@@ -102,7 +103,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
     setError('');
 
     try {
-      const result = await sendLoginCode(identifier);
+      const result = await sendLoginCode(identifier, role);
       if (result.success) {
         setSuccess('New code sent to your email');
       } else {

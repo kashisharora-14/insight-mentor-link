@@ -21,7 +21,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  sendLoginCode: (identifier: string) => Promise<{ userId: string; email: string; success: boolean; error?: string }>;
+  sendLoginCode: (identifier: string, role?: string) => Promise<{ userId: string; email: string; success: boolean; error?: string }>;
   verifyLoginCode: (userId: string, code: string) => Promise<boolean>;
   sendRegistrationCode: (email: string, name: string, studentId?: string, role?: string) => Promise<{ success: boolean; error?: string }>;
   completeRegistration: (email: string, code: string, password: string) => Promise<boolean>;
@@ -99,9 +99,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initializeAuth();
   }, []);
 
-  const sendLoginCode = async (identifier: string) => {
+  const sendLoginCode = async (identifier: string, role: string = 'student') => {
     try {
-      const response = await apiClient.sendLoginCode(identifier);
+      const response = await apiClient.sendLoginCode(identifier, role);
       return {
         userId: response.user_id,
         email: response.email,

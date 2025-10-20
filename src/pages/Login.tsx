@@ -171,7 +171,7 @@ const Login = () => {
                     </p>
                   </div>
                   
-                  <EmailLoginForm onSuccess={() => {
+                  <EmailLoginForm role="alumni" onSuccess={() => {
                     toast({
                       title: "Login successful!",
                       description: "Welcome back to Re-Connect",

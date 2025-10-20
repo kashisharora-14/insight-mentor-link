@@ -142,22 +142,9 @@ class ApiClient {
 
 
   // Authentication methods
-  async sendLoginCode(identifier: string): Promise<any> {
-    const response = await fetch(`${this.baseURL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ identifier }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to send login code');
-    }
-
-    const data = await response.json();
-    return data.data;
+  async sendLoginCode(identifier: string, role: string = 'student'): Promise<any> {
+    const response = await this.post('/auth/login', { identifier, role });
+    return response.data;
   }
 
   async verifyLoginCode(userId: string, code: string): Promise<AuthTokens> {

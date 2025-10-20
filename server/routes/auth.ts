@@ -16,18 +16,20 @@ function generateCode(): string {
 }
 
 // Temporary in-memory storage for demo codes
-const demoLoginCodes = new Map<string, { code: string; userId: string; email: string; expiresAt: number }>();
+const demoLoginCodes = new Map<string, { code: string; userId: string; email: string; role: string; expiresAt: number }>();
 
 // Passwordless login: Send code
 router.post('/login', async (req, res) => {
   try {
-    const { identifier } = req.body;
+    const { identifier, role } = req.body;
 
     if (!identifier) {
       return res.status(400).json({
         error: { message: 'Email or student ID is required' }
       });
     }
+
+    const userRole = role || 'student'; // Default to student if not provided
 
     // Determine if identifier is email or student ID
     const isEmail = identifier.includes('@');
@@ -59,11 +61,12 @@ router.post('/login', async (req, res) => {
     // Generate code
     const code = generateCode();
 
-    // Store code (expires in 5 minutes)
+    // Store code with role (expires in 5 minutes)
     demoLoginCodes.set(email, {
       code,
       userId,
       email,
+      role: userRole,
       expiresAt: Date.now() + 5 * 60 * 1000
     });
 
@@ -137,12 +140,15 @@ router.post('/verify-login-code', async (req, res) => {
         // Extract name from email if not provided
         const defaultName = validCode.email.split('@')[0];
 
+        // Use the role that was stored when the login code was sent
+        const userRole = validCode.role || 'student';
+
         // Create new user with minimal info
         const newUsers = await db.insert(users).values({
           email: validCode.email,
           name: defaultName,
           passwordHash: '', // No password for passwordless login
-          role: 'student',
+          role: userRole,
           isEmailVerified: true,
           isVerified: false,
           verificationMethod: 'pending',
@@ -156,7 +162,8 @@ router.post('/verify-login-code', async (req, res) => {
           userId: actualUserId,
           requestData: {
             email: validCode.email,
-            name: defaultName
+            name: defaultName,
+            role: userRole
           },
         });
       }
