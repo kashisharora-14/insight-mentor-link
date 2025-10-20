@@ -268,17 +268,18 @@ class ApiClient {
   }
 
   async getCurrentUser() {
-    const response = await fetch(`${this.baseURL}/auth/me`, {
-      method: 'GET',
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get current user');
+    try {
+      const response = await this.get('/auth/me');
+      return response.data;
+    } catch (error: any) {
+      // If token is invalid, clear it and force re-login
+      if (error.response?.status === 401) {
+        console.error('❌ Invalid token detected, clearing authentication');
+        this.clearAuthToken();
+        throw new Error('Session expired. Please login again.');
+      }
+      throw error;
     }
-
-    const data = await response.json();
-    return data.data;
   }
 
   // Admin verification endpoints

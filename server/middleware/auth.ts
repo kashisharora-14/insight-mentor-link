@@ -17,10 +17,17 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Auth middleware: No authorization header found');
       return res.status(401).json({ error: 'No token provided' });
     }
 
     const token = authHeader.substring(7);
+    
+    if (!token || token === 'null' || token === 'undefined') {
+      console.error('❌ Auth middleware: Invalid token format');
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     
     req.user = {
@@ -30,8 +37,13 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
       isVerified: decoded.isVerified,
     };
     
+    console.log('✅ Auth middleware: Token validated for user:', decoded.email);
     next();
-  } catch (error) {
+  } catch (error: any) {
+    console.error('❌ Auth middleware error:', error.message);
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
     return res.status(401).json({ error: 'Invalid token' });
   }
 };

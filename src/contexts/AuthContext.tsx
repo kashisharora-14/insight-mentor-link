@@ -44,7 +44,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const initializeAuth = async () => {
       try {
         if (apiClient.isAuthenticated()) {
+          console.log('🔍 Validating existing token...');
           const userData = await apiClient.getCurrentUser();
+          console.log('✅ Token is valid, user authenticated:', userData.user.email);
           setUser({
             ...userData.user,
             isVerified: userData.user.isVerified || false,
@@ -52,11 +54,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             isEmailVerified: userData.user.isEmailVerified || false,
           });
           setIsAuthenticated(true);
+        } else {
+          console.log('ℹ️ No token found, user needs to login');
         }
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
+      } catch (error: any) {
+        console.error('❌ Auth initialization failed:', error.message);
         // Clear invalid tokens
         apiClient.clearAuthToken();
+        setUser(null);
+        setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }

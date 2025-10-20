@@ -120,19 +120,46 @@ export default function StudentProfileForm() {
             portfolioUrl: data.profile.portfolioUrl || '',
           })
         }
+      } else if (response.status === 401) {
+        console.error('❌ Token is invalid or expired during fetch');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        toast({
+          title: "Session Expired",
+          description: "Your session has expired. Please login again.",
+          variant: "destructive",
+        });
+        navigate('/login');
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
+      toast({
+        title: 'Error',
+        description: 'Could not load profile data. Please try again.',
+        variant: 'destructive',
+      });
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true); // Use setLoading for the submit button
 
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('token');
 
+      if (!token || token === 'null' || token === 'undefined') {
+        console.error('❌ No valid token found');
+        toast({
+          title: "Session Expired",
+          description: "Please login again to continue.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+
+      console.log('✅ Submitting profile data with valid token');
       // Convert form data to match backend expectations
       const submitData = {
         ...formData,
@@ -157,22 +184,32 @@ export default function StudentProfileForm() {
         body: JSON.stringify(submitData),
       })
 
-      const result = await response.json()
-
-      if (response.ok) {
+      if (response.status === 401) {
+        console.error('❌ Token is invalid or expired');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         toast({
-          title: 'Success',
-          description: 'Profile saved successfully',
-        })
-        navigate('/student-dashboard')
-      } else {
-        console.error('Save failed:', result)
-        toast({
-          title: 'Error',
-          description: result.details ? result.details.join(', ') : (result.error || 'Failed to save profile'),
-          variant: 'destructive',
-        })
+          title: "Session Expired",
+          description: "Your session has expired. Please login again.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
       }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save profile');
+      }
+
+      const result = await response.json();
+      console.log('✅ Profile saved successfully:', result);
+
+      toast({
+        title: 'Success',
+        description: 'Profile saved successfully',
+      })
+      navigate('/student-dashboard')
     } catch (error) {
       console.error('Error saving profile:', error)
       toast({

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { studentProfiles, users } from '@shared/schema';
+import { studentProfiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { validateStudentProfile } from '../utils/validation';
@@ -13,12 +13,16 @@ const authenticate = (req: any, res: any, next: any) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
+      console.error('❌ No token provided');
       return res.status(401).json({ error: 'No token provided' });
     }
+    
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     req.user = decoded;
+    console.log('✅ Token verified for user:', req.user.userId);
     next();
   } catch (error) {
+    console.error('❌ Invalid token:', error);
     res.status(401).json({ error: 'Invalid token' });
   }
 };
@@ -34,6 +38,7 @@ router.get('/profile', authenticate, async (req: any, res) => {
       .limit(1);
 
     if (profile.length === 0) {
+      console.log('ℹ️ Profile not found for user:', userId);
       return res.json({ profile: null });
     }
 
