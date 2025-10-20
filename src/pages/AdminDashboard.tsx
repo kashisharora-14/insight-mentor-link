@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-// import { supabase } from '@/integrations/supabase/client'; // Replaced with API client
-import { 
-  Users, 
-  DollarSign, 
-  Calendar, 
-  ShoppingBag, 
-  TrendingUp, 
-  CheckCircle, 
+// import {supabase } from '@/integrations/supabase/client'; // Replaced with API client
+import {
+  Users,
+  DollarSign,
+  Calendar,
+  ShoppingBag,
+  TrendingUp,
+  CheckCircle,
   XCircle,
   UserCheck,
   MessageSquare,
@@ -22,7 +22,8 @@ import {
   Brain,
   Target,
   Globe,
-  Zap
+  Zap,
+  Upload // Added Upload icon
 } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -105,6 +106,8 @@ const AdminDashboard = () => {
   const [donations, setDonations] = useState<Donation[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequest[]>([]);
+  const [verificationRequests, setVerificationRequests] = useState<any[]>([]); // Added state for verification requests
+  const [csvUploadResult, setCSVUploadResult] = useState<any>(null); // Added state for CSV upload result
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -147,7 +150,7 @@ const AdminDashboard = () => {
   const aiInsights = [
     "🎯 UIET department shows highest engagement rate (85%) - consider replicating their strategies",
     "📈 Mentorship requests increased 23% this month - consider scaling mentor onboarding",
-    "🌍 International alumni donations up 40% - focus on global engagement campaigns", 
+    "🌍 International alumni donations up 40% - focus on global engagement campaigns",
     "💡 Technology sector alumni most likely to mentor (78% participation rate)",
     "📊 Weekend events show 30% higher attendance - optimize scheduling",
     "🔗 Alumni with 5+ connections donate 3x more - encourage networking"
@@ -386,7 +389,7 @@ const AdminDashboard = () => {
         created_at: '2024-02-01T09:20:00Z'
       }
     ];
-    
+
     setProfiles(mockProfiles);
   };
 
@@ -484,7 +487,7 @@ const AdminDashboard = () => {
         created_at: '2024-01-15T10:25:00Z'
       }
     ];
-    
+
     setDonations(mockDonations);
   };
 
@@ -582,7 +585,7 @@ const AdminDashboard = () => {
         created_at: '2024-02-25T14:20:00Z'
       }
     ];
-    
+
     setEvents(mockEvents);
   };
 
@@ -740,52 +743,181 @@ const AdminDashboard = () => {
         mentor_profile: null
       }
     ];
-    
+
     setMentorshipRequests(mockMentorshipRequests);
   };
 
-  const toggleProfileVerification = async (profileId: string, isVerified: boolean) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_verified: !isVerified })
-      .eq('id', profileId);
-
-    if (error) {
+  // Fetch verification requests
+  const fetchVerificationRequests = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/admin/verification-requests', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setVerificationRequests(data);
+      } else {
+        // Handle non-ok responses, e.g., unauthorized access
+        console.error('Failed to fetch verification requests:', response.status, response.statusText);
+        toast({
+          title: "Error",
+          description: "Failed to load verification requests. Please check your authentication.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching verification requests:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile verification.",
+        description: "Failed to load verification requests",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Success",
-        description: `Profile ${!isVerified ? 'verified' : 'unverified'} successfully.`,
-      });
-      fetchProfiles();
-      fetchStats();
     }
   };
+
+  // Approve verification request
+  const handleApproveVerification = async (requestId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/admin/verification-requests/${requestId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "User verification approved successfully",
+        });
+        fetchVerificationRequests(); // Refresh the list
+        fetchProfiles(); // Refresh profiles to reflect verification status
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to approve verification');
+      }
+    } catch (error) {
+      console.error('Error approving verification:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to approve verification",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Reject verification request
+  const handleRejectVerification = async (requestId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/admin/verification-requests/${requestId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notes: 'Rejected by admin' }), // You might want to add a field for admin notes
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Verification request rejected",
+        });
+        fetchVerificationRequests(); // Refresh the list
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to reject verification');
+      }
+    } catch (error) {
+      console.error('Error rejecting verification:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to reject verification",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle CSV file upload
+  const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:3001/api/admin/csv-upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setCSVUploadResult(result);
+        toast({
+          title: "CSV Upload Complete",
+          description: `Processed ${result.processed} users successfully. ${result.errors?.length || 0} errors.`,
+        });
+        fetchVerificationRequests(); // Refresh lists after upload
+        fetchProfiles();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'CSV upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading CSV:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to upload CSV file",
+        variant: "destructive",
+      });
+    }
+  };
+
+
+  // Mock Supabase update functions - these should be replaced with actual API calls if not using Supabase directly
+  const toggleProfileVerification = async (profileId: string, isVerified: boolean) => {
+    // This is a placeholder. In a real app, this would call an API endpoint.
+    // For now, it simulates the UI update and then fetches fresh data.
+    console.log(`Toggling verification for profile ${profileId} to ${!isVerified}`);
+    toast({
+      title: "Simulated Action",
+      description: `Profile ${profileId} verification status would be updated.`,
+    });
+    // Simulate API call to update profile
+    setTimeout(() => {
+      fetchProfiles(); // Re-fetch profiles to show the updated status
+      fetchStats(); // Re-fetch stats as verified count might change
+    }, 500);
+  };
+
 
   const toggleEventStatus = async (eventId: string, isActive: boolean) => {
-    const { error } = await supabase
-      .from('events')
-      .update({ is_active: !isActive })
-      .eq('id', eventId);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update event status.",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: `Event ${!isActive ? 'activated' : 'deactivated'} successfully.`,
-      });
-      fetchEvents();
-    }
+    // This is a placeholder. In a real app, this would call an API endpoint.
+    console.log(`Toggling status for event ${eventId} to ${!isActive}`);
+    toast({
+      title: "Simulated Action",
+      description: `Event ${eventId} status would be updated.`,
+    });
+    // Simulate API call to update event
+    setTimeout(() => {
+      fetchEvents(); // Re-fetch events to show the updated status
+    }, 500);
   };
+
+  // Initial fetch for all data
+  useEffect(() => {
+    fetchAllData();
+    fetchVerificationRequests(); // Also fetch verification requests on mount
+  }, []);
+
 
   if (loading) {
     return (
@@ -915,7 +1047,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Detailed Management */}
+        {/* Detailed Management Tabs */}
         <Tabs defaultValue="analytics" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 gap-1">
             <TabsTrigger value="analytics" className="text-xs lg:text-sm px-2 lg:px-3">Analytics</TabsTrigger>
@@ -927,7 +1059,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="mentorships" className="text-xs lg:text-sm px-2 lg:px-3">Mentorships</TabsTrigger>
           </TabsList>
 
-          {/* Enhanced Analytics Tab */}
+          {/* Analytics Tab */}
           <TabsContent value="analytics">
             <div className="grid lg:grid-cols-2 gap-6 mb-6">
               <Card>
@@ -972,8 +1104,8 @@ const AdminDashboard = () => {
                       <div key={index} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
+                            <div
+                              className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: region.color }}
                             ></div>
                             <span className="font-medium">{region.name}</span>
@@ -986,17 +1118,17 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full transition-all duration-500" 
-                            style={{ 
-                              width: `${region.value}%`, 
-                              backgroundColor: region.color 
+                          <div
+                            className="h-2 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${region.value}%`,
+                              backgroundColor: region.color
                             }}
                           ></div>
                         </div>
                       </div>
                     ))}
-                    
+
                     <div className="pt-4 border-t">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-primary">8,340</div>
@@ -1107,11 +1239,11 @@ const AdminDashboard = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-2xl font-bold text-primary">
-                              {metric.metric.includes('Salary') ? `₹${metric.value}L` : 
+                              {metric.metric.includes('Salary') ? `₹${metric.value}L` :
                                metric.metric.includes('Satisfaction') ? metric.value : `${metric.value}%`}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Target: {metric.metric.includes('Salary') ? `₹${metric.target}L` : 
+                              Target: {metric.metric.includes('Salary') ? `₹${metric.target}L` :
                                       metric.metric.includes('Satisfaction') ? metric.target : `${metric.target}%`}
                             </div>
                           </div>
@@ -1261,19 +1393,52 @@ const AdminDashboard = () => {
                 <CardDescription>Manage multiple verifications at once</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-4">
-                  <Button>
+                <div className="flex flex-wrap gap-4">
+                  <Button onClick={() => {
+                    // This would ideally iterate through selected verificationRequests and call handleApproveVerification
+                    toast({ title: "Bulk Approve", description: "This feature needs to be implemented." });
+                  }}>
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Approve Selected
                   </Button>
-                  <Button variant="destructive">
+                  <Button variant="destructive" onClick={() => {
+                    // This would ideally iterate through selected verificationRequests and call handleRejectVerification
+                    toast({ title: "Bulk Reject", description: "This feature needs to be implemented." });
+                  }}>
                     <XCircle className="w-4 h-4 mr-2" />
                     Reject Selected
                   </Button>
+                  {/* CSV Upload Button */}
+                  <div className="flex items-center">
+                    <label htmlFor="csv-upload" className="flex items-center px-4 py-2 rounded-md border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground cursor-pointer">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload CSV
+                    </label>
+                    <input
+                      id="csv-upload"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleCSVUpload}
+                      className="hidden"
+                    />
+                  </div>
                   <Button variant="outline">
                     Export Verification Report
                   </Button>
                 </div>
+                {csvUploadResult && (
+                  <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-md">
+                    <p className="text-sm text-green-800">
+                      CSV Upload Summary: Processed {csvUploadResult.processed} users.
+                      {csvUploadResult.errors && csvUploadResult.errors.length > 0 && (
+                        <>
+                          {' '}
+                          <span className="font-semibold">Errors:</span> {csvUploadResult.errors.length}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1433,7 +1598,7 @@ const AdminDashboard = () => {
                     <div key={request.id} className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-medium">{request.field_of_interest}</h3>
-                        <Badge 
+                        <Badge
                           variant={
                             request.status === 'approved' ? 'default' :
                             request.status === 'pending' ? 'secondary' : 'destructive'

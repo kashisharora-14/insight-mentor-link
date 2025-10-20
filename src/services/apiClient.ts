@@ -80,7 +80,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const headers = new Headers(options.headers);
     if (!headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
@@ -97,7 +97,7 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (response.status === 204 || response.headers.get('content-length') === '0') {
         if (!response.ok) {
           throw new Error(`Request failed with status ${response.status}`);
@@ -116,7 +116,7 @@ class ApiClient {
           if (this.token) {
             headers.set('Authorization', `Bearer ${this.token}`);
             const retryResponse = await fetch(url, { ...config, headers });
-            
+
             if (retryResponse.status === 204 || retryResponse.headers.get('content-length') === '0') {
               if (!retryResponse.ok) {
                 throw new Error(`Request failed with status ${retryResponse.status}`);
@@ -125,15 +125,15 @@ class ApiClient {
             }
 
             const retryData: ApiResponse<T> = await retryResponse.json();
-            
+
             if (!retryResponse.ok) {
               throw new Error(retryData.error?.message || 'Request failed after refresh');
             }
-            
+
             return retryData.data as T;
           }
         }
-        
+
         throw new Error(data.error?.message || 'Request failed');
       }
 
@@ -197,7 +197,7 @@ class ApiClient {
     localStorage.setItem('refresh_token', tokens.refresh_token);
     localStorage.setItem('authUser', JSON.stringify(tokens.user));
 
-    return tokens;   
+    return tokens;
   }
 
   async sendRegistrationCode(
@@ -228,8 +228,42 @@ class ApiClient {
     });
   }
 
-  async getCurrentUser(): Promise<UserData> {
-    return this.makeRequest<UserData>('/auth/me');
+  async getCurrentUser() {
+    const response = await this.makeRequest('/auth/me');
+    return response;
+  }
+
+  // Admin verification endpoints
+  async getVerificationRequests() {
+    return this.makeRequest('/admin/verification-requests');
+  }
+
+  async approveVerification(requestId: string) {
+    return this.makeRequest(`/admin/verification-requests/${requestId}/approve`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectVerification(requestId: string, notes?: string) {
+    return this.makeRequest(`/admin/verification-requests/${requestId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    });
+  }
+
+  async uploadCSV(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.makeRequest('/admin/csv-upload', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Remove Content-Type to let browser set it with boundary
+        'Authorization': `Bearer ${this.getToken()}`,
+      },
+      isFormData: true,
+    });
   }
 
   async logout(): Promise<void> {
