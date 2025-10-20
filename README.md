@@ -71,3 +71,18 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## 🏗️ Tech Stack
+
+### Frontend
+- **React 18** with TypeScript
+- **Tailwind CSS** for styling
+- **Shadcn/ui** component library
+- **Recharts** for data visualization
+- **Leaflet** for interactive maps
+
+### Backend
+- **Express.js** (Node.js/TypeScript) for all API endpoints
+- **PostgreSQL** with Drizzle ORM
+- **JWT** for authentication
+- **Nodemailer** for email services

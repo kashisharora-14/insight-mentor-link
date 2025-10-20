@@ -46,7 +46,7 @@ class ApiClient {
 
   constructor() {
     try {
-      // Always use relative URL for Vite proxy - ignore env var
+      // Use Express backend directly
       this.baseURL = '/api';
       console.log('API Client initialized with base URL:', this.baseURL);
       this.loadTokenFromStorage();

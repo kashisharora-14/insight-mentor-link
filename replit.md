@@ -90,23 +90,21 @@ These credentials are stored securely in Replit Secrets and persist across all d
 - `npm run db:studio` - Open Drizzle Studio for database management
 
 ## Development Setup
-The project runs three concurrent services:
+The project runs two concurrent services:
 - **Frontend (Vite)**: Port 5000 - React application with hot reload
-- **Express Backend**: Port 3001 - TypeScript API for student profiles, mentorship
-- **Flask Backend**: Port 3002 - Python API for authentication and admin features
+- **Express Backend**: Port 3001 - TypeScript API for all backend functionality
 - **Host**: 0.0.0.0 (allows external access)
-- **Proxy**: Vite proxies `/api` requests to Flask backend (port 3002)
+- **Proxy**: Vite proxies `/api` requests to Express backend (port 3001)
 
 ### Running the Application
 ```bash
-npm run dev:all  # Runs all three services concurrently
+npm run dev:all  # Runs both frontend and backend concurrently
 ```
 
 Individual services:
 ```bash
 npm run dev        # Frontend only (port 5000)
 npm run dev:api    # Express backend only (port 3001)
-npm run dev:flask  # Flask backend only (port 3002)
 ```
 
 ## Deployment Configuration

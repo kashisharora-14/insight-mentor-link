@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:api": "tsx watch server/index.ts",
     "dev:flask": "python3 run.py",
-    "dev:all": "node_modules/.bin/concurrently \"npm run dev\" \"npm run dev:api\" \"npm run dev:flask\"",
+    "dev:all": "node_modules/.bin/concurrently \"npm run dev\" \"npm run dev:api\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
