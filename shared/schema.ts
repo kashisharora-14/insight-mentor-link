@@ -1,3 +1,4 @@
+
 import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -16,6 +17,69 @@ export const users = pgTable('users', {
   verificationMethod: text('verification_method'), // 'csv_upload', 'admin_manual', 'pending'
   verifiedBy: uuid('verified_by'), // admin ID who verified
   verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Student detailed profiles
+export const studentProfiles = pgTable('student_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+  
+  // Academic Information
+  rollNumber: text('roll_number').unique(),
+  department: text('department'),
+  batchYear: integer('batch_year'),
+  currentSemester: integer('current_semester'),
+  cgpa: decimal('cgpa', { precision: 3, scale: 2 }),
+  currentBacklog: integer('current_backlog').default(0),
+  
+  // Personal Details
+  dateOfBirth: timestamp('date_of_birth', { withTimezone: true }),
+  gender: text('gender'),
+  bloodGroup: text('blood_group'),
+  category: text('category'),
+  nationality: text('nationality').default('Indian'),
+  religion: text('religion'),
+  
+  // Contact Information
+  phoneNumber: text('phone_number'),
+  alternateEmail: text('alternate_email'),
+  permanentAddress: text('permanent_address'),
+  currentAddress: text('current_address'),
+  city: text('city'),
+  state: text('state'),
+  pincode: text('pincode'),
+  
+  // Parent/Guardian Information
+  fatherName: text('father_name'),
+  fatherOccupation: text('father_occupation'),
+  fatherPhone: text('father_phone'),
+  motherName: text('mother_name'),
+  motherOccupation: text('mother_occupation'),
+  motherPhone: text('mother_phone'),
+  guardianName: text('guardian_name'),
+  guardianRelation: text('guardian_relation'),
+  guardianPhone: text('guardian_phone'),
+  
+  // Additional Information
+  admissionType: text('admission_type'),
+  scholarshipStatus: text('scholarship_status'),
+  hostelResident: boolean('hostel_resident').default(false),
+  hostelRoomNumber: text('hostel_room_number'),
+  transportMode: text('transport_mode'),
+  
+  // Skills and Interests
+  technicalSkills: text('technical_skills').array(),
+  softSkills: text('soft_skills').array(),
+  interests: text('interests').array(),
+  careerGoals: text('career_goals'),
+  
+  // Social Links
+  linkedinUrl: text('linkedin_url'),
+  githubUrl: text('github_url'),
+  portfolioUrl: text('portfolio_url'),
+  
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

@@ -1,0 +1,91 @@
+
+import { Router } from 'express';
+import { db } from '../db';
+import { studentProfiles, users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
+
+const router = Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Middleware to verify JWT token
+const authenticate = (req: any, res: any, next: any) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Get student profile
+router.get('/profile', authenticate, async (req: any, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const profile = await db.select()
+      .from(studentProfiles)
+      .where(eq(studentProfiles.userId, userId))
+      .limit(1);
+
+    if (profile.length === 0) {
+      return res.json({ profile: null });
+    }
+
+    res.json({ profile: profile[0] });
+  } catch (error) {
+    console.error('Error fetching student profile:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// Create or update student profile
+router.post('/profile', authenticate, async (req: any, res) => {
+  try {
+    const userId = req.user.userId;
+    const data = req.body;
+
+    // Check if profile exists
+    const existingProfile = await db.select()
+      .from(studentProfiles)
+      .where(eq(studentProfiles.userId, userId))
+      .limit(1);
+
+    if (existingProfile.length > 0) {
+      // Update existing profile
+      await db.update(studentProfiles)
+        .set({
+          ...data,
+          updatedAt: new Date(),
+        })
+        .where(eq(studentProfiles.userId, userId));
+
+      const updated = await db.select()
+        .from(studentProfiles)
+        .where(eq(studentProfiles.userId, userId))
+        .limit(1);
+
+      res.json({ message: 'Profile updated successfully', profile: updated[0] });
+    } else {
+      // Create new profile
+      const newProfile = await db.insert(studentProfiles)
+        .values({
+          userId,
+          ...data,
+        })
+        .returning();
+
+      res.json({ message: 'Profile created successfully', profile: newProfile[0] });
+    }
+  } catch (error) {
+    console.error('Error saving student profile:', error);
+    res.status(500).json({ error: 'Failed to save profile' });
+  }
+});
+
+export default router;

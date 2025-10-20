@@ -17,6 +17,7 @@ interface EmailLoginFormProps {
 export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
   const { sendLoginCode, verifyLoginCode } = useAuth();
   const [step, setStep] = useState<'email' | 'code'>('email');
+  const [loginMethod, setLoginMethod] = useState<'email' | 'studentId'>('email');
   const [identifier, setIdentifier] = useState('');
   const [code, setCode] = useState('');
   const [userId, setUserId] = useState('');
@@ -144,19 +145,51 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
 
         {step === 'email' ? (
           <form onSubmit={handleSendCode} className="space-y-4">
+            <div className="flex gap-2 mb-4">
+              <Button
+                type="button"
+                variant={loginMethod === 'email' ? 'default' : 'outline'}
+                onClick={() => {
+                  setLoginMethod('email');
+                  setIdentifier('');
+                }}
+                className="flex-1"
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Email
+              </Button>
+              <Button
+                type="button"
+                variant={loginMethod === 'studentId' ? 'default' : 'outline'}
+                onClick={() => {
+                  setLoginMethod('studentId');
+                  setIdentifier('');
+                }}
+                className="flex-1"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Student ID
+              </Button>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="identifier">Email or Student ID</Label>
+              <Label htmlFor="identifier">
+                {loginMethod === 'email' ? 'Email Address' : 'Student ID'}
+              </Label>
               <Input
                 id="identifier"
-                type="text"
-                placeholder="e.g., student@example.com or CS2021001"
+                type={loginMethod === 'email' ? 'email' : 'text'}
+                placeholder={loginMethod === 'email' ? 'student@example.com' : 'CS2021001'}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 disabled={loading}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                💡 Students can use their student ID (e.g., CS2021001) or registered email
+                {loginMethod === 'email' 
+                  ? '📧 Enter your registered email address'
+                  : '🎓 Enter your student ID (e.g., CS2021001)'
+                }
               </p>
             </div>
 
