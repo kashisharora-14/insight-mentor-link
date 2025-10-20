@@ -138,7 +138,7 @@ class ApiClient {
     }
   }
 
-  
+
 
   // Authentication methods
   async sendLoginCode(identifier: string): Promise<any> {
@@ -326,43 +326,56 @@ class ApiClient {
   }
 
   // Utility methods
+  setAuthToken(token: string) {
+    // Validate token format before storing
+    if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+      console.error('❌ Attempted to save invalid token');
+      return;
+    }
+
+    // Validate JWT format (3 parts separated by dots)
+    const tokenParts = token.split('.');
+    if (tokenParts.length !== 3) {
+      console.error('❌ Token is malformed, not saving');
+      return;
+    }
+
+    this.token = token;
+    localStorage.setItem('authToken', token);
+    console.log('✅ Auth token saved to localStorage');
+  }
+
+  clearAuthToken() {
+    this.token = null;
+    localStorage.removeItem('authToken');
+    console.log('🗑️ Auth token cleared from localStorage');
+  }
+
   isAuthenticated(): boolean {
-    return !!this.token;
-  }
-
-  getToken(): string | null {
-    return this.token;
-  }
-
-  setAuthToken(token: string): void {
-    this.saveTokenToStorage(token);
-  }
-
-  clearAuthToken(): void {
-    this.removeTokenFromStorage();
+    const token = this.token || localStorage.getItem('authToken');
+    if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+      return false;
+    }
+    // Validate JWT format
+    const tokenParts = token.split('.');
+    return tokenParts.length === 3;
   }
 
   // Generic HTTP methods for other API calls
   async get<T>(endpoint: string): Promise<T> {
-    return this.makeRequest<T>(endpoint, { method: 'GET' });
+    return this.request<T>('GET', endpoint);
   }
 
   async post<T>(endpoint: string, data: any): Promise<T> {
-    return this.makeRequest<T>(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return this.request<T>('POST', endpoint, data);
   }
 
   async put<T>(endpoint: string, data: any): Promise<T> {
-    return this.makeRequest<T>(endpoint, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    return this.request<T>('PUT', endpoint, data);
   }
 
   async delete<T>(endpoint: string): Promise<T> {
-    return this.makeRequest<T>(endpoint, { method: 'DELETE' });
+    return this.request<T>('DELETE', endpoint);
   }
 
   // Helper to get authorization headers, used by getCurrentUser
@@ -373,6 +386,50 @@ class ApiClient {
     }
     headers.set('Content-Type', 'application/json');
     return headers;
+  }
+
+  private async request<T>(method: string, url: string, data?: any): Promise<T> {
+    const token = this.token || localStorage.getItem('authToken');
+
+    console.log(`🌐 Making ${method} request to: ${url}`);
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token && token !== 'null' && token !== 'undefined') {
+      // Validate token format before using it
+      const tokenParts = token.split('.');
+      if (tokenParts.length === 3) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔑 Request includes authorization token');
+      } else {
+        console.error('❌ Token is malformed, clearing it');
+        this.clearAuthToken();
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
+    const response = await fetch(`${this.baseURL}${url}`, {
+      method,
+      headers,
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: { message: 'Request failed' } }));
+      console.error(`❌ Request failed with status ${response.status}:`, errorData);
+
+      if (response.status === 401) {
+        console.error('❌ Token is invalid or expired during fetch');
+        this.clearAuthToken();
+        throw new Error('Session expired. Please login again.');
+      }
+
+      throw new Error(errorData.error?.message || errorData.message || `HTTP error ${response.status}`);
+    }
+
+    return await response.json();
   }
 }
 

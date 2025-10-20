@@ -43,20 +43,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check if user is already logged in and validate token
     const initializeAuth = async () => {
       try {
-        if (apiClient.isAuthenticated()) {
-          console.log('🔍 Validating existing token...');
-          const userData = await apiClient.getCurrentUser();
-          console.log('✅ Token is valid, user authenticated:', userData.user.email);
-          setUser({
-            ...userData.user,
-            isVerified: userData.user.isVerified || false,
-            verificationMethod: userData.user.verificationMethod || 'pending',
-            isEmailVerified: userData.user.isEmailVerified || false,
-          });
-          setIsAuthenticated(true);
-        } else {
-          console.log('ℹ️ No token found, user needs to login');
+        const token = localStorage.getItem('authToken');
+        
+        // Check if token exists and is not malformed
+        if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+          console.log('ℹ️ No valid token found, user needs to login');
+          setLoading(false);
+          return;
         }
+
+        // Validate token format (JWT has 3 parts separated by dots)
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          console.error('❌ Token is malformed, clearing it');
+          apiClient.clearAuthToken();
+          setUser(null);
+          setIsAuthenticated(false);
+          setLoading(false);
+          return;
+        }
+
+        console.log('🔍 Validating existing token...');
+        const userData = await apiClient.getCurrentUser();
+        console.log('✅ Token is valid, user authenticated:', userData.user.email);
+        setUser({
+          ...userData.user,
+          isVerified: userData.user.isVerified || false,
+          verificationMethod: userData.user.verificationMethod || 'pending',
+          isEmailVerified: userData.user.isEmailVerified || false,
+        });
+        setIsAuthenticated(true);
       } catch (error: any) {
         console.error('❌ Auth initialization failed:', error.message);
         // Clear invalid tokens
