@@ -123,11 +123,11 @@ router.post('/verify-login-code', async (req, res) => {
     let userDetails = null;
     let actualUserId = validCode.userId;
 
-    // Check if this is a temporary user ID
+    // Check if this is a temporary user ID (user doesn't exist yet)
     if (validCode.userId.startsWith('temp_')) {
       // Check if user exists by email
       const existingUser = await db.select().from(users).where(eq(users.email, validCode.email)).limit(1);
-      
+
       if (existingUser.length > 0) {
         // User exists, use their actual ID
         userDetails = existingUser[0];
@@ -142,7 +142,7 @@ router.post('/verify-login-code', async (req, res) => {
           isVerified: false,
           verificationMethod: 'pending',
         }).returning();
-        
+
         userDetails = newUsers[0];
         actualUserId = userDetails.id;
 
