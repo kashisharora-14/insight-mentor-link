@@ -23,7 +23,8 @@ import {
   Target,
   Globe,
   Zap,
-  Upload // Added Upload icon
+  Upload,
+  Clock // Added Clock icon
 } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -1117,6 +1118,87 @@ const AdminDashboard = () => {
             Punjab Alumni Data Management System - SIH 2025 | AI-Powered Analytics & Centralized Engagement Platform
           </p>
         </div>
+
+        {/* Verification Status Card */}
+        <Card className="mb-8 bg-gradient-to-br from-yellow-50 via-green-50 to-emerald-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-green-600" />
+              Admin Verification Dashboard
+            </CardTitle>
+            <CardDescription>
+              Manage verification requests and user authentication
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-yellow-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Pending Verifications</p>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {verificationRequests.filter((req: any) => req.status === 'pending').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-green-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Verified Users</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {stats.verifiedProfiles}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Users</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {stats.totalProfiles}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => {
+                  const tab = document.querySelector('[value="verification"]');
+                  if (tab) (tab as HTMLElement).click();
+                }}
+                className="bg-gradient-to-r from-yellow-500 to-green-500 hover:from-yellow-600 hover:to-green-600"
+              >
+                <UserCheck className="w-4 h-4 mr-2" />
+                Manage Verifications
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  fetchVerificationRequests();
+                  fetchProfiles();
+                  toast({ title: "Refreshed", description: "Verification data updated" });
+                }}
+              >
+                Refresh Data
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Enhanced Stats Overview */}
         <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
