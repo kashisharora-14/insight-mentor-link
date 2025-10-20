@@ -2,7 +2,7 @@
 import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex, varchar, pgEnum, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-// Enums for Punjab University CS Department programs
+// Enums for Panjab University CS Department programs
 export const programEnum = pgEnum('program', ['MCA', 'MSCIT']);
 export const batchTypeEnum = pgEnum('batch_type', ['Morning', 'Evening']);
 

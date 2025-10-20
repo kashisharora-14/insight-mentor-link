@@ -57,7 +57,7 @@ export function validateStudentProfile(data: any): { valid: boolean; errors: str
     errors.push('Batch year is required');
   }
 
-  // Punjab University CS Department specific validations
+  // Panjab University CS Department specific validations
   const validPrograms = ['MCA', 'MSCIT'];
   const validBatchTypes = ['Morning', 'Evening'];
 
@@ -80,9 +80,9 @@ export function validateStudentProfile(data: any): { valid: boolean; errors: str
     errors.push('Roll number can only contain letters, numbers, hyphens, and forward slashes');
   }
 
-  // Department is auto-set to "Computer Science" for Punjab University
+  // Department is auto-set to "Computer Science" for Panjab University
   if (data.department && data.department !== 'Computer Science') {
-    errors.push('Department must be Computer Science for Punjab University');
+    errors.push('Department must be Computer Science for Panjab University');
   }
 
   if (data.cgpa) {

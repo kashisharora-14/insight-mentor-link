@@ -1,9 +1,9 @@
 
-# Re-Connect: Central Punjab Alumni Data Management System
+# Re-Connect: Central Panjab Alumni Data Management System
 ## SIH 2025 Project Synopsis
 
 ### 🎯 Project Overview
-**Re-Connect** is a comprehensive digital platform for centralized alumni data management and engagement across all Punjab universities. This system addresses the SIH 2025 problem statement by creating a unified network that connects students, alumni, and institutions for career guidance, professional growth, and community building.
+**Re-Connect** is a comprehensive digital platform for centralized alumni data management and engagement across all Panjab universities. This system addresses the SIH 2025 problem statement by creating a unified network that connects students, alumni, and institutions for career guidance, professional growth, and community building.
 
 ### 🏛️ Target Institutions
 - **UICET** (University Institute of Chemical Engineering and Technology)

@@ -1,7 +1,8 @@
-# Punjab University Computer Science Department - Student Database Setup
+
+# Panjab University Computer Science Department - Student Database Setup
 
 ## Overview
-This system is specifically configured for the **Computer Science Department at Punjab University** with the following academic programs.
+This system is specifically configured for the **Computer Science Department at Panjab University** with the following academic programs.
 
 ---
 
@@ -191,4 +192,4 @@ Authorization: Bearer <jwt_token>
 ✅ **Database**: Fully configured and validated
 ✅ **No Dummy Data**: Database is clean and ready for real student information
 
-The system is now ready to store real student data for Punjab University's Computer Science Department! 🎓
+The system is now ready to store real student data for Panjab University's Computer Science Department! 🎓
