@@ -201,7 +201,7 @@ router.post('/verify-login-code', async (req, res) => {
     const token = jwt.sign(
       { userId: actualUserId, email: validCode.email, name: userName, role: userDetails?.role || 'student' },
       JWT_SECRET
-      // No expiration - token valid until logout
+      // No expiration set - token valid until logout
     );
 
     res.json({

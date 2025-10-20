@@ -422,6 +422,7 @@ export default function StudentProfileForm() {
               {/* Contact Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Contact Information</h3>
+                <p className="text-sm text-muted-foreground">Your contact details</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -496,6 +497,7 @@ export default function StudentProfileForm() {
               {/* Skills & Links */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Skills & Social Links</h3>
+                <p className="text-sm text-muted-foreground">Showcase your technical skills and professional profiles</p>
 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
