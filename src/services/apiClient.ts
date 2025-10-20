@@ -189,25 +189,66 @@ class ApiClient {
   }
 
   // Authentication methods
-  async sendLoginCode(identifier: string): Promise<LoginCodeResponse> {
-    const response = await this.post<LoginCodeResponse>('/auth/login/send-code', {
-      identifier
-    });
-    return response;
+  async sendLoginCode(identifier: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/login/send-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ identifier }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'Failed to send login code'
+        };
+      }
+
+      return {
+        success: true,
+        userId: data.user_id,
+        email: data.email,
+        expiresIn: data.code_expires_in
+      };
+    } catch (error) {
+      console.error('sendLoginCode error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to send login code'
+      };
+    }
   }
 
   async verifyLoginCode(userId: string, code: string): Promise<AuthTokens> {
-    const tokens = await this.makeRequest<AuthTokens>('/auth/login/verify-code', {
-      method: 'POST',
-      body: JSON.stringify({ user_id: userId, code }),
-    });
+    try {
+      const response = await fetch(`${this.baseURL}/auth/login/verify-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId, code }),
+      });
 
-    // Save tokens
-    this.saveTokenToStorage(tokens.access_token);
-    localStorage.setItem('refresh_token', tokens.refresh_token);
-    localStorage.setItem('authUser', JSON.stringify(tokens.user));
+      const data = await response.json();
 
-    return tokens;
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to verify code');
+      }
+
+      // Save tokens
+      this.saveTokenToStorage(data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('authUser', JSON.stringify(data.user));
+
+      return data;
+    } catch (error) {
+      console.error('verifyLoginCode error:', error);
+      throw error;
+    }
   }
 
   async sendRegistrationCode(
