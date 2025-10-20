@@ -1504,25 +1504,35 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {profiles.filter(p => !p.is_verified && p.role === 'alumni').slice(0, 5).map((profile) => (
-                      <div key={profile.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium">{profile.name}</h4>
-                          <p className="text-sm text-muted-foreground">{profile.current_job} at {profile.company}</p>
-                          <p className="text-xs text-muted-foreground">{profile.department} • Class of {profile.graduation_year}</p>
+                    {profiles.filter(p => !p.is_verified && p.role === 'alumni').slice(0, 5).map((profile) => {
+                      // Find if there's a pending verification request for this user
+                      const verificationRequest = verificationRequests.find(
+                        (req: any) => req.userId === profile.id && req.status === 'pending'
+                      );
+                      
+                      return (
+                        <div key={profile.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex-1">
+                            <h4 className="font-medium">{profile.name}</h4>
+                            <p className="text-sm text-muted-foreground">{profile.current_job} at {profile.company}</p>
+                            <p className="text-xs text-muted-foreground">{profile.department} • Class of {profile.graduation_year}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            {verificationRequest ? (
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleApproveVerification(verificationRequest.id)}
+                              >
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Verify
+                              </Button>
+                            ) : (
+                              <Badge variant="secondary">No pending request</Badge>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => toggleProfileVerification(profile.id, profile.is_verified)}>
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Verify
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <MessageSquare className="w-4 h-4 mr-1" />
-                            Contact
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
