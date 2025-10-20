@@ -5,6 +5,7 @@ import { db } from '../db';
 import { users, verificationCodes, approvedUsers, verificationRequests } from '@shared/schema';
 import { sendVerificationEmail, sendWelcomeEmail } from '../services/email';
 import { eq, and, or, gt } from 'drizzle-orm';
+import { validateName } from '../utils/validation';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -275,6 +276,11 @@ router.post('/register/send-code', async (req, res) => {
 
     if (!email || !name || !role) {
       return res.status(400).json({ error: 'Email, name, and role are required' });
+    }
+
+    const nameValidation = validateName(name);
+    if (!nameValidation.valid) {
+      return res.status(400).json({ error: nameValidation.error });
     }
 
     if (!['student', 'alumni'].includes(role)) {

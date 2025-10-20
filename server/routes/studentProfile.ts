@@ -4,6 +4,7 @@ import { db } from '../db';
 import { studentProfiles, users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
+import { validateStudentProfile } from '../utils/validation';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -84,6 +85,14 @@ router.post('/profile', authenticate, async (req: any, res) => {
   try {
     const userId = req.user.userId;
     const data = req.body;
+
+    const validation = validateStudentProfile(data);
+    if (!validation.valid) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validation.errors 
+      });
+    }
 
     // Convert dateOfBirth to Date object if it exists
     const profileData = {
