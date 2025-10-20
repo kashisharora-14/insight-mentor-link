@@ -10,3 +10,4 @@ PyJWT
 python-dotenv
 python-multipart
 Flask-JWT-Extended
+gunicorn

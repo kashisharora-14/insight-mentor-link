@@ -9,7 +9,7 @@ packages = ["cargo", "libiconv", "rustc", "zip"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "-c", "npm run dev:api & npm run preview"]
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--workers=4", "--timeout=120", "run:app"]
 build = ["npm", "run", "build"]
 
 [workflows]
@@ -43,3 +43,7 @@ externalPort = 3000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 34261
+externalPort = 3001
