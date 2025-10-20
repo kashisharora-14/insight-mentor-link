@@ -1,16 +1,16 @@
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { alumniProfiles } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
-import { authenticateToken } from '../middleware/auth';
+import { authMiddleware, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 // Get alumni profile
-router.get('/profile', authenticateToken, async (req, res) => {
+router.get('/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     
     const profile = await db.query.alumniProfiles.findFirst({
       where: eq(alumniProfiles.userId, userId)
@@ -28,9 +28,9 @@ router.get('/profile', authenticateToken, async (req, res) => {
 });
 
 // Create or update alumni profile
-router.post('/profile', authenticateToken, async (req, res) => {
+router.post('/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const profileData = req.body;
 
     // Check if profile exists
@@ -71,10 +71,10 @@ router.post('/profile', authenticateToken, async (req, res) => {
 });
 
 // Get all alumni profiles (for directory)
-router.get('/directory', async (req, res) => {
+router.get('/directory', async (req: Request, res: Response) => {
   try {
     const profiles = await db.query.alumniProfiles.findMany({
-      where: eq(alumniProfiles.availableForMentorship, true)
+      where: eq(alumniProfiles.isMentorAvailable, true)
     });
 
     res.json(profiles);
