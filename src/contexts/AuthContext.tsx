@@ -49,11 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Check if token exists and is not malformed
         if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
           console.log('ℹ️ No valid token found, user needs to login');
-          // Clean up all token storage
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('authUser');
           setLoading(false);
           return;
         }
@@ -62,10 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const tokenParts = token.split('.');
         if (tokenParts.length !== 3) {
           console.error('❌ Token is malformed, clearing all auth data');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('authUser');
+          localStorage.clear();
           apiClient.clearAuthToken();
           setUser(null);
           setIsAuthenticated(false);
@@ -88,15 +80,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
         setIsAuthenticated(true);
       } catch (error: any) {
-        console.error('❌ Auth initialization failed:', error.message);
-        // Clear all invalid tokens
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('authUser');
-        apiClient.clearAuthToken();
-        setUser(null);
-        setIsAuthenticated(false);
+        // Only log errors that aren't network-related during hot reload
+        if (!error.message?.includes('Failed to fetch')) {
+          console.error('❌ Auth initialization failed:', error.message);
+        }
+        // Only clear tokens if it's an actual auth error, not a network issue
+        if (error.message?.includes('Session expired') || error.message?.includes('Invalid token')) {
+          localStorage.clear();
+          apiClient.clearAuthToken();
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       } finally {
         setLoading(false);
       }

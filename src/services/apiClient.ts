@@ -227,6 +227,10 @@ class ApiClient {
       // So we need to return the data property directly
       return response.data || response;
     } catch (error: any) {
+      // Don't log network errors during page refresh/hot reload
+      if (error.message?.includes('Failed to fetch')) {
+        throw error; // Let the caller handle network errors
+      }
       // If token is invalid, clear it and force re-login
       if (error.message?.includes('401') || error.message?.includes('Invalid token')) {
         console.error('❌ Invalid token detected, clearing authentication');
