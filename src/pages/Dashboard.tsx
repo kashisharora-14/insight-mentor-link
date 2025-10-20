@@ -13,7 +13,7 @@ const Dashboard = () => {
   const roleRedirect = {
     student: '/student-dashboard',
     alumni: '/alumni-dashboard',
-    admin: '/admin-dashboard'
+    admin: '/admin'
   };
 
   return <Navigate to={roleRedirect[user.role]} replace />;
