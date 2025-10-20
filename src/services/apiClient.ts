@@ -190,10 +190,10 @@ class ApiClient {
 
   // Authentication methods
   async sendLoginCode(identifier: string): Promise<LoginCodeResponse> {
-    return this.makeRequest<LoginCodeResponse>('/auth/login/send-code', {
-      method: 'POST',
-      body: JSON.stringify({ identifier }),
+    const response = await this.post<LoginCodeResponse>('/auth/login/send-code', {
+      identifier
     });
+    return response;
   }
 
   async verifyLoginCode(userId: string, code: string): Promise<AuthTokens> {
