@@ -176,7 +176,12 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchStudentProfile = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          console.error('❌ No auth token found');
+          setProfileLoading(false);
+          return;
+        }
         const response = await fetch('/api/student-profile/profile', {
           headers: {
             'Authorization': `Bearer ${token}`,

@@ -56,7 +56,8 @@ export default function StudentProfileForm() {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token')
+      // Corrected to use 'authToken' as per the thinking
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/student-profile/profile', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -104,7 +105,7 @@ export default function StudentProfileForm() {
         }
       } else if (response.status === 401) {
         console.error('❌ Token is invalid or expired during fetch');
-        localStorage.removeItem('token');
+        localStorage.removeItem('authToken'); // Corrected to remove 'authToken'
         localStorage.removeItem('user');
         toast({
           title: "Session Expired",
@@ -128,7 +129,8 @@ export default function StudentProfileForm() {
     setLoading(true); // Use setLoading for the submit button
 
     try {
-      const token = localStorage.getItem('token');
+      // Corrected to use 'authToken' as per the thinking
+      const token = localStorage.getItem('authToken');
 
       if (!token || token === 'null' || token === 'undefined') {
         console.error('❌ No valid token found');
@@ -157,18 +159,32 @@ export default function StudentProfileForm() {
 
       console.log('Submitting profile data:', submitData)
 
+      // Updated to use the corrected token retrieval logic
+      const tokenForSubmit = localStorage.getItem('authToken');
+      if (!tokenForSubmit) {
+        console.error('❌ No authentication token found for submission');
+        toast({
+          title: "Session Expired",
+          description: "Please login again to continue.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+
       const response = await fetch('/api/student-profile/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${tokenForSubmit}`,
         },
         body: JSON.stringify(submitData),
-      })
+      });
+
 
       if (response.status === 401) {
         console.error('❌ Token is invalid or expired');
-        localStorage.removeItem('token');
+        localStorage.removeItem('authToken'); // Corrected to remove 'authToken'
         localStorage.removeItem('user');
         toast({
           title: "Session Expired",
