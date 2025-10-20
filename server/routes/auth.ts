@@ -14,6 +14,134 @@ function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+// Temporary in-memory storage for demo codes
+const demoLoginCodes = new Map<string, { code: string; userId: string; email: string; expiresAt: number }>();
+
+// Passwordless login: Send code
+router.post('/login', async (req, res) => {
+  try {
+    const { identifier } = req.body;
+
+    if (!identifier) {
+      return res.status(400).json({ 
+        error: { message: 'Email or student ID is required' }
+      });
+    }
+
+    // For demo purposes, generate a code and return mock data
+    const code = generateCode();
+    const userId = 'demo_' + Date.now();
+    const email = identifier.includes('@') ? identifier : `${identifier}@demo.com`;
+    
+    // Store demo code (expires in 5 minutes)
+    demoLoginCodes.set(email, {
+      code,
+      userId,
+      email,
+      expiresAt: Date.now() + 5 * 60 * 1000
+    });
+
+    console.log(`Demo login code for ${email}: ${code}`);
+
+    res.json({
+      data: {
+        user_id: userId,
+        email: email,
+        code_expires_in: 300
+      }
+    });
+  } catch (error) {
+    console.error('Error sending login code:', error);
+    res.status(500).json({ 
+      error: { message: 'Failed to send login code' }
+    });
+  }
+});
+
+// Passwordless login: Verify code
+router.post('/verify-login-code', async (req, res) => {
+  try {
+    const { user_id, code } = req.body;
+
+    if (!user_id || !code) {
+      return res.status(400).json({
+        error: { message: 'User ID and code are required' }
+      });
+    }
+
+    // Find the code in our demo storage
+    let validCode = null;
+    for (const [email, data] of demoLoginCodes.entries()) {
+      if (data.userId === user_id && data.code === code && data.expiresAt > Date.now()) {
+        validCode = data;
+        demoLoginCodes.delete(email);
+        break;
+      }
+    }
+
+    if (!validCode) {
+      return res.status(400).json({
+        error: { message: 'Invalid or expired verification code' }
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: validCode.userId, email: validCode.email, role: 'student' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      data: {
+        access_token: token,
+        refresh_token: token + '_refresh',
+        token_type: 'Bearer',
+        expires_in: 604800,
+        user: {
+          id: validCode.userId,
+          email: validCode.email,
+          name: 'Demo User',
+          role: 'student'
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error verifying login code:', error);
+    res.status(500).json({
+      error: { message: 'Failed to verify login code' }
+    });
+  }
+});
+
+// Get current user
+router.get('/me', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({
+        error: { message: 'No token provided' }
+      });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    
+    res.json({
+      data: {
+        id: decoded.userId,
+        email: decoded.email,
+        name: 'Demo User',
+        role: decoded.role || 'student'
+      }
+    });
+  } catch (error) {
+    res.status(401).json({
+      error: { message: 'Invalid token' }
+    });
+  }
+});
+
 // STEP 1: Send verification code (for registration)
 router.post('/register/send-code', async (req, res) => {
   try {
@@ -341,6 +469,11 @@ router.post('/password-reset/verify', async (req, res) => {
     console.error('Error resetting password:', error);
     res.status(500).json({ error: 'Failed to reset password' });
   }
+});
+
+// Logout endpoint
+router.post('/logout', async (req, res) => {
+  res.status(204).send();
 });
 
 export default router;
