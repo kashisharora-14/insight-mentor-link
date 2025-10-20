@@ -57,7 +57,7 @@ router.post('/login', async (req, res) => {
 
     // Generate code
     const code = generateCode();
-    
+
     // Store code (expires in 5 minutes)
     demoLoginCodes.set(email, {
       code,
@@ -153,7 +153,7 @@ router.post('/verify-login-code', async (req, res) => {
 router.get('/me', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({
         error: { message: 'No token provided' }
@@ -161,7 +161,7 @@ router.get('/me', async (req, res) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as any;
-    
+
     res.json({
       data: {
         id: decoded.userId,

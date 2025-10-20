@@ -4,7 +4,12 @@ async function getGmailCredentials() {
   const email = process.env.MAIL_USERNAME || process.env.GMAIL_USER;
   const password = process.env.MAIL_PASSWORD || process.env.GMAIL_APP_PASSWORD;
 
+  console.log('📧 Checking Gmail credentials...');
+  console.log('📧 Email configured:', email ? 'Yes' : 'No');
+  console.log('📧 Password configured:', password ? 'Yes' : 'No');
+
   if (!email || !password) {
+    console.error('❌ Gmail credentials not found in environment variables');
     throw new Error('Gmail credentials not found. Please set MAIL_USERNAME and MAIL_PASSWORD in Secrets.');
   }
 
@@ -82,8 +87,13 @@ export async function sendVerificationEmail(email: string, code: string, type: '
 
     console.log(`✅ Email sent successfully to ${email}. Message ID: ${info.messageId}`);
     return { success: true, data: info };
-  } catch (error) {
-    console.error('Error in sendVerificationEmail:', error);
+  } catch (error: any) {
+    console.error('❌ Error in sendVerificationEmail:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      command: error.command
+    });
     throw error;
   }
 }
