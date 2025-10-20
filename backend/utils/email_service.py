@@ -9,9 +9,7 @@ def send_async_email(app, msg):
         mail.send(msg)
 
 def send_email(subject, recipient, template):
-    """
-    Send email asynchronously
-    """
+    """Send email asynchronously"""
     app = current_app._get_current_object()
     msg = Message(
         subject,
@@ -19,55 +17,29 @@ def send_email(subject, recipient, template):
         recipients=[recipient]
     )
     msg.html = template
-    
+
     # Send email asynchronously
     Thread(target=send_async_email, args=(app, msg)).start()
 
 def send_verification_email(email, verification_code):
-    """
-    Send verification code email
-    """
-    subject = "Verify Your Email - Insight Mentor Link"
+    """Send verification code email"""
+    subject = "Your Login Code - Re-Connect"
     template = f"""
     <html>
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2>Welcome to Insight Mentor Link!</h2>
-            <p>Your verification code is:</p>
-            <h1 style="color: #4a90e2; font-size: 32px; letter-spacing: 5px; padding: 20px;">{verification_code}</h1>
-            <p>This code will expire in 15 minutes.</p>
-            <p>If you didn't request this code, please ignore this email.</p>
-            <br>
-            <p>Best regards,</p>
-            <p>The Insight Mentor Link Team</p>
+        <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h2 style="color: #333; margin-bottom: 20px;">Welcome to Re-Connect!</h2>
+                <p style="color: #666; font-size: 16px;">Your verification code is:</p>
+                <div style="background-color: #f0f0f0; padding: 20px; text-align: center; border-radius: 5px; margin: 20px 0;">
+                    <h1 style="color: #4a90e2; font-size: 36px; letter-spacing: 8px; margin: 0;">{verification_code}</h1>
+                </div>
+                <p style="color: #666; font-size: 14px;">This code will expire in 15 minutes.</p>
+                <p style="color: #999; font-size: 12px; margin-top: 30px;">If you didn't request this code, please ignore this email.</p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="color: #999; font-size: 12px; text-align: center;">Re-Connect Alumni Platform</p>
+            </div>
         </body>
     </html>
     """
-    
-    send_email(subject, email, template)
 
-def send_welcome_email(email, name):
-    """
-    Send welcome email after successful registration
-    """
-    subject = "Welcome to Insight Mentor Link!"
-    template = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2>Welcome to Insight Mentor Link{', ' + name if name else ''}!</h2>
-            <p>Thank you for joining our platform. We're excited to have you as part of our community!</p>
-            <p>With Insight Mentor Link, you can:</p>
-            <ul>
-                <li>Connect with alumni and mentors</li>
-                <li>Get career guidance</li>
-                <li>Share your experiences</li>
-                <li>Stay updated with opportunities</li>
-            </ul>
-            <p>Get started by completing your profile and exploring the platform.</p>
-            <br>
-            <p>Best regards,</p>
-            <p>The Insight Mentor Link Team</p>
-        </body>
-    </html>
-    """
-    
     send_email(subject, email, template)

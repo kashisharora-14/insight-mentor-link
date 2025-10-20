@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from .config.config import Config
 from .models import db
+from .utils.email_service import mail
 import os
 
 def create_app():
@@ -12,17 +13,10 @@ def create_app():
     app.config.from_object(Config)
 
     # Initialize extensions
+    CORS(app)
     db.init_app(app)
-    jwt = JWTManager(app)
-
-    # Configure CORS
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": "*",
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
-        }
-    })
+    JWTManager(app)
+    mail.init_app(app)
 
     # Create tables if they don't exist
     with app.app_context():

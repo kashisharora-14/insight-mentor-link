@@ -190,14 +190,14 @@ class ApiClient {
 
   // Authentication methods
   async sendLoginCode(identifier: string): Promise<LoginCodeResponse> {
-    return this.makeRequest<LoginCodeResponse>('/auth/register/send-code', {
+    return this.makeRequest<LoginCodeResponse>('/auth/login/send-code', {
       method: 'POST',
       body: JSON.stringify({ identifier }),
     });
   }
 
   async verifyLoginCode(userId: string, code: string): Promise<AuthTokens> {
-    const tokens = await this.makeRequest<AuthTokens>('/auth/register/verify', {
+    const tokens = await this.makeRequest<AuthTokens>('/auth/login/verify-code', {
       method: 'POST',
       body: JSON.stringify({ user_id: userId, code }),
     });
@@ -231,11 +231,18 @@ class ApiClient {
     email: string,
     code: string,
     password: string
-  ): Promise<any> {
-    return this.makeRequest('/auth/complete-registration', {
+  ): Promise<AuthTokens> {
+    const tokens = await this.makeRequest<AuthTokens>('/auth/register/verify', {
       method: 'POST',
       body: JSON.stringify({ email, code, password }),
     });
+
+    // Save tokens
+    this.saveTokenToStorage(tokens.access_token);
+    localStorage.setItem('refresh_token', tokens.refresh_token);
+    localStorage.setItem('authUser', JSON.stringify(tokens.user));
+
+    return tokens;
   }
 
   async getCurrentUser() {
