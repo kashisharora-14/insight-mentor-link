@@ -1,47 +1,34 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-let connectionSettings: any;
+async function getGmailCredentials() {
+  const email = process.env.MAIL_USERNAME || process.env.GMAIL_USER;
+  const password = process.env.MAIL_PASSWORD || process.env.GMAIL_APP_PASSWORD;
 
-async function getCredentials() {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY
-    ? 'repl ' + process.env.REPL_IDENTITY
-    : process.env.WEB_REPL_RENEWAL
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  if (!email || !password) {
+    throw new Error('Gmail credentials not found. Please set MAIL_USERNAME and MAIL_PASSWORD in Secrets.');
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  if (!connectionSettings || (!connectionSettings.settings.api_key)) {
-    throw new Error('Resend not connected');
-  }
-  return { apiKey: connectionSettings.settings.api_key, fromEmail: connectionSettings.settings.from_email };
+  return { email, password };
 }
 
-async function getResendClient() {
-  const { apiKey, fromEmail } = await getCredentials();
-  return {
-    client: new Resend(apiKey),
-    fromEmail: fromEmail || 'onboarding@resend.dev'
-  };
+async function getMailTransporter() {
+  const { email, password } = await getGmailCredentials();
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: email,
+      pass: password,
+    },
+  });
+
+  return { transporter, fromEmail: email };
 }
 
 export async function sendVerificationEmail(email: string, code: string, type: 'registration' | 'password_reset' | 'login' = 'registration') {
   try {
-    const { client, fromEmail } = await getResendClient();
-    
+    const { transporter, fromEmail } = await getMailTransporter();
+
     let subject: string;
     let html: string;
 
@@ -86,19 +73,15 @@ export async function sendVerificationEmail(email: string, code: string, type: '
       `;
     }
 
-    const { data, error } = await client.emails.send({
-      from: fromEmail,
-      to: [email],
+    const info = await transporter.sendMail({
+      from: `"Re-Connect Alumni" <${fromEmail}>`,
+      to: email,
       subject: subject,
       html: html,
     });
 
-    if (error) {
-      console.error('Error sending email:', error);
-      throw new Error('Failed to send verification email');
-    }
-
-    return { success: true, data };
+    console.log(`✅ Email sent successfully to ${email}. Message ID: ${info.messageId}`);
+    return { success: true, data: info };
   } catch (error) {
     console.error('Error in sendVerificationEmail:', error);
     throw error;
@@ -107,8 +90,8 @@ export async function sendVerificationEmail(email: string, code: string, type: '
 
 export async function sendWelcomeEmail(email: string, name: string, isVerified: boolean) {
   try {
-    const { client, fromEmail } = await getResendClient();
-    
+    const { transporter, fromEmail } = await getMailTransporter();
+
     const html = isVerified
       ? `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -141,19 +124,15 @@ export async function sendWelcomeEmail(email: string, name: string, isVerified: 
         </div>
       `;
 
-    const { data, error } = await client.emails.send({
-      from: fromEmail,
-      to: [email],
+    const info = await transporter.sendMail({
+      from: `"Re-Connect Alumni" <${fromEmail}>`,
+      to: email,
       subject: 'Welcome to the Alumni Platform',
       html: html,
     });
 
-    if (error) {
-      console.error('Error sending welcome email:', error);
-      return { success: false, error };
-    }
-
-    return { success: true, data };
+    console.log(`✅ Welcome email sent to ${email}. Message ID: ${info.messageId}`);
+    return { success: true, data: info };
   } catch (error) {
     console.error('Error in sendWelcomeEmail:', error);
     return { success: false, error };
@@ -162,8 +141,8 @@ export async function sendWelcomeEmail(email: string, name: string, isVerified: 
 
 export async function sendVerificationApprovedEmail(email: string, name: string) {
   try {
-    const { client, fromEmail } = await getResendClient();
-    
+    const { transporter, fromEmail } = await getMailTransporter();
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #10b981;">Account Verified! 🎉</h2>
@@ -176,19 +155,15 @@ export async function sendVerificationApprovedEmail(email: string, name: string)
       </div>
     `;
 
-    const { data, error } = await client.emails.send({
-      from: fromEmail,
-      to: [email],
+    const info = await transporter.sendMail({
+      from: `"Re-Connect Alumni" <${fromEmail}>`,
+      to: email,
       subject: 'Your Account Has Been Verified!',
       html: html,
     });
 
-    if (error) {
-      console.error('Error sending verification approved email:', error);
-      return { success: false, error };
-    }
-
-    return { success: true, data };
+    console.log(`✅ Verification approved email sent to ${email}. Message ID: ${info.messageId}`);
+    return { success: true, data: info };
   } catch (error) {
     console.error('Error in sendVerificationApprovedEmail:', error);
     return { success: false, error };
