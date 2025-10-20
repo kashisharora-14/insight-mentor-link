@@ -155,27 +155,66 @@ export async function sendVerificationApprovedEmail(email: string, name: string)
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #10b981;">Account Verified! 🎉</h2>
-        <p>Great news, ${name}!</p>
-        <p>Your account has been verified by our admin team. You now have full access to all platform features with a verified badge on your profile.</p>
-        <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0;">
-          <p style="margin: 0; color: #047857;"><strong>✓ Your account is now verified</strong></p>
+        <div style="background-color: #10b981; padding: 20px; text-align: center;">
+          <h1 style="color: white; margin: 0;">🎉 Account Verified!</h1>
         </div>
-        <p>Log in now to start connecting with the community!</p>
+        <div style="padding: 30px; background-color: #ffffff;">
+          <p style="font-size: 18px; color: #1f2937;">Great news, ${name}!</p>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Your account has been <strong>successfully verified</strong> by our admin team. 
+            You now have full access to all Re-Connect Alumni Platform features!
+          </p>
+          
+          <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; margin: 25px 0; border-radius: 4px;">
+            <p style="margin: 0; color: #047857; font-size: 16px;">
+              <strong>✓ Verification Complete</strong>
+            </p>
+            <p style="margin: 10px 0 0 0; color: #065f46;">
+              Your profile now displays a verified badge 
+            </p>
+          </div>
+
+          <h3 style="color: #1f2937; margin-top: 30px;">What's Next?</h3>
+          <ul style="color: #4b5563; line-height: 1.8;">
+            <li>Connect with alumni and students across the network</li>
+            <li>Access exclusive mentorship programs</li>
+            <li>Participate in events and workshops</li>
+            <li>Browse job opportunities and career resources</li>
+            <li>Shop at the alumni gift store</li>
+          </ul>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.VITE_APP_URL || 'http://localhost:5000'}" 
+               style="background-color: #2563eb; color: white; padding: 12px 30px; 
+                      text-decoration: none; border-radius: 6px; display: inline-block; 
+                      font-weight: bold;">
+              Log In to Your Account
+            </a>
+          </div>
+
+          <p style="color: #6b7280; font-size: 14px; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+            Welcome to the Re-Connect Alumni community! If you have any questions, 
+            feel free to reach out to our support team.
+          </p>
+        </div>
       </div>
     `;
 
     const info = await transporter.sendMail({
-      from: `"Re-Connect Alumni" <${fromEmail}>`,
+      from: `"Re-Connect Alumni Platform" <${fromEmail}>`,
       to: email,
-      subject: 'Your Account Has Been Verified!',
+      subject: '🎉 Your Account Has Been Verified - Re-Connect Alumni',
       html: html,
     });
 
     console.log(`✅ Verification approved email sent to ${email}. Message ID: ${info.messageId}`);
     return { success: true, data: info };
   } catch (error) {
-    console.error('Error in sendVerificationApprovedEmail:', error);
-    return { success: false, error };
+    console.error('❌ Error in sendVerificationApprovedEmail:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+    });
+    throw error;
   }
 }

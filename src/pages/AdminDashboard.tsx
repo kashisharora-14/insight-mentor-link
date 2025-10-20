@@ -867,10 +867,12 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
+        const result = await response.json();
         toast({
           title: "Success",
-          description: "User verification approved successfully",
+          description: "User verification approved successfully. Verification email has been sent to the user.",
         });
+        console.log('✅ Verification approved and email sent:', result);
         fetchVerificationRequests(); // Refresh the list
         fetchProfiles(); // Refresh profiles to reflect verification status
       } else {
