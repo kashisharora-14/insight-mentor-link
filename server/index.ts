@@ -11,6 +11,7 @@ import profileRoutes from './routes/profile';
 import mentorshipRoutes from './routes/mentorship';
 import studentProfileRoutes from './routes/studentProfile';
 import alumniProfileRoutes from './routes/alumniProfile';
+import alumniRoutes from './routes/alumni';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,7 +41,8 @@ app.use('/api/skills', skillsRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/mentorship', mentorshipRoutes);
 app.use('/api/student-profile', studentProfileRoutes);
-app.use('/api/alumni', alumniProfileRoutes);
+app.use('/api/alumni-profile', alumniProfileRoutes);
+app.use('/api/alumni', alumniRoutes);
 
 // Serve static files in production
 if (isProduction) {

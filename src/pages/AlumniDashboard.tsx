@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { AlumniProfileForm } from '@/components/alumni/AlumniProfileForm';
 import { 
   Users, 
@@ -55,6 +56,7 @@ const AlumniDashboard = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch real mentorship requests from database
   useEffect(() => {
@@ -65,7 +67,7 @@ const AlumniDashboard = () => {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setAlumniRequests(data);
@@ -75,7 +77,7 @@ const AlumniDashboard = () => {
       } catch (error) {
         console.error('Error fetching mentorship requests:', error);
       }
-      
+
       // Fallback to mock data
       setAlumniRequests([
         {
@@ -149,7 +151,7 @@ const AlumniDashboard = () => {
       ]);
       setLoading(false);
     };
-    
+
     fetchMentorshipRequests();
   }, []);
 
@@ -267,7 +269,15 @@ const AlumniDashboard = () => {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Alumni Dashboard</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Alumni Dashboard</h1>
+            <Button 
+              onClick={() => navigate('/alumni-profile-edit')}
+              className="bg-gradient-to-r from-purple-600 to-blue-600"
+            >
+              Edit Profile
+            </Button>
+          </div>
           <p className="text-muted-foreground">
             Manage your mentorship requests and help guide the next generation of professionals.
           </p>

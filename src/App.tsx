@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
@@ -11,6 +10,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import AlumniDashboard from './pages/AlumniDashboard';
+import AlumniProfileEdit from './pages/AlumniProfileEdit';
 import Events from './pages/Events';
 import JobBoard from './pages/JobBoard';
 import AlumniProfile from './pages/AlumniProfile';
@@ -49,6 +49,7 @@ function App() {
             <Route path="/jobs" element={<ProtectedRoute><JobBoard /></ProtectedRoute>} />
             <Route path="/mentorship" element={<ProtectedRoute><Mentorship /></ProtectedRoute>} />
             <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
+            <Route path="/alumni-profile-edit" element={<ProtectedRoute><AlumniProfileEdit /></ProtectedRoute>} />
             <Route path="/alumni-directory" element={<ProtectedRoute><AlumniDirectory /></ProtectedRoute>} />
             <Route path="/global-map" element={<ProtectedRoute><GlobalMap /></ProtectedRoute>} />
             <Route path="/donations" element={<ProtectedRoute><Donations /></ProtectedRoute>} />
