@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navigation from "@/components/ui/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +23,8 @@ import {
   Brain,
   BarChart3,
   Award,
-  Zap
+  Zap,
+  Shield // Import Shield icon
 } from "lucide-react";
 import CareerRoadmap from "@/components/CareerRoadmap";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -162,6 +163,18 @@ const StudentDashboard = () => {
       trend: "Industry target: 8+"
     }
   ];
+
+  const [studentProfile, setStudentProfile] = useState({
+    name: 'Demo Student',
+    email: 'student@demo.com',
+    studentId: 'CS2021001', // Added studentId
+    rollNumber: 'CS2021001',
+    semester: 6,
+    cgpa: 8.5,
+    attendance: 85,
+    department: 'Computer Science',
+    batchYear: 2021
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -309,6 +322,13 @@ const StudentDashboard = () => {
             }>
               <Award className="w-4 h-4" />
               {isMobile ? "Awards" : "Achievements"}
+            </TabsTrigger>
+            <TabsTrigger value="profile" className={isMobile 
+              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
+              : "flex items-center gap-2"
+            }>
+              <User className="w-4 h-4" />
+              {isMobile ? "Profile" : "Profile"}
             </TabsTrigger>
           </TabsList>
 
@@ -758,9 +778,87 @@ const StudentDashboard = () => {
           <TabsContent value="roadmap">
             <CareerRoadmap />
           </TabsContent>
-        </Tabs>
 
-        {/* Removed the original Verification Status Card as it's now above the tabs */}
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-primary" />
+                  Personal Information
+                </CardTitle>
+                <CardDescription>
+                  Your profile details and login credentials
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Login Credentials Section */}
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Login Credentials
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Student ID:</span>
+                      <span className="font-mono font-semibold text-blue-700 dark:text-blue-300">
+                        {studentProfile.studentId}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Registered Email:</span>
+                      <span className="font-semibold">{studentProfile.email}</span>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+                      <p className="text-xs text-muted-foreground">
+                        💡 You can login using either your <strong>Student ID</strong> ({studentProfile.studentId}) or <strong>Email</strong> ({studentProfile.email})
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Basic Information Section */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold text-sm text-foreground mb-3">Basic Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Full Name</span>
+                        <span className="font-semibold">{currentStudent.name}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Department</span>
+                        <span className="font-semibold">{currentStudent.department}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Batch Year</span>
+                        <span className="font-semibold">{currentStudent.batchYear}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-sm text-foreground mb-3">Academic Performance</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Current Semester</span>
+                        <span className="font-semibold">{studentProfile.semester}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">CGPA</span>
+                        <span className="font-semibold">{studentProfile.cgpa}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Attendance</span>
+                        <span className="font-semibold">{studentProfile.attendance}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

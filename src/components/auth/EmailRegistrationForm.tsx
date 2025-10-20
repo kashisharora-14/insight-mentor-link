@@ -189,15 +189,20 @@ export default function EmailRegistrationForm({ onSuccess }: EmailRegistrationFo
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="studentId">Student ID (Optional)</Label>
+              <Label htmlFor="studentId">Student ID {role === 'student' ? '(Recommended)' : '(Optional)'}</Label>
               <Input
                 id="studentId"
                 type="text"
-                placeholder="Enter your student ID"
+                placeholder="e.g., CS2021001"
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
                 disabled={loading}
               />
+              {role === 'student' && (
+                <p className="text-xs text-muted-foreground">
+                  💡 Add your student ID to login using either student ID or email
+                </p>
+              )}
             </div>
             
             <div className="space-y-2">

@@ -109,12 +109,12 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2">
           {step === 'email' ? <Mail className="h-5 w-5" /> : <Shield className="h-5 w-5" />}
-          {step === 'email' ? 'Sign In' : 'Enter Verification Code'}
+          {step === 'email' ? 'Sign In to Re-Connect' : 'Verify Your Identity'}
         </CardTitle>
         <CardDescription>
           {step === 'email' 
-            ? 'Enter your email or student ID to receive a login code'
-            : `Enter the 6-digit code sent to ${userEmail}`
+            ? 'Students: Use your student ID or registered email for secure login'
+            : `Check your inbox: ${userEmail}`
           }
         </CardDescription>
       </CardHeader>
@@ -139,12 +139,15 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
               <Input
                 id="identifier"
                 type="text"
-                placeholder="Enter your email or student ID"
+                placeholder="e.g., student@example.com or CS2021001"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 disabled={loading}
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                💡 Students can use their student ID (e.g., CS2021001) or registered email
+              </p>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
@@ -154,7 +157,7 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
                   Sending Code...
                 </>
               ) : (
-                'Send Login Code'
+                'Send Verification Code'
               )}
             </Button>
           </form>

@@ -124,7 +124,12 @@ const Login = () => {
                 <div>
                   <div className="text-center mb-4">
                     <h3 className="text-lg font-semibold mb-2">🔐 Sign In</h3>
-                    <p className="text-sm text-muted-foreground">Enter your email or student ID to receive a login code</p>
+                    <p className="text-sm text-muted-foreground">
+                      Students: Use your <strong>student ID</strong> or <strong>registered email</strong>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      A verification code will be sent to your email
+                    </p>
                   </div>
                   
                   <EmailLoginForm onSuccess={() => {
