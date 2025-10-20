@@ -210,7 +210,6 @@ const StudentDashboard = () => {
               batchYear: data.profile.batchYear || new Date().getFullYear(),
               semester: data.profile.currentSemester || 1,
               cgpa: data.profile.cgpa || 'N/A',
-              attendance: 'N/A', // Calculate from attendance records if available
               hasProfile: true,
             });
           } else {
@@ -223,7 +222,6 @@ const StudentDashboard = () => {
               batchYear: new Date().getFullYear(),
               semester: 1,
               cgpa: 'N/A',
-              attendance: 'N/A',
               hasProfile: false,
             });
           }
@@ -237,7 +235,6 @@ const StudentDashboard = () => {
             batchYear: new Date().getFullYear(),
             semester: 1,
             cgpa: 'N/A',
-            attendance: 'N/A',
             hasProfile: false,
           });
         }
@@ -252,7 +249,6 @@ const StudentDashboard = () => {
           batchYear: new Date().getFullYear(),
           semester: 1,
           cgpa: 'N/A',
-          attendance: 'N/A',
           hasProfile: false,
         });
       } finally {
@@ -948,10 +944,6 @@ const StudentDashboard = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">CGPA</span>
                         <span className="font-semibold">{studentProfile?.cgpa}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Attendance</span>
-                        <span className="font-semibold">{studentProfile?.attendance}%</span>
                       </div>
                     </div>
                   </div>
