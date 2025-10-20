@@ -533,7 +533,7 @@ const AdminDashboard = () => {
       {
         id: '9',
         donor_name: 'Neha Gupta',
-        email: 'neha.gupta@mckinsey.com',
+        donor_email: 'neha.gupta@mckinsey.com',
         amount: 22000,
         message: 'Entrepreneurship incubator support. Build the future!',
         is_anonymous: false,
@@ -828,7 +828,7 @@ const AdminDashboard = () => {
   // Fetch verification requests
   const fetchVerificationRequests = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/admin/verification-requests', {
+      const response = await fetch('/api/admin/verification-requests', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -836,6 +836,7 @@ const AdminDashboard = () => {
       if (response.ok) {
         const data = await response.json();
         setVerificationRequests(data);
+        console.log('✅ Loaded verification requests:', data);
       } else {
         console.error('Failed to fetch verification requests:', response.status, response.statusText);
         toast({
@@ -855,29 +856,28 @@ const AdminDashboard = () => {
   };
 
   // Approve verification request
-  const handleApproveVerification = async (requestId: string, userId: string) => { // Added userId
+  const handleApproveVerification = async (requestId: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/admin/verification-requests/${requestId}/approve`, {
+      const response = await fetch(`/api/admin/verification-requests/${requestId}/approve`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId: userId }), // Send userId to update profile directly
       });
 
       if (response.ok) {
         const result = await response.json();
         toast({
-          title: "Success",
-          description: "User verification approved successfully. Verification email has been sent to the user.",
+          title: "✅ Verification Approved!",
+          description: "User verified successfully. Confirmation email has been sent.",
         });
         console.log('✅ Verification approved and email sent:', result);
         fetchVerificationRequests(); // Refresh the list
         fetchProfiles(); // Refresh profiles to reflect verification status
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to approve verification');
+        throw new Error(errorData.error || 'Failed to approve verification');
       }
     } catch (error) {
       console.error('Error approving verification:', error);
@@ -890,27 +890,27 @@ const AdminDashboard = () => {
   };
 
   // Reject verification request
-  const handleRejectVerification = async (requestId: string, userId: string) => { // Added userId
+  const handleRejectVerification = async (requestId: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/admin/verification-requests/${requestId}/reject`, {
+      const response = await fetch(`/api/admin/verification-requests/${requestId}/reject`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ notes: 'Rejected by admin', userId: userId }), // Send userId and notes
+        body: JSON.stringify({ notes: 'Rejected by admin' }),
       });
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Verification request rejected",
+          title: "Verification Rejected",
+          description: "Verification request has been rejected",
         });
         fetchVerificationRequests(); // Refresh the list
         fetchProfiles(); // Refresh profiles to reflect verification status
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to reject verification');
+        throw new Error(errorData.error || 'Failed to reject verification');
       }
     } catch (error) {
       console.error('Error rejecting verification:', error);
@@ -931,7 +931,7 @@ const AdminDashboard = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:3001/api/admin/csv-upload', {
+      const response = await fetch('/api/admin/csv-upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -1458,31 +1458,35 @@ const AdminDashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Student Verification Requests</CardTitle>
-                  <CardDescription>Review and manage student verification requests</CardDescription>
+                  <CardTitle>Verification Requests</CardTitle>
+                  <CardDescription>Review and manage user verification requests</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {profiles.filter(p => p.role === 'student' && p.verification_status === 'pending').map((profile) => (
-                      <div key={profile.id} className="p-3 border rounded-lg flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">{profile.name}</h4>
-                          <p className="text-sm text-muted-foreground">{profile.email}</p>
+                    {verificationRequests.filter((req: any) => req.status === 'pending').map((request: any) => {
+                      const user = profiles.find(p => p.id === request.user_id) || profiles.find(p => p.user_id === request.user_id);
+                      return (
+                        <div key={request.id} className="p-3 border rounded-lg flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium">{(request.request_data as any)?.name || user?.name || user?.email?.split('@')[0] || 'User'}</h4>
+                            <p className="text-sm text-muted-foreground">{user?.email || (request.request_data as any)?.email || 'Email not available'}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Requested: {new Date(request.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(request.id)}>
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleApproveVerification(profile.id, profile.id)}> {/* Assuming request ID is same as user ID for now */}
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(profile.id, profile.id)}> {/* Assuming request ID is same as user ID for now */}
-                            <XCircle className="w-4 h-4 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                    {profiles.filter(p => p.role === 'student' && p.verification_status === 'pending').length === 0 && (
-                      <p className="text-muted-foreground text-center">No pending student verification requests.</p>
+                      );
+                    })}
+                    {verificationRequests.filter((req: any) => req.status === 'pending').length === 0 && (
+                      <p className="text-muted-foreground text-center py-4">No pending verification requests.</p>
                     )}
                   </div>
                 </CardContent>
@@ -1596,18 +1600,23 @@ const AdminDashboard = () => {
                             )}
                           </Button>
                         )}
-                        {profile.role === 'student' && profile.verification_status === 'pending' && (
-                          <>
-                            <Button size="sm" onClick={() => handleApproveVerification(profile.id, profile.id)}>
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(profile.id, profile.id)}>
-                              <XCircle className="w-4 h-4 mr-1" />
-                              Reject
-                            </Button>
-                          </>
-                        )}
+                        {profile.role === 'student' && profile.verification_status === 'pending' && (() => {
+                          const request = verificationRequests.find((req: any) => req.user_id === profile.id && req.status === 'pending');
+                          return request ? (
+                            <>
+                              <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(request.id)}>
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Reject
+                              </Button>
+                            </>
+                          ) : (
+                            <Badge variant="secondary">No pending request</Badge>
+                          );
+                        })()}
                       </div>
                     </div>
                   ))}

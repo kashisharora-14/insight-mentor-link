@@ -40,6 +40,15 @@ This is a React + TypeScript alumni platform application with PostgreSQL databas
 
 ## Database Schema
 The database includes the following tables:
+
+### Authentication & Verification:
+- **users** - Core user authentication and verification status
+- **verification_codes** - Email verification codes
+- **verification_requests** - User verification requests for admin review
+- **csv_uploads** - Bulk verification via CSV upload tracking
+- **approved_users** - Pre-approved users from CSV whitelist
+
+### Platform Features:
 - **donations** - Alumni donations tracking
 - **products** - Gift shop merchandise
 - **orders** - Gift shop order management
@@ -56,13 +65,20 @@ The database includes the following tables:
 - **yearly_milestones** - Year-by-year career goals
 
 ## Environment Configuration
-The application uses the following environment variables (automatically configured by Replit):
+The application uses the following environment variables:
+
+### Database (automatically configured by Replit):
 - `DATABASE_URL` - PostgreSQL connection string
 - `PGHOST` - PostgreSQL host
 - `PGPORT` - PostgreSQL port
 - `PGDATABASE` - Database name
 - `PGUSER` - Database user
 - `PGPASSWORD` - Database password
+
+### Email Service (configured in Replit Secrets - PERMANENT):
+- `MAIL_USERNAME` - Gmail address for sending emails
+- `MAIL_PASSWORD` - Gmail app-specific password
+These credentials are stored securely in Replit Secrets and persist across all deployments
 
 ## Database Commands
 - `npm run db:generate` - Generate Drizzle migrations
@@ -92,11 +108,17 @@ For testing purposes, the application includes mock authentication:
 4. Set up deployment configuration for production
 
 ## Recent Changes
-- **2025-10-20**: Successfully migrated from Supabase to Replit Neon PostgreSQL
+- **2025-10-20**: Successfully migrated and configured complete verification system
   - Installed Drizzle ORM and Neon serverless packages
   - Created comprehensive database schema based on Supabase migrations
   - Set up Drizzle configuration and database push workflow
-  - Pushed all database tables and schema to PostgreSQL
+  - Pushed all database tables and schema to PostgreSQL (20+ tables including verification tables)
+  - **Configured Gmail Email Service**: Set up permanent email credentials in Replit Secrets
+  - **Admin Verification System**: Fixed and tested approve/reject workflow
+  - **Email Notifications**: Automated emails sent when admin verifies users
+  - **Verified Badge System**: Badge displays on verified users across the platform
+  - Fixed API endpoints to use relative paths instead of hardcoded localhost URLs
+  - Updated admin dashboard to properly fetch and manage verification requests
   - Populated database with sample products and events data
   - Removed Supabase dependencies and files
   - Updated Vite config to use port 5000 and added @shared path alias
