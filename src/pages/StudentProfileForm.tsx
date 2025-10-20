@@ -159,13 +159,27 @@ export default function StudentProfileForm() {
 
       console.log('Submitting profile data:', submitData)
 
-      // Updated to use the corrected token retrieval logic
+      // Validate token before submission
       const tokenForSubmit = localStorage.getItem('authToken');
-      if (!tokenForSubmit) {
-        console.error('❌ No authentication token found for submission');
+      if (!tokenForSubmit || tokenForSubmit === 'null' || tokenForSubmit === 'undefined') {
+        console.error('❌ No valid authentication token found for submission');
         toast({
           title: "Session Expired",
           description: "Please login again to continue.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+
+      // Validate JWT format
+      const tokenParts = tokenForSubmit.split('.');
+      if (tokenParts.length !== 3) {
+        console.error('❌ Malformed token detected, clearing auth');
+        localStorage.clear();
+        toast({
+          title: "Invalid Session",
+          description: "Your session is invalid. Please login again.",
           variant: "destructive",
         });
         navigate('/login');

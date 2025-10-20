@@ -177,11 +177,22 @@ const StudentDashboard = () => {
     const fetchStudentProfile = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        if (!token) {
-          console.error('❌ No auth token found');
+        if (!token || token === 'null' || token === 'undefined') {
+          console.error('❌ No valid auth token found');
           setProfileLoading(false);
           return;
         }
+
+        // Validate token format (JWT should have 3 parts)
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          console.error('❌ Malformed token detected, clearing auth');
+          localStorage.clear();
+          setProfileLoading(false);
+          navigate('/login');
+          return;
+        }
+
         const response = await fetch('/api/student-profile/profile', {
           headers: {
             'Authorization': `Bearer ${token}`,
