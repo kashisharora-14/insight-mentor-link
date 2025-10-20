@@ -1,0 +1,346 @@
+import { Router } from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { db } from '../db';
+import { users, verificationCodes, approvedUsers, verificationRequests } from '@shared/schema';
+import { sendVerificationEmail, sendWelcomeEmail } from '../services/email';
+import { eq, and, or, gt } from 'drizzle-orm';
+
+const router = Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Generate random 6-digit code
+function generateCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// STEP 1: Send verification code (for registration)
+router.post('/register/send-code', async (req, res) => {
+  try {
+    const { email, role } = req.body;
+
+    if (!email || !role) {
+      return res.status(400).json({ error: 'Email and role are required' });
+    }
+
+    if (!['student', 'alumni'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    // Check if user already exists
+    const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (existingUser.length > 0) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    // Generate and store verification code
+    const code = generateCode();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await db.insert(verificationCodes).values({
+      email,
+      code,
+      type: 'registration',
+      expiresAt,
+    });
+
+    // Send email
+    await sendVerificationEmail(email, code, 'registration');
+
+    res.json({ 
+      message: 'Verification code sent to your email',
+      expiresIn: 900 // 15 minutes in seconds
+    });
+  } catch (error) {
+    console.error('Error sending verification code:', error);
+    res.status(500).json({ error: 'Failed to send verification code' });
+  }
+});
+
+// STEP 2: Verify code and complete registration
+router.post('/register/verify', async (req, res) => {
+  try {
+    const { email, code, password, studentId, name, department, graduationYear } = req.body;
+
+    if (!email || !code || !password) {
+      return res.status(400).json({ error: 'Email, code, and password are required' });
+    }
+
+    // Verify code
+    const verificationRecord = await db.select()
+      .from(verificationCodes)
+      .where(
+        and(
+          eq(verificationCodes.email, email),
+          eq(verificationCodes.code, code),
+          eq(verificationCodes.type, 'registration'),
+          eq(verificationCodes.isUsed, false),
+          gt(verificationCodes.expiresAt, new Date())
+        )
+      )
+      .limit(1);
+
+    if (verificationRecord.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
+    }
+
+    // Check if email is in approved list
+    const approvedRecord = await db.select()
+      .from(approvedUsers)
+      .where(
+        and(
+          or(
+            eq(approvedUsers.email, email),
+            studentId ? eq(approvedUsers.studentId, studentId) : undefined
+          ),
+          eq(approvedUsers.isUsed, false)
+        )
+      )
+      .limit(1);
+
+    const isAutoApproved = approvedRecord.length > 0;
+    const role = isAutoApproved ? approvedRecord[0].role : (studentId ? 'student' : 'alumni');
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create user
+    const newUser = await db.insert(users).values({
+      email,
+      passwordHash,
+      role,
+      studentId: studentId || null,
+      isEmailVerified: true,
+      isVerified: isAutoApproved,
+      verificationMethod: isAutoApproved ? 'csv_upload' : 'pending',
+      verifiedAt: isAutoApproved ? new Date() : null,
+    }).returning();
+
+    const userId = newUser[0].id;
+
+    // Mark verification code as used
+    await db.update(verificationCodes)
+      .set({ isUsed: true, usedAt: new Date() })
+      .where(eq(verificationCodes.id, verificationRecord[0].id));
+
+    // If auto-approved, mark the approved record as used
+    if (isAutoApproved) {
+      await db.update(approvedUsers)
+        .set({ isUsed: true, usedBy: userId, usedAt: new Date() })
+        .where(eq(approvedUsers.id, approvedRecord[0].id));
+    } else {
+      // Create verification request for admin review
+      await db.insert(verificationRequests).values({
+        userId,
+        requestData: { name, department, graduationYear },
+      });
+    }
+
+    // Send welcome email
+    await sendWelcomeEmail(email, name || 'User', isAutoApproved);
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId, email, role, isVerified: isAutoApproved },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Registration successful',
+      token,
+      user: {
+        id: userId,
+        email,
+        role,
+        isVerified: isAutoApproved,
+        isEmailVerified: true,
+      },
+    });
+  } catch (error) {
+    console.error('Error verifying registration:', error);
+    res.status(500).json({ error: 'Failed to complete registration' });
+  }
+});
+
+// Login endpoint
+router.post('/login', async (req, res) => {
+  try {
+    const { email, studentId, password } = req.body;
+
+    if (!password || (!email && !studentId)) {
+      return res.status(400).json({ error: 'Email/Student ID and password are required' });
+    }
+
+    // Find user by email or student ID
+    const userRecord = await db.select()
+      .from(users)
+      .where(
+        or(
+          email ? eq(users.email, email) : undefined,
+          studentId ? eq(users.studentId, studentId) : undefined
+        )
+      )
+      .limit(1);
+
+    if (userRecord.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = userRecord[0];
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role, isVerified: user.isVerified },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        studentId: user.studentId,
+        isVerified: user.isVerified,
+        isEmailVerified: user.isEmailVerified,
+      },
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Check if email/student ID is pre-approved
+router.post('/check-approval', async (req, res) => {
+  try {
+    const { email, studentId } = req.body;
+
+    if (!email && !studentId) {
+      return res.status(400).json({ error: 'Email or student ID required' });
+    }
+
+    const approvedRecord = await db.select()
+      .from(approvedUsers)
+      .where(
+        and(
+          or(
+            email ? eq(approvedUsers.email, email) : undefined,
+            studentId ? eq(approvedUsers.studentId, studentId) : undefined
+          ),
+          eq(approvedUsers.isUsed, false)
+        )
+      )
+      .limit(1);
+
+    if (approvedRecord.length > 0) {
+      return res.json({
+        isApproved: true,
+        role: approvedRecord[0].role,
+        message: 'Your registration will be auto-approved with verified badge',
+      });
+    }
+
+    res.json({
+      isApproved: false,
+      message: 'Your registration will require admin approval',
+    });
+  } catch (error) {
+    console.error('Error checking approval:', error);
+    res.status(500).json({ error: 'Failed to check approval status' });
+  }
+});
+
+// Password reset: Send code
+router.post('/password-reset/send-code', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Check if user exists
+    const userRecord = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (userRecord.length === 0) {
+      // Don't reveal if email exists or not
+      return res.json({ message: 'If the email exists, a password reset code has been sent' });
+    }
+
+    // Generate and store verification code
+    const code = generateCode();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await db.insert(verificationCodes).values({
+      email,
+      code,
+      type: 'password_reset',
+      expiresAt,
+    });
+
+    await sendVerificationEmail(email, code, 'password_reset');
+
+    res.json({ message: 'If the email exists, a password reset code has been sent' });
+  } catch (error) {
+    console.error('Error sending password reset code:', error);
+    res.status(500).json({ error: 'Failed to send password reset code' });
+  }
+});
+
+// Password reset: Verify and reset
+router.post('/password-reset/verify', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ error: 'Email, code, and new password are required' });
+    }
+
+    // Verify code
+    const verificationRecord = await db.select()
+      .from(verificationCodes)
+      .where(
+        and(
+          eq(verificationCodes.email, email),
+          eq(verificationCodes.code, code),
+          eq(verificationCodes.type, 'password_reset'),
+          eq(verificationCodes.isUsed, false),
+          gt(verificationCodes.expiresAt, new Date())
+        )
+      )
+      .limit(1);
+
+    if (verificationRecord.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update user password
+    await db.update(users)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.email, email));
+
+    // Mark code as used
+    await db.update(verificationCodes)
+      .set({ isUsed: true, usedAt: new Date() })
+      .where(eq(verificationCodes.id, verificationRecord[0].id));
+
+    res.json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+export default router;

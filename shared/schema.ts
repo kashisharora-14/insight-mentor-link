@@ -1,5 +1,79 @@
-import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+
+// Authentication Tables
+
+// Users table - Core authentication
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  role: text('role').notNull(), // 'student', 'alumni', 'admin'
+  studentId: text('student_id').unique(), // Optional, only for students
+  isVerified: boolean('is_verified').default(false),
+  isEmailVerified: boolean('is_email_verified').default(false),
+  verificationMethod: text('verification_method'), // 'csv_upload', 'admin_manual', 'pending'
+  verifiedBy: uuid('verified_by'), // admin ID who verified
+  verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Email verification codes
+export const verificationCodes = pgTable('verification_codes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull(),
+  code: text('code').notNull(),
+  type: text('type').notNull(), // 'registration', 'password_reset', 'email_change'
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  isUsed: boolean('is_used').default(false),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Verification requests - when users register without CSV
+export const verificationRequests = pgTable('verification_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  requestData: jsonb('request_data'), // Additional info provided by user
+  reviewedBy: uuid('reviewed_by'), // admin ID
+  reviewNotes: text('review_notes'),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// CSV upload tracking - for bulk verification
+export const csvUploads = pgTable('csv_uploads', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  uploadedBy: uuid('uploaded_by').notNull().references(() => users.id),
+  fileName: text('file_name').notNull(),
+  recordsCount: integer('records_count').notNull(),
+  processedCount: integer('processed_count').default(0),
+  errorCount: integer('error_count').default(0),
+  status: text('status').notNull().default('processing'), // 'processing', 'completed', 'failed'
+  errorLog: jsonb('error_log'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Pre-approved users from CSV (email or student ID whitelist)
+export const approvedUsers = pgTable('approved_users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email'),
+  studentId: text('student_id'),
+  role: text('role').notNull(), // 'student', 'alumni'
+  name: text('name'),
+  department: text('department'),
+  graduationYear: integer('graduation_year'),
+  csvUploadId: uuid('csv_upload_id').references(() => csvUploads.id),
+  isUsed: boolean('is_used').default(false),
+  usedBy: uuid('used_by').references(() => users.id),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueEmail: uniqueIndex('approved_email_unique').on(table.email),
+  uniqueStudentId: uniqueIndex('approved_student_id_unique').on(table.studentId),
+}));
 
 // Donations table
 export const donations = pgTable('donations', {
