@@ -24,7 +24,8 @@ import {
   BarChart3,
   Award,
   Zap,
-  Shield // Import Shield icon
+  Shield, // Import Shield icon
+  Info // Import Info icon
 } from "lucide-react";
 import CareerRoadmap from "@/components/CareerRoadmap";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -892,25 +893,20 @@ const StudentDashboard = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Login Credentials Section */}
-                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
-                    <Shield className="w-4 h-4" />
-                    Login Credentials
-                  </h3>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Login Credentials</h3>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between">
                       <span className="text-muted-foreground">Student ID:</span>
-                      <span className="font-mono font-semibold text-blue-700 dark:text-blue-300">
-                        {studentProfile?.studentId}
-                      </span>
+                      <span className="font-medium">{user?.studentId || studentProfile?.studentId || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between">
                       <span className="text-muted-foreground">Registered Email:</span>
-                      <span className="font-semibold">{studentProfile?.email}</span>
+                      <span className="font-medium">{user.email}</span>
                     </div>
                     <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
                       <p className="text-xs text-muted-foreground">
-                        💡 You can login using either your <strong>Student ID</strong> ({studentProfile?.studentId}) or <strong>Email</strong> ({studentProfile?.email})
+                        💡 You can login using either your <strong>Student ID</strong> ({user?.studentId || studentProfile?.studentId || 'N/A'}) or <strong>Email</strong> ({user.email})
                       </p>
                     </div>
                   </div>

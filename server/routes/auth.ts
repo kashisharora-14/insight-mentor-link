@@ -184,13 +184,14 @@ router.post('/verify-login-code', async (req, res) => {
             userId: userDetails.id,
             requestData: {
               email: userDetails.email,
-              name: userDetails.name || userDetails.email.split('@')[0]
+              name: userDetails.name || userDetails.email.split('@')[0],
+              studentId: userDetails.studentId || null
             },
             status: 'pending',
           });
-          console.log(`✅ Verification request created for user ID: ${userDetails.id}`);
+          console.log(`✅ Verification request created for user ID: ${userDetails.id} with student ID: ${userDetails.studentId}`);
         } else {
-          console.log(`ℹ️ Verification request already exists for user: ${userDetails.email}`);
+          console.log(`ℹ️ Verification request already exists for user: ${userDetails.email} (Request ID: ${existingRequest[0].id})`);
         }
       }
     }

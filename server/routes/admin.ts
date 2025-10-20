@@ -23,7 +23,12 @@ router.get('/verification-requests', async (req, res) => {
     // First, get all verification requests to debug
     const allRequests = await db.select().from(verificationRequests);
     console.log(`📊 Total verification requests in DB: ${allRequests.length}`);
-    console.log('📊 Request statuses:', allRequests.map(r => ({ id: r.id, status: r.status, userId: r.userId })));
+    console.log('📊 All requests:', allRequests.map(r => ({ 
+      id: r.id, 
+      status: r.status, 
+      userId: r.userId,
+      createdAt: r.createdAt 
+    })));
 
     const requests = await db.select({
       id: verificationRequests.id,
@@ -43,11 +48,16 @@ router.get('/verification-requests', async (req, res) => {
 
     console.log(`✅ Found ${requests.length} pending verification requests`);
     if (requests.length > 0) {
-      console.log('📋 Pending requests:', requests.map(r => ({ 
+      console.log('📋 Pending requests details:', requests.map(r => ({ 
+        id: r.id,
         email: r.userEmail, 
         name: r.userName,
-        status: r.status 
+        studentId: r.userStudentId,
+        status: r.status,
+        requestData: r.requestData
       })));
+    } else {
+      console.log('⚠️ No pending verification requests found, but total requests:', allRequests.length);
     }
 
     res.json(requests);
