@@ -58,7 +58,7 @@ class ApiClient {
 
   private loadTokenFromStorage(): void {
     try {
-      this.token = localStorage.getItem('access_token');
+      this.token = localStorage.getItem('authToken');
     } catch (error) {
       console.error('Failed to load token from storage:', error);
       this.token = null;
@@ -67,11 +67,12 @@ class ApiClient {
 
   private saveTokenToStorage(token: string): void {
     this.token = token;
-    localStorage.setItem('access_token', token);
+    localStorage.setItem('authToken', token);
   }
 
   private removeTokenFromStorage(): void {
     this.token = null;
+    localStorage.removeItem('authToken');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('authUser');
@@ -314,8 +315,7 @@ class ApiClient {
 
     const data = await response.json();
 
-    this.setAuthToken(data.token);
-    localStorage.setItem('refresh_token', data.token + '_refresh');
+    this.saveTokenToStorage(data.token);
     localStorage.setItem('authUser', JSON.stringify(data.user));
 
     return {
@@ -342,14 +342,12 @@ class ApiClient {
       return;
     }
 
-    this.token = token;
-    localStorage.setItem('authToken', token);
+    this.saveTokenToStorage(token);
     console.log('✅ Auth token saved to localStorage');
   }
 
   clearAuthToken() {
-    this.token = null;
-    localStorage.removeItem('authToken');
+    this.removeTokenFromStorage();
     console.log('🗑️ Auth token cleared from localStorage');
   }
 

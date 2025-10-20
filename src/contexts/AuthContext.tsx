@@ -49,8 +49,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Check if token exists and is not malformed
         if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
           console.log('ℹ️ No valid token found, user needs to login');
+          // Clean up all token storage
           localStorage.removeItem('authToken');
           localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('authUser');
           setLoading(false);
           return;
         }
@@ -216,10 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Logout failed:', error);
     } finally {
       // Clear all authentication data
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('authUser');
+      localStorage.clear(); // Clear everything to ensure no stale data
       apiClient.clearAuthToken();
       setUser(null);
       setIsAuthenticated(false);
