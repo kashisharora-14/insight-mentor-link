@@ -1499,40 +1499,46 @@ const AdminDashboard = () => {
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Pending Verifications</CardTitle>
-                  <CardDescription>Alumni profiles requiring verification</CardDescription>
+                  <CardTitle>Pending Alumni Verifications</CardTitle>
+                  <CardDescription>Alumni waiting for verification approval</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {profiles.filter(p => !p.is_verified && p.role === 'alumni').slice(0, 5).map((profile) => {
-                      // Find if there's a pending verification request for this user
-                      const verificationRequest = verificationRequests.find(
-                        (req: any) => req.userId === profile.id && req.status === 'pending'
-                      );
-                      
-                      return (
-                        <div key={profile.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{profile.name}</h4>
-                            <p className="text-sm text-muted-foreground">{profile.current_job} at {profile.company}</p>
-                            <p className="text-xs text-muted-foreground">{profile.department} • Class of {profile.graduation_year}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            {verificationRequest ? (
+                    {verificationRequests
+                      .filter((req: any) => req.status === 'pending' && req.userRole === 'alumni')
+                      .slice(0, 5)
+                      .map((request: any) => {
+                        const profile = profiles.find(p => p.id === request.userId);
+                        const userName = (request.requestData as any)?.name || request.userName || 'Unknown';
+                        
+                        return (
+                          <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex-1">
+                              <h4 className="font-medium">{userName}</h4>
+                              <p className="text-sm text-muted-foreground">{request.userEmail}</p>
+                              {profile && (
+                                <p className="text-xs text-muted-foreground">
+                                  {profile.department} • Class of {profile.graduation_year}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
                               <Button 
                                 size="sm" 
-                                onClick={() => handleApproveVerification(verificationRequest.id)}
+                                onClick={() => handleApproveVerification(request.id)}
                               >
                                 <CheckCircle className="w-4 h-4 mr-1" />
                                 Verify
                               </Button>
-                            ) : (
-                              <Badge variant="secondary">No pending request</Badge>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    {verificationRequests.filter((req: any) => req.status === 'pending' && req.userRole === 'alumni').length === 0 && (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground">No pending alumni verifications.</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1550,41 +1556,45 @@ const AdminDashboard = () => {
                     {verificationRequests.length === 0 && (
                       <div className="text-center py-8">
                         <p className="text-muted-foreground">Loading verification requests...</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Total requests in system: {verificationRequests.length}
-                        </p>
                       </div>
                     )}
                     {verificationRequests.filter((req: any) => req.status === 'pending').map((request: any) => {
-                      // Extract user info from the API response or request data
                       const userName = (request.requestData as any)?.name || 
-                                      request.userName || // Use userName if available directly
+                                      request.userName || 
                                       request.userEmail?.split('@')[0] || 
                                       'User';
                       const userEmail = request.userEmail || 
                                        (request.requestData as any)?.email || 
                                        'Email not available';
+                      const isStudent = request.userRole === 'student';
+                      const isAlumni = request.userRole === 'alumni';
 
                       return (
-                        <div key={request.id} className="p-3 border rounded-lg flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold">{userName || 'Unknown User'}</p>
-                            <p className="text-sm text-muted-foreground">{userEmail || 'Email not available'}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Requested: {new Date(request.createdAt).toLocaleDateString()} | 
-                              Role: {request.userRole || 'N/A'} | 
-                              Student ID: {request.userStudentId || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(request.id)}>
-                              <XCircle className="w-4 h-4 mr-1" />
-                              Reject
-                            </Button>
+                        <div key={request.id} className="p-4 border rounded-lg">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-semibold">{userName}</p>
+                                <Badge variant={isStudent ? "secondary" : "default"}>
+                                  {isStudent ? "Student" : isAlumni ? "Alumni" : request.userRole}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{userEmail}</p>
+                              <div className="mt-2 text-xs text-muted-foreground">
+                                <p>Requested: {new Date(request.createdAt).toLocaleDateString()}</p>
+                                {request.userStudentId && <p>Student ID: {request.userStudentId}</p>}
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(request.id)}>
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -1592,9 +1602,6 @@ const AdminDashboard = () => {
                     {verificationRequests.length > 0 && verificationRequests.filter((req: any) => req.status === 'pending').length === 0 && (
                       <div className="text-center py-4">
                         <p className="text-muted-foreground">No pending verification requests.</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Total requests in system: {verificationRequests.length} (all processed)
-                        </p>
                       </div>
                     )}
                   </div>
