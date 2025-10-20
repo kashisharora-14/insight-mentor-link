@@ -210,8 +210,13 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
           </form>
         )}
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm text-muted-foreground space-y-1">
           <p>Don't have an account? Contact admin for registration.</p>
+          {step === 'code' && (
+            <p className="text-xs">
+              💡 If you don't receive the code, check your spam folder or verify the email address.
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

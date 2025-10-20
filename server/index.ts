@@ -40,19 +40,31 @@ app.use('/api/profile', profileRoutes);
 if (isProduction) {
   const distPath = path.join(__dirname, '..', 'dist');
   app.use(express.static(distPath));
-  
+
   app.get('*', (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
-// Error handling
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+// Global error handler - ensures all errors return JSON
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error('Global error handler:', err);
+
+  // If headers already sent, delegate to default error handler
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  // Always return JSON error response
+  res.status(err.status || 500).json({
+    error: {
+      message: err.message || 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    }
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`Environment: ${isProduction ? 'production' : 'development'}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

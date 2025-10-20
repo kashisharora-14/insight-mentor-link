@@ -85,10 +85,10 @@ router.post('/login', async (req, res) => {
         code_expires_in: 300
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending login code:', error);
     res.status(500).json({ 
-      error: { message: 'Failed to send login code' }
+      error: { message: error.message || 'Failed to send login code' }
     });
   }
 });
