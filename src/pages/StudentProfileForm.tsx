@@ -1,125 +1,153 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, User, GraduationCap, Phone, Code } from 'lucide-react';
-import Navigation from '@/components/ui/navigation';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { Button } from '../components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { Textarea } from '../components/ui/textarea'
+import { toast } from '../components/ui/use-toast'
+import { Loader2, Save, ArrowLeft } from 'lucide-react'
 
 export default function StudentProfileForm() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    // Academic Information - Punjab University CS Department
     rollNumber: '',
-    program: '', // MCA or MSCIT
-    batchType: '', // Morning or Evening
-    currentYear: 1, // 1 or 2
-    batchYear: new Date().getFullYear(),
-    currentSemester: 1, // 1-4
+    program: '',
+    batchType: '',
+    currentYear: '',
+    currentSemester: '',
+    batchYear: '',
     cgpa: '',
-    
-    // Personal Details
+    currentBacklog: '0',
     dateOfBirth: '',
     gender: '',
-    
-    // Contact Information
+    bloodGroup: '',
+    category: '',
+    nationality: 'Indian',
+    religion: '',
     phoneNumber: '',
     alternateEmail: '',
     permanentAddress: '',
+    currentAddress: '',
     city: '',
     state: '',
     pincode: '',
-    
-    // Skills and Interests
-    technicalSkills: [] as string[],
-    softSkills: [] as string[],
-    interests: [] as string[],
+    fatherName: '',
+    fatherOccupation: '',
+    fatherPhone: '',
+    motherName: '',
+    motherOccupation: '',
+    motherPhone: '',
+    guardianName: '',
+    guardianRelation: '',
+    guardianPhone: '',
+    admissionType: '',
+    scholarshipStatus: '',
+    hostelResident: false,
+    hostelRoomNumber: '',
+    transportMode: '',
+    technicalSkills: '',
+    softSkills: '',
+    interests: '',
     careerGoals: '',
-    
-    // Social Links
     linkedinUrl: '',
     githubUrl: '',
     portfolioUrl: '',
-  });
-
-  const [skillInput, setSkillInput] = useState('');
-  const [softSkillInput, setSoftSkillInput] = useState('');
-  const [interestInput, setInterestInput] = useState('');
+  })
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    fetchProfile()
+  }, [])
 
-  const loadProfile = async () => {
+  const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       const response = await fetch('/api/student-profile/profile', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
-      });
+      })
 
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json()
         if (data.profile) {
-          setFormData(prev => ({
-            ...prev,
+          setFormData({
             rollNumber: data.profile.rollNumber || '',
             program: data.profile.program || '',
             batchType: data.profile.batchType || '',
-            currentYear: data.profile.currentYear || 1,
-            batchYear: data.profile.batchYear || new Date().getFullYear(),
-            currentSemester: data.profile.currentSemester || 1,
+            currentYear: data.profile.currentYear?.toString() || '',
+            currentSemester: data.profile.currentSemester?.toString() || '',
+            batchYear: data.profile.batchYear?.toString() || '',
             cgpa: data.profile.cgpa || '',
+            currentBacklog: data.profile.currentBacklog?.toString() || '0',
             dateOfBirth: data.profile.dateOfBirth ? new Date(data.profile.dateOfBirth).toISOString().split('T')[0] : '',
             gender: data.profile.gender || '',
+            bloodGroup: data.profile.bloodGroup || '',
+            category: data.profile.category || '',
+            nationality: data.profile.nationality || 'Indian',
+            religion: data.profile.religion || '',
             phoneNumber: data.profile.phoneNumber || '',
             alternateEmail: data.profile.alternateEmail || '',
             permanentAddress: data.profile.permanentAddress || '',
+            currentAddress: data.profile.currentAddress || '',
             city: data.profile.city || '',
             state: data.profile.state || '',
             pincode: data.profile.pincode || '',
-            technicalSkills: data.profile.technicalSkills || [],
-            softSkills: data.profile.softSkills || [],
-            interests: data.profile.interests || [],
+            fatherName: data.profile.fatherName || '',
+            fatherOccupation: data.profile.fatherOccupation || '',
+            fatherPhone: data.profile.fatherPhone || '',
+            motherName: data.profile.motherName || '',
+            motherOccupation: data.profile.motherOccupation || '',
+            motherPhone: data.profile.motherPhone || '',
+            guardianName: data.profile.guardianName || '',
+            guardianRelation: data.profile.guardianRelation || '',
+            guardianPhone: data.profile.guardianPhone || '',
+            admissionType: data.profile.admissionType || '',
+            scholarshipStatus: data.profile.scholarshipStatus || '',
+            hostelResident: data.profile.hostelResident || false,
+            hostelRoomNumber: data.profile.hostelRoomNumber || '',
+            transportMode: data.profile.transportMode || '',
+            technicalSkills: data.profile.technicalSkills?.join(', ') || '',
+            softSkills: data.profile.softSkills?.join(', ') || '',
+            interests: data.profile.interests?.join(', ') || '',
             careerGoals: data.profile.careerGoals || '',
             linkedinUrl: data.profile.linkedinUrl || '',
             githubUrl: data.profile.githubUrl || '',
             portfolioUrl: data.profile.portfolioUrl || '',
-          }));
+          })
         }
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
-      toast({
-        title: 'Notice',
-        description: 'Starting with a fresh profile form.',
-      });
+      console.error('Error fetching profile:', error)
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       
-      // Convert dateOfBirth to ISO string if it exists
+      // Convert form data to match backend expectations
       const submitData = {
         ...formData,
-        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
-      };
+        currentYear: formData.currentYear ? parseInt(formData.currentYear) : undefined,
+        currentSemester: formData.currentSemester ? parseInt(formData.currentSemester) : undefined,
+        batchYear: formData.batchYear ? parseInt(formData.batchYear) : undefined,
+        currentBacklog: formData.currentBacklog ? parseInt(formData.currentBacklog) : 0,
+        cgpa: formData.cgpa ? parseFloat(formData.cgpa) : undefined,
+        technicalSkills: formData.technicalSkills ? formData.technicalSkills.split(',').map(s => s.trim()).filter(Boolean) : [],
+        softSkills: formData.softSkills ? formData.softSkills.split(',').map(s => s.trim()).filter(Boolean) : [],
+        interests: formData.interests ? formData.interests.split(',').map(s => s.trim()).filter(Boolean) : [],
+      }
+
+      console.log('Submitting profile data:', submitData)
 
       const response = await fetch('/api/student-profile/profile', {
         method: 'POST',
@@ -128,373 +156,422 @@ export default function StudentProfileForm() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(submitData),
-      });
+      })
+
+      const result = await response.json()
 
       if (response.ok) {
-        const data = await response.json();
         toast({
           title: 'Success',
-          description: data.message || 'Profile saved successfully!',
-        });
-        setTimeout(() => {
-          navigate('/student-dashboard');
-        }, 1000);
+          description: 'Profile saved successfully',
+        })
+        navigate('/student-dashboard')
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save profile');
+        console.error('Save failed:', result)
+        toast({
+          title: 'Error',
+          description: result.details ? result.details.join(', ') : (result.error || 'Failed to save profile'),
+          variant: 'destructive',
+        })
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error saving profile:', error)
       toast({
         title: 'Error',
-        description: error.message || 'Failed to save profile. Please try again.',
+        description: 'An error occurred while saving your profile',
         variant: 'destructive',
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const addSkill = (type: 'technical' | 'soft' | 'interest') => {
-    const input = type === 'technical' ? skillInput : type === 'soft' ? softSkillInput : interestInput;
-    if (!input.trim()) return;
-
-    const field = type === 'technical' ? 'technicalSkills' : type === 'soft' ? 'softSkills' : 'interests';
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...prev[field], input.trim()]
-    }));
-
-    if (type === 'technical') setSkillInput('');
-    else if (type === 'soft') setSoftSkillInput('');
-    else setInterestInput('');
-  };
-
-  const removeSkill = (type: 'technical' | 'soft' | 'interest', index: number) => {
-    const field = type === 'technical' ? 'technicalSkills' : type === 'soft' ? 'softSkills' : 'interests';
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }));
-  };
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Card>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/student-dashboard')}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+
+        <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
             <CardDescription>
-              Fill in your details to help us serve you better
+              Fill in your details for Panjab University CS Department
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit}>
-              <Tabs defaultValue="academic" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="academic">
-                    <GraduationCap className="w-4 h-4 mr-2" />
-                    Academic
-                  </TabsTrigger>
-                  <TabsTrigger value="personal">
-                    <User className="w-4 h-4 mr-2" />
-                    Personal
-                  </TabsTrigger>
-                  <TabsTrigger value="contact">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Contact
-                  </TabsTrigger>
-                  <TabsTrigger value="skills">
-                    <Code className="w-4 h-4 mr-2" />
-                    Skills
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Academic Information */}
-                <TabsContent value="academic" className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="rollNumber">Roll Number *</Label>
-                      <Input
-                        id="rollNumber"
-                        value={formData.rollNumber}
-                        onChange={(e) => handleChange('rollNumber', e.target.value)}
-                        placeholder="e.g., MCA2024001"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="program">Program *</Label>
-                      <Select value={formData.program} onValueChange={(v) => handleChange('program', v)} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select program" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="MCA">MCA (Master of Computer Applications)</SelectItem>
-                          <SelectItem value="MSCIT">MSCIT (Master of Science in IT)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="batchType">Batch Type *</Label>
-                      <Select value={formData.batchType} onValueChange={(v) => handleChange('batchType', v)} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select batch type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Morning">Morning</SelectItem>
-                          <SelectItem value="Evening">Evening</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="currentYear">Current Year *</Label>
-                      <Select value={formData.currentYear.toString()} onValueChange={(v) => handleChange('currentYear', parseInt(v))} required>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">Year 1</SelectItem>
-                          <SelectItem value="2">Year 2</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="batchYear">Batch Year *</Label>
-                      <Input
-                        id="batchYear"
-                        type="number"
-                        value={formData.batchYear}
-                        onChange={(e) => handleChange('batchYear', parseInt(e.target.value))}
-                        min="2020"
-                        max="2030"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="currentSemester">Current Semester *</Label>
-                      <Select value={formData.currentSemester.toString()} onValueChange={(v) => handleChange('currentSemester', parseInt(v))} required>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">Semester 1</SelectItem>
-                          <SelectItem value="2">Semester 2</SelectItem>
-                          <SelectItem value="3">Semester 3</SelectItem>
-                          <SelectItem value="4">Semester 4</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cgpa">CGPA</Label>
-                      <Input
-                        id="cgpa"
-                        type="number"
-                        step="0.01"
-                        max="10"
-                        value={formData.cgpa}
-                        onChange={(e) => handleChange('cgpa', e.target.value)}
-                        placeholder="e.g., 8.5"
-                      />
-                    </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Academic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Academic Information</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="rollNumber">Roll Number *</Label>
+                    <Input
+                      id="rollNumber"
+                      value={formData.rollNumber}
+                      onChange={(e) => handleInputChange('rollNumber', e.target.value)}
+                      placeholder="e.g., MCA/M/2024/001"
+                      required
+                    />
                   </div>
-                </TabsContent>
 
-                {/* Personal Details */}
-                <TabsContent value="personal" className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                      <Input
-                        id="dateOfBirth"
-                        type="date"
-                        value={formData.dateOfBirth}
-                        onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="gender">Gender</Label>
-                      <Select value={formData.gender} onValueChange={(v) => handleChange('gender', v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Male">Male</SelectItem>
-                          <SelectItem value="Female">Female</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div>
+                    <Label htmlFor="program">Program *</Label>
+                    <Select value={formData.program} onValueChange={(value) => handleInputChange('program', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select program" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MCA">MCA</SelectItem>
+                        <SelectItem value="MSCIT">MSCIT</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </TabsContent>
 
-                {/* Contact Information */}
-                <TabsContent value="contact" className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">Phone Number</Label>
-                      <Input
-                        id="phoneNumber"
-                        type="tel"
-                        value={formData.phoneNumber}
-                        onChange={(e) => handleChange('phoneNumber', e.target.value)}
-                        placeholder="10-digit mobile number"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="alternateEmail">Alternate Email</Label>
-                      <Input
-                        id="alternateEmail"
-                        type="email"
-                        value={formData.alternateEmail}
-                        onChange={(e) => handleChange('alternateEmail', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="permanentAddress">Address</Label>
-                      <Textarea
-                        id="permanentAddress"
-                        value={formData.permanentAddress}
-                        onChange={(e) => handleChange('permanentAddress', e.target.value)}
-                        rows={3}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => handleChange('city', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State</Label>
-                      <Input
-                        id="state"
-                        value={formData.state}
-                        onChange={(e) => handleChange('state', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="pincode">Pincode</Label>
-                      <Input
-                        id="pincode"
-                        value={formData.pincode}
-                        onChange={(e) => handleChange('pincode', e.target.value)}
-                        maxLength={6}
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="batchType">Batch Type *</Label>
+                    <Select value={formData.batchType} onValueChange={(value) => handleInputChange('batchType', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select batch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Morning">Morning</SelectItem>
+                        <SelectItem value="Evening">Evening</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </TabsContent>
 
-                {/* Skills and Professional Information */}
-                <TabsContent value="skills" className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="technicalSkills">Technical Skills</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="technicalSkills"
-                          value={skillInput}
-                          onChange={(e) => setSkillInput(e.target.value)}
-                          placeholder="e.g., Python, React, Node.js"
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill('technical'))}
-                        />
-                        <Button type="button" onClick={() => addSkill('technical')}>Add</Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {formData.technicalSkills.map((skill, i) => (
-                          <span key={i} className="bg-primary/10 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                            {skill}
-                            <button type="button" onClick={() => removeSkill('technical', i)} className="text-destructive">×</button>
-                          </span>
+                  <div>
+                    <Label htmlFor="currentYear">Current Year *</Label>
+                    <Select value={formData.currentYear} onValueChange={(value) => handleInputChange('currentYear', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Year 1</SelectItem>
+                        <SelectItem value="2">Year 2</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="currentSemester">Current Semester *</Label>
+                    <Select value={formData.currentSemester} onValueChange={(value) => handleInputChange('currentSemester', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select semester" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Semester 1</SelectItem>
+                        <SelectItem value="2">Semester 2</SelectItem>
+                        <SelectItem value="3">Semester 3</SelectItem>
+                        <SelectItem value="4">Semester 4</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="batchYear">Batch Year (Graduation) *</Label>
+                    <Input
+                      id="batchYear"
+                      type="number"
+                      value={formData.batchYear}
+                      onChange={(e) => handleInputChange('batchYear', e.target.value)}
+                      placeholder="e.g., 2026"
+                      min="2020"
+                      max="2030"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="cgpa">CGPA</Label>
+                    <Input
+                      id="cgpa"
+                      type="number"
+                      step="0.01"
+                      value={formData.cgpa}
+                      onChange={(e) => handleInputChange('cgpa', e.target.value)}
+                      placeholder="0.00"
+                      min="0"
+                      max="10"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="currentBacklog">Current Backlog</Label>
+                    <Input
+                      id="currentBacklog"
+                      type="number"
+                      value={formData.currentBacklog}
+                      onChange={(e) => handleInputChange('currentBacklog', e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Personal Information</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="bloodGroup">Blood Group</Label>
+                    <Select value={formData.bloodGroup} onValueChange={(value) => handleInputChange('bloodGroup', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select blood group" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                          <SelectItem key={bg} value={bg}>{bg}</SelectItem>
                         ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="softSkills">Soft Skills</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="softSkills"
-                          value={softSkillInput}
-                          onChange={(e) => setSoftSkillInput(e.target.value)}
-                          placeholder="e.g., Communication, Leadership"
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill('soft'))}
-                        />
-                        <Button type="button" onClick={() => addSkill('soft')}>Add</Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {formData.softSkills.map((skill, i) => (
-                          <span key={i} className="bg-secondary/10 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                            {skill}
-                            <button type="button" onClick={() => removeSkill('soft', i)} className="text-destructive">×</button>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="interests">Interests & Career Goals</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="interests"
-                          value={interestInput}
-                          onChange={(e) => setInterestInput(e.target.value)}
-                          placeholder="e.g., AI/ML, Web Development"
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill('interest'))}
-                        />
-                        <Button type="button" onClick={() => addSkill('interest')}>Add</Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {formData.interests.map((interest, i) => (
-                          <span key={i} className="bg-accent/10 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                            {interest}
-                            <button type="button" onClick={() => removeSkill('interest', i)} className="text-destructive">×</button>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="careerGoals">Career Aspirations</Label>
-                      <Textarea
-                        id="careerGoals"
-                        value={formData.careerGoals}
-                        onChange={(e) => handleChange('careerGoals', e.target.value)}
-                        placeholder="Describe your career goals and what you hope to achieve..."
-                        rows={4}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Professional Links</Label>
-                      <div className="space-y-2">
-                        <Input
-                          placeholder="LinkedIn Profile URL"
-                          value={formData.linkedinUrl}
-                          onChange={(e) => handleChange('linkedinUrl', e.target.value)}
-                        />
-                        <Input
-                          placeholder="GitHub Profile URL"
-                          value={formData.githubUrl}
-                          onChange={(e) => handleChange('githubUrl', e.target.value)}
-                        />
-                        <Input
-                          placeholder="Portfolio Website URL"
-                          value={formData.portfolioUrl}
-                          onChange={(e) => handleChange('portfolioUrl', e.target.value)}
-                        />
-                      </div>
-                    </div>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </TabsContent>
-              </Tabs>
+
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="General">General</SelectItem>
+                        <SelectItem value="SC">SC</SelectItem>
+                        <SelectItem value="ST">ST</SelectItem>
+                        <SelectItem value="OBC">OBC</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="nationality">Nationality</Label>
+                    <Input
+                      id="nationality"
+                      value={formData.nationality}
+                      onChange={(e) => handleInputChange('nationality', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="religion">Religion</Label>
+                    <Input
+                      id="religion"
+                      value={formData.religion}
+                      onChange={(e) => handleInputChange('religion', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Contact Information</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <Input
+                      id="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                      placeholder="10-digit number"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="alternateEmail">Alternate Email</Label>
+                    <Input
+                      id="alternateEmail"
+                      type="email"
+                      value={formData.alternateEmail}
+                      onChange={(e) => handleInputChange('alternateEmail', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label htmlFor="permanentAddress">Permanent Address</Label>
+                    <Textarea
+                      id="permanentAddress"
+                      value={formData.permanentAddress}
+                      onChange={(e) => handleInputChange('permanentAddress', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label htmlFor="currentAddress">Current Address</Label>
+                    <Textarea
+                      id="currentAddress"
+                      value={formData.currentAddress}
+                      onChange={(e) => handleInputChange('currentAddress', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="pincode">Pincode</Label>
+                    <Input
+                      id="pincode"
+                      value={formData.pincode}
+                      onChange={(e) => handleInputChange('pincode', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Parent/Guardian Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Parent/Guardian Information</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="fatherName">Father's Name</Label>
+                    <Input
+                      id="fatherName"
+                      value={formData.fatherName}
+                      onChange={(e) => handleInputChange('fatherName', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="fatherOccupation">Father's Occupation</Label>
+                    <Input
+                      id="fatherOccupation"
+                      value={formData.fatherOccupation}
+                      onChange={(e) => handleInputChange('fatherOccupation', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="fatherPhone">Father's Phone</Label>
+                    <Input
+                      id="fatherPhone"
+                      value={formData.fatherPhone}
+                      onChange={(e) => handleInputChange('fatherPhone', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="motherName">Mother's Name</Label>
+                    <Input
+                      id="motherName"
+                      value={formData.motherName}
+                      onChange={(e) => handleInputChange('motherName', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="motherOccupation">Mother's Occupation</Label>
+                    <Input
+                      id="motherOccupation"
+                      value={formData.motherOccupation}
+                      onChange={(e) => handleInputChange('motherOccupation', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="motherPhone">Mother's Phone</Label>
+                    <Input
+                      id="motherPhone"
+                      value={formData.motherPhone}
+                      onChange={(e) => handleInputChange('motherPhone', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Skills & Links */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Skills & Social Links</h3>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="technicalSkills">Technical Skills (comma-separated)</Label>
+                    <Input
+                      id="technicalSkills"
+                      value={formData.technicalSkills}
+                      onChange={(e) => handleInputChange('technicalSkills', e.target.value)}
+                      placeholder="Python, Java, React, etc."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+                    <Input
+                      id="linkedinUrl"
+                      value={formData.linkedinUrl}
+                      onChange={(e) => handleInputChange('linkedinUrl', e.target.value)}
+                      placeholder="https://www.linkedin.com/in/yourprofile"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="githubUrl">GitHub URL</Label>
+                    <Input
+                      id="githubUrl"
+                      value={formData.githubUrl}
+                      onChange={(e) => handleInputChange('githubUrl', e.target.value)}
+                      placeholder="https://github.com/yourusername"
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="flex gap-4 mt-6">
                 <Button type="submit" disabled={loading} className="flex-1">
@@ -519,5 +596,5 @@ export default function StudentProfileForm() {
         </Card>
       </div>
     </div>
-  );
+  )
 }
