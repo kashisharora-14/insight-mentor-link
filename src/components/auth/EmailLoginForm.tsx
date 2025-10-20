@@ -39,6 +39,8 @@ export default function EmailLoginForm({ onSuccess, role = 'student' }: EmailLog
     setError('');
     setShowRegisterPrompt(false);
 
+    console.log('Sending login code with role:', role);
+
     try {
       const result = await sendLoginCode(identifier.trim(), role);
 

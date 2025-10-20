@@ -5,18 +5,23 @@ import { useAuth } from '@/contexts/AuthContext';
 const Dashboard = () => {
   const { user, isAuthenticated } = useAuth();
 
+  console.log('Dashboard - User role:', user?.role);
+
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
   // Redirect based on user role
-  const roleRedirect = {
+  const roleRedirect: Record<string, string> = {
     student: '/student-dashboard',
     alumni: '/alumni-dashboard',
     admin: '/admin'
   };
 
-  return <Navigate to={roleRedirect[user.role]} replace />;
+  const redirectPath = roleRedirect[user.role] || '/student-dashboard';
+  console.log('Redirecting to:', redirectPath);
+
+  return <Navigate to={redirectPath} replace />;
 };
 
 export default Dashboard;

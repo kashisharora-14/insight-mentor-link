@@ -222,11 +222,15 @@ router.post('/verify-login-code', async (req, res) => {
       }
     }
 
-    // Generate JWT token with proper user name
+    // Generate JWT token with proper user name and role
     const userName = userDetails?.name || validCode.email.split('@')[0];
+    const userRole = userDetails?.role || validCode.role || 'student';
+
+    console.log('Generating token for user:', validCode.email);
+    console.log('User role:', userRole);
 
     const token = jwt.sign(
-      { userId: actualUserId, email: validCode.email, name: userName, role: userDetails?.role || 'student', student_id: userDetails?.studentId || null },
+      { userId: actualUserId, email: validCode.email, name: userName, role: userRole, student_id: userDetails?.studentId || null },
       JWT_SECRET
       // No expiration set - token valid until logout
     );
@@ -241,7 +245,7 @@ router.post('/verify-login-code', async (req, res) => {
           id: actualUserId,
           email: validCode.email,
           name: userName,
-          role: userDetails?.role || 'student',
+          role: userRole,
           studentId: userDetails?.studentId || null,
           isVerified: userDetails?.isVerified || false,
           verificationMethod: userDetails?.verificationMethod || 'pending',
