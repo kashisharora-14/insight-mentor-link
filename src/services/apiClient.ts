@@ -190,65 +190,40 @@ class ApiClient {
 
   // Authentication methods
   async sendLoginCode(identifier: string): Promise<any> {
-    try {
-      const response = await fetch(`${this.baseURL}/auth/login/send-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ identifier }),
-      });
+    const response = await fetch(`${this.baseURL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ identifier }),
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || 'Failed to send login code'
-        };
-      }
-
-      return {
-        success: true,
-        userId: data.user_id,
-        email: data.email,
-        expiresIn: data.code_expires_in
-      };
-    } catch (error) {
-      console.error('sendLoginCode error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to send login code'
-      };
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to send login code');
     }
+
+    const data = await response.json();
+    return data.data;
   }
 
   async verifyLoginCode(userId: string, code: string): Promise<AuthTokens> {
-    try {
-      const response = await fetch(`${this.baseURL}/auth/login/verify-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ user_id: userId, code }),
-      });
+    const response = await fetch(`${this.baseURL}/auth/verify-login-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: userId, code }),
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to verify code');
-      }
-
-      // Save tokens
-      this.saveTokenToStorage(data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-      localStorage.setItem('authUser', JSON.stringify(data.user));
-
-      return data;
-    } catch (error) {
-      console.error('verifyLoginCode error:', error);
-      throw error;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to verify code');
     }
+
+    const data = await response.json();
+    this.setAuthToken(data.data.access_token);
+    return data.data;
   }
 
   async sendRegistrationCode(
@@ -257,38 +232,53 @@ class ApiClient {
     studentId?: string,
     role: string = 'student'
   ): Promise<RegistrationResponse> {
-    return this.makeRequest<RegistrationResponse>('/auth/register/send-code', {
+    const response = await fetch(`${this.baseURL}/auth/register/send-code`, {
       method: 'POST',
-      body: JSON.stringify({
-        email,
-        name,
-        student_id: studentId,
-        role,
-      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, name, studentId, role }),
     });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to send registration code');
+    }
+
+    return await response.json();
   }
 
-  async completeRegistration(
-    email: string,
-    code: string,
-    password: string
-  ): Promise<AuthTokens> {
-    const tokens = await this.makeRequest<AuthTokens>('/auth/register/verify', {
+  async completeRegistration(email: string, code: string, password: string): Promise<AuthTokens> {
+    const response = await fetch(`${this.baseURL}/auth/register/verify`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ email, code, password }),
     });
 
-    // Save tokens
-    this.saveTokenToStorage(tokens.access_token);
-    localStorage.setItem('refresh_token', tokens.refresh_token);
-    localStorage.setItem('authUser', JSON.stringify(tokens.user));
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Registration failed');
+    }
 
-    return tokens;
+    const data = await response.json();
+    this.setAuthToken(data.token);
+    return data;
   }
 
   async getCurrentUser() {
-    const response = await this.makeRequest('/auth/me');
-    return response;
+    const response = await fetch(`${this.baseURL}/auth/me`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get current user');
+    }
+
+    const data = await response.json();
+    return data.data;
   }
 
   // Admin verification endpoints
@@ -400,6 +390,16 @@ class ApiClient {
 
   async delete<T>(endpoint: string): Promise<T> {
     return this.makeRequest<T>(endpoint, { method: 'DELETE' });
+  }
+
+  // Helper to get authorization headers, used by getCurrentUser
+  private getAuthHeaders(): HeadersInit {
+    const headers = new Headers();
+    if (this.token) {
+      headers.set('Authorization', `Bearer ${this.token}`);
+    }
+    headers.set('Content-Type', 'application/json');
+    return headers;
   }
 }
 
