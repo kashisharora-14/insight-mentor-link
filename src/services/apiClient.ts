@@ -46,12 +46,13 @@ class ApiClient {
 
   constructor() {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://0.0.0.0:3001/api';
-      this.baseURL = API_BASE_URL;
+      // Use relative URL which will be proxied by Vite dev server
+      this.baseURL = import.meta.env.VITE_API_URL || '/api';
+      console.log('API Client initialized with base URL:', this.baseURL);
       this.loadTokenFromStorage();
     } catch (error) {
       console.error('ApiClient initialization failed:', error);
-      this.baseURL = 'http://0.0.0.0:3001/api';
+      this.baseURL = '/api';
     }
   }
 
