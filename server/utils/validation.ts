@@ -28,6 +28,35 @@ export function validateName(name: string): { valid: boolean; error?: string } {
 export function validateStudentProfile(data: any): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
+  // Required fields
+  if (!data.rollNumber) {
+    errors.push('Roll number is required');
+  }
+
+  // Program validation (MCA or MSCIT only)
+  if (data.program && !['MCA', 'MSCIT'].includes(data.program)) {
+    errors.push('Program must be either MCA or MSCIT');
+  }
+
+  // Batch type validation (Morning or Evening only)
+  if (data.batchType && !['Morning', 'Evening'].includes(data.batchType)) {
+    errors.push('Batch type must be either Morning or Evening');
+  }
+
+  // Current year validation (1 or 2 for 2-year programs)
+  if (data.currentYear && ![1, 2].includes(data.currentYear)) {
+    errors.push('Current year must be either 1 or 2');
+  }
+
+  // Current semester validation (1-4 for 2-year programs)
+  if (data.currentSemester && ![1, 2, 3, 4].includes(data.currentSemester)) {
+    errors.push('Current semester must be between 1 and 4');
+  }
+
+  if (!data.batchYear) {
+    errors.push('Batch year is required');
+  }
+
   // Punjab University CS Department specific validations
   const validPrograms = ['MCA', 'MSCIT'];
   const validBatchTypes = ['Morning', 'Evening'];

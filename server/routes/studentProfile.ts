@@ -86,8 +86,12 @@ router.post('/profile', authenticate, async (req: any, res) => {
     const userId = req.user.userId;
     const data = req.body;
 
+    console.log('Received profile data:', data);
+    console.log('User ID:', userId);
+
     const validation = validateStudentProfile(data);
     if (!validation.valid) {
+      console.error('Validation failed:', validation.errors);
       return res.status(400).json({ 
         error: 'Validation failed', 
         details: validation.errors 
@@ -96,12 +100,38 @@ router.post('/profile', authenticate, async (req: any, res) => {
 
     // Convert dateOfBirth to Date object if it exists
     // Auto-set department to "Computer Science" for Punjab University
-    const profileData = {
-      ...data,
+    const profileData: any = {
       department: 'Computer Science', // Always Computer Science for Punjab University CS Dept
-      dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
       updatedAt: new Date(),
     };
+
+    // Map all fields from request to profileData
+    const fieldMapping = [
+      'rollNumber', 'program', 'batchType', 'currentYear', 'batchYear', 
+      'currentSemester', 'cgpa', 'currentBacklog', 'gender', 'bloodGroup',
+      'category', 'nationality', 'religion', 'phoneNumber', 'alternateEmail',
+      'permanentAddress', 'currentAddress', 'city', 'state', 'pincode',
+      'fatherName', 'fatherOccupation', 'fatherPhone', 'motherName',
+      'motherOccupation', 'motherPhone', 'guardianName', 'guardianRelation',
+      'guardianPhone', 'admissionType', 'scholarshipStatus', 'hostelResident',
+      'hostelRoomNumber', 'transportMode', 'technicalSkills', 'softSkills',
+      'interests', 'careerGoals', 'linkedinUrl', 'githubUrl', 'portfolioUrl'
+    ];
+
+    fieldMapping.forEach(field => {
+      if (data[field] !== undefined) {
+        profileData[field] = data[field];
+      }
+    });
+
+    // Handle date conversion
+    if (data.dateOfBirth) {
+      try {
+        profileData.dateOfBirth = new Date(data.dateOfBirth);
+      } catch (e) {
+        console.error('Invalid date format for dateOfBirth:', data.dateOfBirth);
+      }
+    }
 
     // Check if profile exists
     const existingProfile = await db.select()
@@ -111,6 +141,7 @@ router.post('/profile', authenticate, async (req: any, res) => {
 
     if (existingProfile.length > 0) {
       // Update existing profile
+      console.log('Updating existing profile');
       await db.update(studentProfiles)
         .set(profileData)
         .where(eq(studentProfiles.userId, userId));
@@ -120,9 +151,11 @@ router.post('/profile', authenticate, async (req: any, res) => {
         .where(eq(studentProfiles.userId, userId))
         .limit(1);
 
-      res.json({ message: 'Profile updated successfully', profile: updated[0] });
+      console.log('Profile updated successfully');
+      return res.json({ message: 'Profile updated successfully', profile: updated[0] });
     } else {
       // Create new profile
+      console.log('Creating new profile');
       const newProfile = await db.insert(studentProfiles)
         .values({
           userId,
@@ -130,11 +163,15 @@ router.post('/profile', authenticate, async (req: any, res) => {
         })
         .returning();
 
-      res.json({ message: 'Profile created successfully', profile: newProfile[0] });
+      console.log('Profile created successfully');
+      return res.json({ message: 'Profile created successfully', profile: newProfile[0] });
     }
   } catch (error) {
     console.error('Error saving student profile:', error);
-    res.status(500).json({ error: 'Failed to save profile' });
+    return res.status(500).json({ 
+      error: 'Failed to save profile',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
