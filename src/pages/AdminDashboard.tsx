@@ -53,6 +53,7 @@ interface Profile {
   current_job?: string;
   company?: string;
   is_verified: boolean;
+  verification_status?: 'pending' | 'approved' | 'rejected' | 'csv_verified'; // Added for verification status
   is_mentor_available: boolean;
   created_at: string;
 }
@@ -224,14 +225,13 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch profiles');
       }
-      
+
       const users = await response.json();
-      
-      // Transform API data to match Profile interface
+
       const transformedProfiles: Profile[] = users.map((user: any) => ({
         id: user.id,
         user_id: user.id,
@@ -243,10 +243,11 @@ const AdminDashboard = () => {
         current_job: null,
         company: null,
         is_verified: user.is_verified || false,
+        verification_status: user.verification_status || 'pending', // Use API data if available
         is_mentor_available: false,
         created_at: user.created_at,
       }));
-      
+
       setProfiles(transformedProfiles);
     } catch (error) {
       console.error('Error fetching profiles:', error);
@@ -263,6 +264,7 @@ const AdminDashboard = () => {
         current_job: 'Senior Software Engineer',
         company: 'Google',
         is_verified: true,
+        verification_status: 'approved',
         is_mentor_available: true,
         created_at: '2024-01-10T10:30:00Z'
       },
@@ -277,6 +279,7 @@ const AdminDashboard = () => {
         current_job: 'Investment Banking Director',
         company: 'Goldman Sachs',
         is_verified: true,
+        verification_status: 'approved',
         is_mentor_available: true,
         created_at: '2024-01-08T14:20:00Z'
       },
@@ -291,6 +294,7 @@ const AdminDashboard = () => {
         current_job: 'Corporate Lawyer',
         company: 'Baker McKenzie',
         is_verified: true,
+        verification_status: 'approved',
         is_mentor_available: true,
         created_at: '2024-01-05T09:15:00Z'
       },
@@ -305,6 +309,7 @@ const AdminDashboard = () => {
         current_job: 'Product Manager',
         company: 'Microsoft',
         is_verified: false,
+        verification_status: 'pending',
         is_mentor_available: true,
         created_at: '2024-01-15T16:45:00Z'
       },
@@ -319,6 +324,7 @@ const AdminDashboard = () => {
         current_job: 'Creative Director',
         company: 'Ogilvy',
         is_verified: true,
+        verification_status: 'approved',
         is_mentor_available: false,
         created_at: '2024-01-12T11:30:00Z'
       },
@@ -333,6 +339,7 @@ const AdminDashboard = () => {
         current_job: 'Data Scientist',
         company: 'Netflix',
         is_verified: false,
+        verification_status: 'pending',
         is_mentor_available: true,
         created_at: '2024-01-18T13:25:00Z'
       },
@@ -347,6 +354,7 @@ const AdminDashboard = () => {
         current_job: undefined,
         company: undefined,
         is_verified: true,
+        verification_status: 'csv_verified', // Example: verified via CSV
         is_mentor_available: false,
         created_at: '2024-01-20T08:15:00Z'
       },
@@ -361,6 +369,7 @@ const AdminDashboard = () => {
         current_job: undefined,
         company: undefined,
         is_verified: true,
+        verification_status: 'approved', // Example: approved by admin
         is_mentor_available: false,
         created_at: '2024-01-22T12:40:00Z'
       },
@@ -375,6 +384,7 @@ const AdminDashboard = () => {
         current_job: undefined,
         company: undefined,
         is_verified: false,
+        verification_status: 'pending', // Example: pending admin approval
         is_mentor_available: false,
         created_at: '2024-01-25T15:20:00Z'
       },
@@ -389,6 +399,7 @@ const AdminDashboard = () => {
         current_job: 'Management Consultant',
         company: 'McKinsey & Company',
         is_verified: false,
+        verification_status: 'pending',
         is_mentor_available: true,
         created_at: '2024-01-28T10:10:00Z'
       },
@@ -403,6 +414,7 @@ const AdminDashboard = () => {
         current_job: 'Senior Advocate',
         company: 'Punjab & Haryana High Court',
         is_verified: true,
+        verification_status: 'approved',
         is_mentor_available: true,
         created_at: '2024-01-30T14:35:00Z'
       },
@@ -417,6 +429,7 @@ const AdminDashboard = () => {
         current_job: undefined,
         company: undefined,
         is_verified: true,
+        verification_status: 'approved',
         is_mentor_available: false,
         created_at: '2024-02-01T09:20:00Z'
       }
@@ -432,7 +445,7 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setDonations(data);
@@ -441,7 +454,7 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching donations:', error);
     }
-    
+
     // Fallback to mock data
     const mockDonations: Donation[] = [
       {
@@ -519,7 +532,7 @@ const AdminDashboard = () => {
       {
         id: '9',
         donor_name: 'Neha Gupta',
-        donor_email: 'neha.gupta@mckinsey.com',
+        email: 'neha.gupta@mckinsey.com',
         amount: 22000,
         message: 'Entrepreneurship incubator support. Build the future!',
         is_anonymous: false,
@@ -546,7 +559,7 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setEvents(data);
@@ -555,7 +568,7 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching events:', error);
     }
-    
+
     // Fallback to mock data
     const mockEvents: Event[] = [
       {
@@ -823,7 +836,6 @@ const AdminDashboard = () => {
         const data = await response.json();
         setVerificationRequests(data);
       } else {
-        // Handle non-ok responses, e.g., unauthorized access
         console.error('Failed to fetch verification requests:', response.status, response.statusText);
         toast({
           title: "Error",
@@ -842,7 +854,7 @@ const AdminDashboard = () => {
   };
 
   // Approve verification request
-  const handleApproveVerification = async (requestId: string) => {
+  const handleApproveVerification = async (requestId: string, userId: string) => { // Added userId
     try {
       const response = await fetch(`http://localhost:3001/api/admin/verification-requests/${requestId}/approve`, {
         method: 'POST',
@@ -850,6 +862,7 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ userId: userId }), // Send userId to update profile directly
       });
 
       if (response.ok) {
@@ -874,7 +887,7 @@ const AdminDashboard = () => {
   };
 
   // Reject verification request
-  const handleRejectVerification = async (requestId: string) => {
+  const handleRejectVerification = async (requestId: string, userId: string) => { // Added userId
     try {
       const response = await fetch(`http://localhost:3001/api/admin/verification-requests/${requestId}/reject`, {
         method: 'POST',
@@ -882,7 +895,7 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ notes: 'Rejected by admin' }), // You might want to add a field for admin notes
+        body: JSON.stringify({ notes: 'Rejected by admin', userId: userId }), // Send userId and notes
       });
 
       if (response.ok) {
@@ -891,6 +904,7 @@ const AdminDashboard = () => {
           description: "Verification request rejected",
         });
         fetchVerificationRequests(); // Refresh the list
+        fetchProfiles(); // Refresh profiles to reflect verification status
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to reject verification');
@@ -930,7 +944,7 @@ const AdminDashboard = () => {
           description: `Processed ${result.processed} users successfully. ${result.errors?.length || 0} errors.`,
         });
         fetchVerificationRequests(); // Refresh lists after upload
-        fetchProfiles();
+        fetchProfiles(); // Refresh profiles to reflect verification status
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || 'CSV upload failed');
@@ -1000,6 +1014,33 @@ const AdminDashboard = () => {
       </div>
     );
   }
+
+  // Function to determine the verification badge appearance
+  const getVerificationBadge = (profile: Profile) => {
+    if (profile.role === 'student') {
+      switch (profile.verification_status) {
+        case 'csv_verified':
+          return <Badge variant="default" className="text-green-600">Verified (CSV)</Badge>;
+        case 'approved':
+          return <Badge variant="outline" className="text-blue-600">Approved by Admin</Badge>;
+        case 'pending':
+          return <Badge variant="secondary">Pending Verification</Badge>;
+        case 'rejected':
+          return <Badge variant="destructive">Rejected</Badge>;
+        default:
+          return <Badge variant="secondary">Pending</Badge>;
+      }
+    } else { // Alumni or other roles
+      return profile.is_verified ? (
+        <Badge variant="outline" className="text-green-600">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Verified
+        </Badge>
+      ) : (
+        <Badge variant="secondary">Not Verified</Badge>
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -1414,38 +1455,32 @@ const AdminDashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Document Verification</CardTitle>
-                  <CardDescription>Review submitted documents</CardDescription>
+                  <CardTitle>Student Verification Requests</CardTitle>
+                  <CardDescription>Review and manage student verification requests</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between">
+                    {profiles.filter(p => p.role === 'student' && p.verification_status === 'pending').map((profile) => (
+                      <div key={profile.id} className="p-3 border rounded-lg flex items-center justify-between">
                         <div>
-                          <h4 className="font-medium">Degree Certificate</h4>
-                          <p className="text-sm text-muted-foreground">Submitted by John Doe</p>
+                          <h4 className="font-medium">{profile.name}</h4>
+                          <p className="text-sm text-muted-foreground">{profile.email}</p>
                         </div>
-                        <Badge variant="secondary">Pending</Badge>
-                      </div>
-                    </div>
-                    <div className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">Employment Letter</h4>
-                          <p className="text-sm text-muted-foreground">Submitted by Jane Smith</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleApproveVerification(profile.id, profile.id)}> {/* Assuming request ID is same as user ID for now */}
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(profile.id, profile.id)}> {/* Assuming request ID is same as user ID for now */}
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
                         </div>
-                        <Badge variant="default">Approved</Badge>
                       </div>
-                    </div>
-                    <div className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium">ID Verification</h4>
-                          <p className="text-sm text-muted-foreground">Submitted by Mike Johnson</p>
-                        </div>
-                        <Badge variant="destructive">Rejected</Badge>
-                      </div>
-                    </div>
+                    ))}
+                    {profiles.filter(p => p.role === 'student' && p.verification_status === 'pending').length === 0 && (
+                      <p className="text-muted-foreground text-center">No pending student verification requests.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1459,15 +1494,13 @@ const AdminDashboard = () => {
               <CardContent>
                 <div className="flex flex-wrap gap-4">
                   <Button onClick={() => {
-                    // This would ideally iterate through selected verificationRequests and call handleApproveVerification
-                    toast({ title: "Bulk Approve", description: "This feature needs to be implemented." });
+                    toast({ title: "Bulk Approve", description: "This feature needs to be implemented for selected users." });
                   }}>
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Approve Selected
                   </Button>
                   <Button variant="destructive" onClick={() => {
-                    // This would ideally iterate through selected verificationRequests and call handleRejectVerification
-                    toast({ title: "Bulk Reject", description: "This feature needs to be implemented." });
+                    toast({ title: "Bulk Reject", description: "This feature needs to be implemented for selected users." });
                   }}>
                     <XCircle className="w-4 h-4 mr-2" />
                     Reject Selected
@@ -1527,12 +1560,7 @@ const AdminDashboard = () => {
                           <Badge variant={profile.role === 'alumni' ? 'default' : 'secondary'}>
                             {profile.role}
                           </Badge>
-                          {profile.is_verified && (
-                            <Badge variant="outline" className="text-green-600">
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              Verified
-                            </Badge>
-                          )}
+                          {getVerificationBadge(profile)}
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
                           {profile.current_job && profile.company && (
@@ -1546,23 +1574,37 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant={profile.is_verified ? "destructive" : "default"}
-                          onClick={() => toggleProfileVerification(profile.id, profile.is_verified)}
-                        >
-                          {profile.is_verified ? (
-                            <>
+                        {profile.role !== 'student' && ( // Only show verify/unverify for non-students here
+                          <Button
+                            size="sm"
+                            variant={profile.is_verified ? "destructive" : "default"}
+                            onClick={() => toggleProfileVerification(profile.id, profile.is_verified)}
+                          >
+                            {profile.is_verified ? (
+                              <>
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Unverify
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="w-4 h-4 mr-1" />
+                                Verify
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        {profile.role === 'student' && profile.verification_status === 'pending' && (
+                          <>
+                            <Button size="sm" onClick={() => handleApproveVerification(profile.id, profile.id)}>
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(profile.id, profile.id)}>
                               <XCircle className="w-4 h-4 mr-1" />
-                              Unverify
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck className="w-4 h-4 mr-1" />
-                              Verify
-                            </>
-                          )}
-                        </Button>
+                              Reject
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}

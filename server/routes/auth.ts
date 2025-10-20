@@ -127,6 +127,10 @@ router.post('/verify-login-code', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    // Get user details to check verification status
+    const userRecord = await db.select().from(users).where(eq(users.id, validCode.userId)).limit(1);
+    const userDetails = userRecord.length > 0 ? userRecord[0] : null;
+
     res.json({
       data: {
         access_token: token,
@@ -137,7 +141,10 @@ router.post('/verify-login-code', async (req, res) => {
           id: validCode.userId,
           email: validCode.email,
           name: 'Demo User',
-          role: 'student'
+          role: userDetails?.role || 'student',
+          isVerified: userDetails?.isVerified || false,
+          verificationMethod: userDetails?.verificationMethod || 'pending',
+          isEmailVerified: userDetails?.isEmailVerified || false,
         }
       }
     });
@@ -162,12 +169,19 @@ router.get('/me', async (req, res) => {
 
     const decoded = jwt.verify(token, JWT_SECRET) as any;
 
+    // Fetch user details for verification status
+    const userRecord = await db.select().from(users).where(eq(users.id, decoded.userId)).limit(1);
+    const userDetails = userRecord.length > 0 ? userRecord[0] : null;
+
     res.json({
       data: {
         id: decoded.userId,
         email: decoded.email,
         name: 'Demo User',
-        role: decoded.role || 'student'
+        role: decoded.role || 'student',
+        isVerified: userDetails?.isVerified || false,
+        verificationMethod: userDetails?.verificationMethod || 'pending',
+        isEmailVerified: userDetails?.isEmailVerified || false,
       }
     });
   } catch (error) {

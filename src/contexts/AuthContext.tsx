@@ -14,6 +14,9 @@ export interface User {
   verification_status?: string;
   email_verified?: boolean;
   student_id?: string;
+  isVerified?: boolean;
+  verificationMethod?: string; // 'csv_upload' | 'admin_manual' | 'pending'
+  isEmailVerified?: boolean;
 }
 
 interface AuthContextType {
@@ -42,7 +45,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         if (apiClient.isAuthenticated()) {
           const userData = await apiClient.getCurrentUser();
-          setUser(userData.user);
+          setUser({
+            ...userData.user,
+            isVerified: userData.user.isVerified || false,
+            verificationMethod: userData.user.verificationMethod || 'pending',
+            isEmailVerified: userData.user.isEmailVerified || false,
+          });
           setIsAuthenticated(true);
         }
       } catch (error) {
@@ -78,7 +86,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const verifyLoginCode = async (userId: string, code: string): Promise<boolean> => {
     try {
       const tokens = await apiClient.verifyLoginCode(userId, code);
-      setUser(tokens.user);
+      setUser({
+        ...tokens.user,
+        isVerified: tokens.user.isVerified || false,
+        verificationMethod: tokens.user.verificationMethod || 'pending',
+        isEmailVerified: tokens.user.isEmailVerified || false,
+      });
       setIsAuthenticated(true);
       return true;
     } catch (error: any) {
@@ -125,7 +138,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const tokens = await apiClient.loginLegacy(email, password);
-      setUser(tokens.user);
+      setUser({
+        ...tokens.user,
+        isVerified: tokens.user.isVerified || false,
+        verificationMethod: tokens.user.verificationMethod || 'pending',
+        isEmailVerified: tokens.user.isEmailVerified || false,
+      });
       setIsAuthenticated(true);
       return true;
     } catch (error: any) {

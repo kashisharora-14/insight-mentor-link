@@ -28,13 +28,25 @@ import {
 import CareerRoadmap from "@/components/CareerRoadmap";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar } from 'recharts';
+import VerifiedBadge from '@/components/VerifiedBadge'; // Assuming VerifiedBadge component exists
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
   const isMobile = useIsMobile();
 
-  // Mock current student
+  // Mock current student and user context (replace with actual auth context)
   const currentStudent = students[0];
+  // Mock user object to simulate auth context for verification status and method
+  const user = {
+    id: currentStudent.id,
+    name: currentStudent.name,
+    isVerified: currentStudent.verification_status === 'verified', // Derive from student data
+    verificationMethod: currentStudent.verification_status === 'verified' 
+      ? (currentStudent.verification_source === 'csv_upload' ? 'csv_upload' : 'admin_approval') 
+      : null, // Or 'pending' if not verified
+    department: currentStudent.department,
+    batchYear: currentStudent.batchYear,
+  };
 
   // Filter requests for current student
   const studentRequests = mentorshipRequests.filter(req => req.studentId === currentStudent.id);
@@ -172,6 +184,44 @@ const StudentDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Verification Status Card */}
+        <Card className="mb-8 border-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Account Verification Status
+              {user?.isVerified && <VerifiedBadge isVerified={true} verificationMethod={user.verificationMethod} />}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {user?.isVerified ? (
+              <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-green-900">Your account is verified!</p>
+                  <p className="text-sm text-green-700 mt-1">
+                    {user.verificationMethod === 'csv_upload' 
+                      ? '✅ Automatically verified via CSV upload - You have full access to all platform features.'
+                      : '✅ Manually verified by admin - You have full access to all platform features.'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-yellow-900">Verification Pending</p>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    ⏳ Your account is awaiting admin approval. You'll receive an email notification once verified.
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-2">
+                    💡 While waiting, you can explore limited features. Full access will be granted after verification.
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Enhanced Stats Grid */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -710,18 +760,7 @@ const StudentDashboard = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Verification Status Card */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Verification Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Your account is {currentStudent?.verification_status === 'verified' ? 'verified' : 'not verified'}.</p>
-            {currentStudent?.verification_status !== 'verified' && (
-                <p>Please wait for an admin to verify your account.</p>
-            )}
-          </CardContent>
-        </Card>
+        {/* Removed the original Verification Status Card as it's now above the tabs */}
       </div>
     </div>
   );
