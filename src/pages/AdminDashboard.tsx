@@ -235,15 +235,15 @@ const AdminDashboard = () => {
       const transformedProfiles: Profile[] = users.map((user: any) => ({
         id: user.id,
         user_id: user.id,
-        name: user.email.split('@')[0], // Temporary until we have proper names
+        name: user.name || user.email.split('@')[0],
         email: user.email,
         role: user.role,
         graduation_year: null,
         department: null,
         current_job: null,
         company: null,
-        is_verified: user.is_verified || false,
-        verification_status: user.verification_status || 'pending', // Use API data if available
+        is_verified: user.isVerified || false,
+        verification_status: user.verificationMethod || 'pending',
         is_mentor_available: false,
         created_at: user.created_at,
       }));

@@ -133,9 +133,13 @@ router.post('/verify-login-code', async (req, res) => {
         userDetails = existingUser[0];
         actualUserId = userDetails.id;
       } else {
+        // Extract name from email if not provided
+        const defaultName = validCode.email.split('@')[0];
+        
         // Create new user with minimal info
         const newUsers = await db.insert(users).values({
           email: validCode.email,
+          name: defaultName,
           passwordHash: '', // No password for passwordless login
           role: 'student',
           isEmailVerified: true,
@@ -146,21 +150,44 @@ router.post('/verify-login-code', async (req, res) => {
         userDetails = newUsers[0];
         actualUserId = userDetails.id;
 
-        // Create verification request for admin review
+        // Create verification request for admin review with name
         await db.insert(verificationRequests).values({
           userId: actualUserId,
-          requestData: { email: validCode.email },
+          requestData: { 
+            email: validCode.email,
+            name: defaultName 
+          },
         });
       }
     } else {
       // Get existing user details
       const userRecord = await db.select().from(users).where(eq(users.id, validCode.userId)).limit(1);
       userDetails = userRecord.length > 0 ? userRecord[0] : null;
+      
+      // If user exists but doesn't have verification request, create one
+      if (userDetails && !userDetails.isVerified) {
+        const existingRequest = await db.select()
+          .from(verificationRequests)
+          .where(eq(verificationRequests.userId, userDetails.id))
+          .limit(1);
+        
+        if (existingRequest.length === 0) {
+          await db.insert(verificationRequests).values({
+            userId: userDetails.id,
+            requestData: { 
+              email: userDetails.email,
+              name: userDetails.name || userDetails.email.split('@')[0]
+            },
+          });
+        }
+      }
     }
 
-    // Generate JWT token
+    // Generate JWT token with proper user name
+    const userName = userDetails?.name || validCode.email.split('@')[0];
+    
     const token = jwt.sign(
-      { userId: actualUserId, email: validCode.email, name: userDetails?.name, role: userDetails?.role || 'student' },
+      { userId: actualUserId, email: validCode.email, name: userName, role: userDetails?.role || 'student' },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -174,7 +201,7 @@ router.post('/verify-login-code', async (req, res) => {
         user: {
           id: actualUserId,
           email: validCode.email,
-          name: userDetails?.name || 'User',
+          name: userName,
           role: userDetails?.role || 'student',
           studentId: userDetails?.studentId || null,
           isVerified: userDetails?.isVerified || false,

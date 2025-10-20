@@ -75,8 +75,10 @@ export default function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
       const success = await verifyLoginCode(userId, code.trim());
 
       if (success) {
-        setSuccess('Login successful!');
-        onSuccess?.();
+        setSuccess('Login successful! Redirecting...');
+        setTimeout(() => {
+          onSuccess?.();
+        }, 500);
       } else {
         setError('Invalid verification code. Please try again.');
       }
