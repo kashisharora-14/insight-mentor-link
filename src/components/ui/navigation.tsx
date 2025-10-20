@@ -170,7 +170,7 @@ const Navigation = () => {
                   <span>{item.name}</span>
                 </Link>
               ))}
-              
+
               {/* Mobile Auth Section */}
               <div className="border-t border-border pt-3 mt-3">
                 {isAuthenticated && user ? (
