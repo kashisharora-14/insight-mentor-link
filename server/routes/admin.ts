@@ -3,7 +3,7 @@ import multer from 'multer';
 import csv from 'csv-parser';
 import { Readable } from 'stream';
 import { db } from '../db';
-import { users, verificationRequests, csvUploads, approvedUsers } from '@shared/schema';
+import { users, verificationRequests, csvUploads, approvedUsers, donations, events, profiles, mentorshipRequests } from '@shared/schema';
 import { sendVerificationApprovedEmail } from '../services/email';
 import { eq, and } from 'drizzle-orm';
 import { authMiddleware, adminMiddleware } from '../middleware/auth';
@@ -283,6 +283,50 @@ router.get('/users', async (req, res) => {
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Get all donations
+router.get('/donations', async (req, res) => {
+  try {
+    const allDonations = await db.select().from(donations).orderBy(donations.createdAt);
+    res.json(allDonations);
+  } catch (error) {
+    console.error('Error fetching donations:', error);
+    res.status(500).json({ error: 'Failed to fetch donations' });
+  }
+});
+
+// Get all events
+router.get('/events', async (req, res) => {
+  try {
+    const allEvents = await db.select().from(events).orderBy(events.createdAt);
+    res.json(allEvents);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    res.status(500).json({ error: 'Failed to fetch events' });
+  }
+});
+
+// Get all profiles (extended user info)
+router.get('/profiles', async (req, res) => {
+  try {
+    const allProfiles = await db.select().from(profiles).orderBy(profiles.createdAt);
+    res.json(allProfiles);
+  } catch (error) {
+    console.error('Error fetching profiles:', error);
+    res.status(500).json({ error: 'Failed to fetch profiles' });
+  }
+});
+
+// Get all mentorship requests
+router.get('/mentorship-requests', async (req, res) => {
+  try {
+    const requests = await db.select().from(mentorshipRequests).orderBy(mentorshipRequests.createdAt);
+    res.json(requests);
+  } catch (error) {
+    console.error('Error fetching mentorship requests:', error);
+    res.status(500).json({ error: 'Failed to fetch mentorship requests' });
   }
 });
 

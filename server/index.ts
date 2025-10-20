@@ -8,6 +8,7 @@ import adminRoutes from './routes/admin';
 import studentRoutes from './routes/student';
 import skillsRoutes from './routes/skills';
 import profileRoutes from './routes/profile';
+import mentorshipRoutes from './routes/mentorship';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +36,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/skills', skillsRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/mentorship', mentorshipRoutes);
 
 // Serve static files in production
 if (isProduction) {

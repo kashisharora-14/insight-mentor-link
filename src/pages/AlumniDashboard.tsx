@@ -55,10 +55,27 @@ const AlumniDashboard = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Mock data for demonstration
+  // Fetch real mentorship requests from database
   useEffect(() => {
-    // Simulate loading mentorship requests
-    setTimeout(() => {
+    const fetchMentorshipRequests = async () => {
+      try {
+        const response = await fetch('/api/mentorship/my-requests', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setAlumniRequests(data);
+          setLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching mentorship requests:', error);
+      }
+      
+      // Fallback to mock data
       setAlumniRequests([
         {
           id: '1',
@@ -130,7 +147,9 @@ const AlumniDashboard = () => {
         }
       ]);
       setLoading(false);
-    }, 1000);
+    };
+    
+    fetchMentorshipRequests();
   }, []);
 
   const handleAcceptRequest = (requestId: string) => {

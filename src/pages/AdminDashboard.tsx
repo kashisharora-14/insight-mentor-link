@@ -218,8 +218,40 @@ const AdminDashboard = () => {
   };
 
   const fetchProfiles = async () => {
-    // Mock comprehensive profile data
-    const mockProfiles: Profile[] = [
+    try {
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch profiles');
+      }
+      
+      const users = await response.json();
+      
+      // Transform API data to match Profile interface
+      const transformedProfiles: Profile[] = users.map((user: any) => ({
+        id: user.id,
+        user_id: user.id,
+        name: user.email.split('@')[0], // Temporary until we have proper names
+        email: user.email,
+        role: user.role,
+        graduation_year: null,
+        department: null,
+        current_job: null,
+        company: null,
+        is_verified: user.is_verified || false,
+        is_mentor_available: false,
+        created_at: user.created_at,
+      }));
+      
+      setProfiles(transformedProfiles);
+    } catch (error) {
+      console.error('Error fetching profiles:', error);
+      // Fallback to mock data if API fails
+      const mockProfiles: Profile[] = [
       {
         id: '1',
         user_id: 'user-1',
@@ -394,7 +426,23 @@ const AdminDashboard = () => {
   };
 
   const fetchDonations = async () => {
-    // Mock comprehensive donations data
+    try {
+      const response = await fetch('/api/admin/donations', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDonations(data);
+        return;
+      }
+    } catch (error) {
+      console.error('Error fetching donations:', error);
+    }
+    
+    // Fallback to mock data
     const mockDonations: Donation[] = [
       {
         id: '1',
@@ -492,7 +540,23 @@ const AdminDashboard = () => {
   };
 
   const fetchEvents = async () => {
-    // Mock comprehensive events data
+    try {
+      const response = await fetch('/api/admin/events', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setEvents(data);
+        return;
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+    
+    // Fallback to mock data
     const mockEvents: Event[] = [
       {
         id: '1',
