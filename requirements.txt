@@ -1,2 +1,11 @@
 
 python-dotenv
+bcrypt
+email-validator
+Flask
+Flask-CORS
+Flask-SQLAlchemy
+psycopg2-binary
+PyJWT
+python-dotenv
+python-multipart
