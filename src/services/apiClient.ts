@@ -46,11 +46,12 @@ class ApiClient {
 
   constructor() {
     try {
-      this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://0.0.0.0:3001/api';
+      this.baseURL = API_BASE_URL;
       this.loadTokenFromStorage();
     } catch (error) {
       console.error('ApiClient initialization failed:', error);
-      this.baseURL = 'http://localhost:3001/api';
+      this.baseURL = 'http://0.0.0.0:3001/api';
     }
   }
 
