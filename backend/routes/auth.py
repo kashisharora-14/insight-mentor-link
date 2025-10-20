@@ -12,6 +12,7 @@ auth = Blueprint('auth', __name__)
 def generate_verification_code():
     return ''.join(random.choices(string.digits, k=6))
 
+@auth.route('/api/auth/login', methods=['POST'])
 @auth.route('/api/auth/login/send-code', methods=['POST'])
 def send_login_code():
     data = request.get_json()
@@ -46,11 +47,11 @@ def send_login_code():
     send_verification_email(user.email, code)
     
     return jsonify({
-        'success': True,
-        'userId': str(user.id),
-        'email': user.email,
-        'message': 'Login code sent to your email',
-        'expires_in': 900
+        'data': {
+            'user_id': str(user.id),
+            'email': user.email,
+            'code_expires_in': 900
+        }
     }), 200
 
 @auth.route('/api/auth/login/verify-code', methods=['POST'])
