@@ -85,6 +85,13 @@ router.post('/profile', authenticate, async (req: any, res) => {
     const userId = req.user.userId;
     const data = req.body;
 
+    // Convert dateOfBirth to Date object if it exists
+    const profileData = {
+      ...data,
+      dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+      updatedAt: new Date(),
+    };
+
     // Check if profile exists
     const existingProfile = await db.select()
       .from(studentProfiles)
@@ -94,10 +101,7 @@ router.post('/profile', authenticate, async (req: any, res) => {
     if (existingProfile.length > 0) {
       // Update existing profile
       await db.update(studentProfiles)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
+        .set(profileData)
         .where(eq(studentProfiles.userId, userId));
 
       const updated = await db.select()
@@ -111,7 +115,7 @@ router.post('/profile', authenticate, async (req: any, res) => {
       const newProfile = await db.insert(studentProfiles)
         .values({
           userId,
-          ...data,
+          ...profileData,
         })
         .returning();
 
