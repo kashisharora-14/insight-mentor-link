@@ -220,25 +220,18 @@ const Login = () => {
                     setIsLoading(true);
                     
                     try {
-                      const response = await fetch('/api/auth/admin-login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: identifier, password })
-                      });
+                      const success = await login(identifier, password);
                       
-                      const data = await response.json();
-                      
-                      if (response.ok) {
-                        localStorage.setItem('token', data.token);
+                      if (success) {
                         toast({
                           title: "Login successful!",
                           description: "Welcome to Admin Dashboard",
                         });
-                        navigate('/admin');
+                        navigate('/dashboard');
                       } else {
                         toast({
                           title: "Login failed",
-                          description: data.error || "Invalid credentials",
+                          description: "Invalid credentials",
                           variant: "destructive",
                         });
                       }
