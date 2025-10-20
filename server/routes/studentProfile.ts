@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { studentProfiles } from '@shared/schema';
+import { studentProfiles, verificationRequests } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { validateStudentProfile } from '../utils/validation';
@@ -170,6 +170,35 @@ router.post('/profile', authenticate, async (req: any, res) => {
         .returning();
 
       console.log('✅ Profile created successfully for user:', userId);
+
+      // Create verification request automatically after profile creation
+      try {
+        const existingRequest = await db.select()
+          .from(verificationRequests)
+          .where(eq(verificationRequests.userId, userId))
+          .limit(1);
+
+        if (existingRequest.length === 0) {
+          await db.insert(verificationRequests)
+            .values({
+              userId,
+              status: 'pending',
+              requestData: {
+                type: 'student',
+                profileData: {
+                  rollNumber: data.rollNumber,
+                  program: data.program,
+                  batchYear: data.batchYear,
+                  currentSemester: data.currentSemester,
+                }
+              },
+            });
+          console.log('✅ Verification request created automatically');
+        }
+      } catch (verifyError) {
+        console.error('Warning: Failed to create verification request:', verifyError);
+      }
+
       return res.json({ message: 'Profile created successfully', profile: newProfile[0] });
     }
   } catch (error) {

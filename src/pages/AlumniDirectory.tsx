@@ -1,29 +1,110 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/ui/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { alumni, departments } from "@/data/mockData";
-import { MapPin, Briefcase, MessageCircle, Filter } from "lucide-react";
+import { MapPin, Briefcase, MessageCircle, Filter, GraduationCap, Heart, Award, Users, Building, Sparkles } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { toast } from "sonner";
+
+interface AlumniProfile {
+  id: string;
+  userId: string;
+  name: string;
+  email: string | null;
+  phoneNumber: string | null;
+  program: string;
+  batchType: string;
+  graduationYear: number;
+  currentPosition: string;
+  currentCompany: string;
+  companyLocation: string;
+  industry: string;
+  workType: string;
+  yearsOfExperience: number;
+  technicalSkills: string[];
+  expertiseAreas: string[];
+  isMentorAvailable: boolean;
+  mentorshipAreas: string[];
+  availableForJobReferrals: boolean;
+  availableForGuestLectures: boolean;
+  availableForNetworking: boolean;
+  bio: string;
+  careerJourney: string;
+  adviceForStudents: string;
+  linkedinUrl: string;
+  githubUrl: string;
+  portfolioUrl: string;
+  profilePictureUrl: string;
+  isVerified: boolean;
+}
 
 const AlumniDirectory = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("all");
-  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedProgram, setSelectedProgram] = useState("all");
+  const [selectedIndustry, setSelectedIndustry] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("all");
+  const [mentorshipOnly, setMentorshipOnly] = useState(false);
+  const [alumni, setAlumni] = useState<AlumniProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAlumni();
+  }, []);
+
+  const fetchAlumni = async () => {
+    try {
+      const response = await fetch('/api/alumni/directory');
+      if (response.ok) {
+        const data = await response.json();
+        setAlumni(data.alumni || []);
+      } else {
+        toast.error("Failed to load alumni directory");
+      }
+    } catch (error) {
+      console.error('Error fetching alumni:', error);
+      toast.error("Failed to load alumni directory");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredAlumni = alumni.filter(person => {
-    const matchesSearch = person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         person.profession.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === "all" || person.department === selectedDepartment;
-    const matchesLocation = selectedLocation === "all" || person.location.includes(selectedLocation);
+    const matchesSearch = 
+      person.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      person.currentPosition?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      person.currentCompany?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      person.technicalSkills?.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      person.expertiseAreas?.some(area => area.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    return matchesSearch && matchesDepartment && matchesLocation;
+    const matchesProgram = selectedProgram === "all" || person.program === selectedProgram;
+    const matchesIndustry = selectedIndustry === "all" || person.industry === selectedIndustry;
+    const matchesYear = selectedYear === "all" || person.graduationYear?.toString() === selectedYear;
+    const matchesMentorship = !mentorshipOnly || person.isMentorAvailable;
+    
+    return matchesSearch && matchesProgram && matchesIndustry && matchesYear && matchesMentorship;
   });
 
-  const locations = [...new Set(alumni.map(a => a.location.split(', ')[1]))];
+  const industries = [...new Set(alumni.map(a => a.industry).filter(Boolean))];
+  const graduationYears = [...new Set(alumni.map(a => a.graduationYear).filter(Boolean))].sort((a, b) => b - a);
+
+  const getInitials = (name: string) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <p className="text-lg text-muted-foreground">Loading alumni directory...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,7 +117,7 @@ const AlumniDirectory = () => {
             Alumni Directory
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Connect with our global network of successful alumni across all industries and departments.
+            Connect with our global network of {alumni.length}+ verified alumni from Punjab University CS Department.
           </p>
         </div>
 
@@ -47,44 +128,70 @@ const AlumniDirectory = () => {
               <Filter className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold">Filter Alumni</h3>
             </div>
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-5 gap-4">
               <Input
-                placeholder="Search by name or profession..."
+                placeholder="Search by name, company, skills..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="md:col-span-2"
               />
-              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+              <Select value={selectedProgram} onValueChange={setSelectedProgram}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Departments" />
+                  <SelectValue placeholder="All Programs" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Departments</SelectItem>
-                  {departments.map(dept => (
-                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  <SelectItem value="all">All Programs</SelectItem>
+                  <SelectItem value="MCA">MCA</SelectItem>
+                  <SelectItem value="MSCIT">MSCIT</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Industries" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Industries</SelectItem>
+                  {industries.map(industry => (
+                    <SelectItem key={industry} value={industry}>{industry}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Locations" />
+                  <SelectValue placeholder="Graduation Year" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  {locations.map(location => (
-                    <SelectItem key={location} value={location}>{location}</SelectItem>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {graduationYears.map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="mt-4">
+              <Button
+                variant={mentorshipOnly ? "default" : "outline"}
+                onClick={() => setMentorshipOnly(!mentorshipOnly)}
+                className="gap-2"
+              >
+                <Users className="w-4 h-4" />
+                {mentorshipOnly ? "Showing: Mentors Only" : "Show: All Alumni"}
+              </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Results Count */}
-        <div className="mb-6">
+        <div className="mb-6 flex justify-between items-center">
           <p className="text-muted-foreground">
-            Showing {filteredAlumni.length} of {alumni.length} alumni
+            Showing {filteredAlumni.length} of {alumni.length} verified alumni
           </p>
+          {mentorshipOnly && (
+            <Badge variant="secondary" className="gap-1">
+              <Heart className="w-3 h-3" />
+              {filteredAlumni.length} Mentors Available
+            </Badge>
+          )}
         </div>
 
         {/* Alumni Grid */}
@@ -93,62 +200,154 @@ const AlumniDirectory = () => {
             <Card key={person.id} className="shadow-elegant hover:shadow-glow transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-start space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {person.name.split(' ').map(n => n[0]).join('')}
+                  <div className="relative">
+                    {person.profilePictureUrl ? (
+                      <img 
+                        src={person.profilePictureUrl} 
+                        alt={person.name}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {getInitials(person.name)}
+                      </div>
+                    )}
+                    {person.isVerified && (
+                      <div className="absolute -bottom-1 -right-1">
+                        <VerifiedBadge size="small" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                       {person.name}
                     </h3>
                     <Badge variant="secondary" className="mb-2">
-                      {person.department} • {person.batchYear}
+                      {person.program} • {person.graduationYear}
                     </Badge>
                   </div>
                 </div>
                 
-                <div className="space-y-3 mb-6">
+                <div className="space-y-3 mb-4">
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Briefcase className="w-4 h-4 mr-2 text-primary" />
-                    <span>{person.profession}</span>
+                    <Briefcase className="w-4 h-4 mr-2 text-primary flex-shrink-0" />
+                    <span className="font-semibold">{person.currentPosition}</span>
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4 mr-2 text-primary" />
-                    <span>{person.location}</span>
+                    <Building className="w-4 h-4 mr-2 text-primary flex-shrink-0" />
+                    <span>{person.currentCompany}</span>
+                  </div>
+                  {person.companyLocation && (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 mr-2 text-primary flex-shrink-0" />
+                      <span>{person.companyLocation}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <GraduationCap className="w-4 h-4 mr-2 text-primary flex-shrink-0" />
+                    <span>{person.yearsOfExperience} years experience</span>
                   </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                  {person.bio}
-                </p>
+                {person.bio && (
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    {person.bio}
+                  </p>
+                )}
 
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {person.skills.slice(0, 3).map((skill, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {skill}
+                {/* Expertise Areas */}
+                {person.expertiseAreas && person.expertiseAreas.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Expertise:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {person.expertiseAreas.slice(0, 3).map((area, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {area}
+                        </Badge>
+                      ))}
+                      {person.expertiseAreas.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{person.expertiseAreas.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Availability Badges */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {person.isMentorAvailable && (
+                    <Badge className="bg-green-500 hover:bg-green-600 text-white gap-1">
+                      <Users className="w-3 h-3" />
+                      Mentor
                     </Badge>
-                  ))}
-                  {person.skills.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{person.skills.length - 3} more
+                  )}
+                  {person.availableForJobReferrals && (
+                    <Badge className="bg-blue-500 hover:bg-blue-600 text-white gap-1">
+                      <Briefcase className="w-3 h-3" />
+                      Referrals
+                    </Badge>
+                  )}
+                  {person.availableForGuestLectures && (
+                    <Badge className="bg-purple-500 hover:bg-purple-600 text-white gap-1">
+                      <Award className="w-3 h-3" />
+                      Lectures
+                    </Badge>
+                  )}
+                  {person.availableForNetworking && (
+                    <Badge className="bg-orange-500 hover:bg-orange-600 text-white gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      Networking
                     </Badge>
                   )}
                 </div>
 
-                <Link to="/student-dashboard">
-                  <Button className="w-full bg-gradient-hero hover:opacity-90 transition-opacity">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Request Mentorship
+                {/* Action Button */}
+                {person.isMentorAvailable ? (
+                  <Link to={`/mentorship?alumniId=${person.userId}`}>
+                    <Button className="w-full bg-gradient-hero hover:opacity-90 transition-opacity">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Request Mentorship
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      if (person.linkedinUrl) {
+                        window.open(person.linkedinUrl, '_blank');
+                      } else {
+                        toast.info("No LinkedIn profile available");
+                      }
+                    }}
+                  >
+                    View Profile
                   </Button>
-                </Link>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {filteredAlumni.length === 0 && (
+        {filteredAlumni.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">
-              No alumni found matching your criteria. Try adjusting your filters.
+            <p className="text-muted-foreground text-lg mb-2">
+              No alumni found matching your criteria.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Try adjusting your filters or search terms.
+            </p>
+          </div>
+        )}
+
+        {alumni.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground text-lg mb-2">
+              No verified alumni profiles yet.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Alumni will appear here once their profiles are verified by admins.
             </p>
           </div>
         )}
