@@ -222,10 +222,12 @@ class ApiClient {
   async getCurrentUser() {
     try {
       const response = await this.get('/auth/me');
-      return response.data;
+      // Response from /auth/me is already { data: { id, email, ... } }
+      // So we need to return the data property directly
+      return response.data || response;
     } catch (error: any) {
       // If token is invalid, clear it and force re-login
-      if (error.response?.status === 401) {
+      if (error.message?.includes('401') || error.message?.includes('Invalid token')) {
         console.error('❌ Invalid token detected, clearing authentication');
         this.clearAuthToken();
         throw new Error('Session expired. Please login again.');

@@ -43,11 +43,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Check if user is already logged in and validate token
     const initializeAuth = async () => {
       try {
+        // Clear any invalid tokens first
         const token = localStorage.getItem('authToken');
         
         // Check if token exists and is not malformed
         if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
           console.log('ℹ️ No valid token found, user needs to login');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('access_token');
           setLoading(false);
           return;
         }
@@ -55,7 +58,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Validate token format (JWT has 3 parts separated by dots)
         const tokenParts = token.split('.');
         if (tokenParts.length !== 3) {
-          console.error('❌ Token is malformed, clearing it');
+          console.error('❌ Token is malformed, clearing all auth data');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('authUser');
           apiClient.clearAuthToken();
           setUser(null);
           setIsAuthenticated(false);
@@ -65,17 +72,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         console.log('🔍 Validating existing token...');
         const userData = await apiClient.getCurrentUser();
-        console.log('✅ Token is valid, user authenticated:', userData.user.email);
+        console.log('✅ Token is valid, user authenticated:', userData.email);
         setUser({
-          ...userData.user,
-          isVerified: userData.user.isVerified || false,
-          verificationMethod: userData.user.verificationMethod || 'pending',
-          isEmailVerified: userData.user.isEmailVerified || false,
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          role: userData.role,
+          studentId: userData.studentId,
+          isVerified: userData.isVerified || false,
+          verificationMethod: userData.verificationMethod || 'pending',
+          isEmailVerified: userData.isEmailVerified || false,
         });
         setIsAuthenticated(true);
       } catch (error: any) {
         console.error('❌ Auth initialization failed:', error.message);
-        // Clear invalid tokens
+        // Clear all invalid tokens
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('authUser');
         apiClient.clearAuthToken();
         setUser(null);
         setIsAuthenticated(false);
@@ -108,8 +123,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const verifyLoginCode = async (userId: string, code: string): Promise<boolean> => {
     try {
       const tokens = await apiClient.verifyLoginCode(userId, code);
+      
+      // Validate the token before saving
+      if (!tokens.access_token || tokens.access_token === 'null' || tokens.access_token === 'undefined') {
+        console.error('❌ Received invalid token from server');
+        return false;
+      }
+
+      const tokenParts = tokens.access_token.split('.');
+      if (tokenParts.length !== 3) {
+        console.error('❌ Received malformed token from server');
+        return false;
+      }
+
+      // Save the token
+      apiClient.setAuthToken(tokens.access_token);
+      
       setUser({
-        ...tokens.user,
+        id: tokens.user.id,
+        email: tokens.user.email,
+        name: tokens.user.name,
+        role: tokens.user.role,
+        studentId: tokens.user.studentId,
         isVerified: tokens.user.isVerified || false,
         verificationMethod: tokens.user.verificationMethod || 'pending',
         isEmailVerified: tokens.user.isEmailVerified || false,
@@ -180,6 +215,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
+      // Clear all authentication data
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('authUser');
+      apiClient.clearAuthToken();
       setUser(null);
       setIsAuthenticated(false);
     }
