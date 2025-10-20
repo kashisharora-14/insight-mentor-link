@@ -46,11 +46,11 @@ class ApiClient {
 
   constructor() {
     try {
-      this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+      this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
       this.loadTokenFromStorage();
     } catch (error) {
       console.error('ApiClient initialization failed:', error);
-      this.baseURL = 'http://localhost:5002/api';
+      this.baseURL = 'http://localhost:3001/api';
     }
   }
 
@@ -255,15 +255,29 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.makeRequest('/admin/csv-upload', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        // Remove Content-Type to let browser set it with boundary
-        'Authorization': `Bearer ${this.getToken()}`,
-      },
-      isFormData: true,
-    });
+    const url = `${this.baseURL}/admin/csv-upload`;
+    const headers = new Headers();
+    if (this.token) {
+      headers.set('Authorization', `Bearer ${this.token}`);
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error?.message || 'CSV upload failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('CSV upload failed:', error);
+      throw error;
+    }
   }
 
   async logout(): Promise<void> {
