@@ -1511,13 +1511,20 @@ const AdminDashboard = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {verificationRequests.filter((req: any) => req.status === 'pending').map((request: any) => {
-                      const user = profiles.find(p => p.id === request.user_id) || profiles.find(p => p.user_id === request.user_id);
+                      // Extract user info from the API response or request data
+                      const userName = (request.requestData as any)?.name || 
+                                      request.userEmail?.split('@')[0] || 
+                                      'User';
+                      const userEmail = request.userEmail || 
+                                       (request.requestData as any)?.email || 
+                                       'Email not available';
+                      
                       return (
                         <div key={request.id} className="p-3 border rounded-lg flex items-center justify-between">
                           <div>
-                            <h4 className="font-medium">{(request.request_data as any)?.name || user?.name || user?.email?.split('@')[0] || 'User'}</h4>
-                            <p className="text-sm text-muted-foreground">{user?.email || (request.request_data as any)?.email || 'Email not available'}</p>
-                            <p className="text-xs text-muted-foreground mt-1">Requested: {new Date(request.created_at).toLocaleDateString()}</p>
+                            <h4 className="font-medium">{userName}</h4>
+                            <p className="text-sm text-muted-foreground">{userEmail}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Requested: {new Date(request.createdAt).toLocaleDateString()}</p>
                           </div>
                           <div className="flex gap-2">
                             <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
