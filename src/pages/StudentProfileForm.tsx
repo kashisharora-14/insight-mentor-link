@@ -19,11 +19,13 @@ export default function StudentProfileForm() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    // Academic Information
+    // Academic Information - Punjab University CS Department
     rollNumber: '',
-    department: '',
+    program: '', // MCA or MSCIT
+    batchType: '', // Morning or Evening
+    currentYear: 1, // 1 or 2
     batchYear: new Date().getFullYear(),
-    currentSemester: 1,
+    currentSemester: 1, // 1-4
     cgpa: '',
     
     // Personal Details
@@ -73,7 +75,9 @@ export default function StudentProfileForm() {
           setFormData(prev => ({
             ...prev,
             rollNumber: data.profile.rollNumber || '',
-            department: data.profile.department || '',
+            program: data.profile.program || '',
+            batchType: data.profile.batchType || '',
+            currentYear: data.profile.currentYear || 1,
             batchYear: data.profile.batchYear || new Date().getFullYear(),
             currentSemester: data.profile.currentSemester || 1,
             cgpa: data.profile.cgpa || '',
@@ -225,14 +229,38 @@ export default function StudentProfileForm() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="department">Course *</Label>
-                      <Select value={formData.department} onValueChange={(v) => handleChange('department', v)} required>
+                      <Label htmlFor="program">Program *</Label>
+                      <Select value={formData.program} onValueChange={(v) => handleChange('program', v)} required>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select course" />
+                          <SelectValue placeholder="Select program" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="MCA">MCA (Master of Computer Applications)</SelectItem>
-                          <SelectItem value="MSc-IT">MSc-IT (Master of Science in IT)</SelectItem>
+                          <SelectItem value="MSCIT">MSCIT (Master of Science in IT)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="batchType">Batch Type *</Label>
+                      <Select value={formData.batchType} onValueChange={(v) => handleChange('batchType', v)} required>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select batch type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Morning">Morning</SelectItem>
+                          <SelectItem value="Evening">Evening</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="currentYear">Current Year *</Label>
+                      <Select value={formData.currentYear.toString()} onValueChange={(v) => handleChange('currentYear', parseInt(v))} required>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Year 1</SelectItem>
+                          <SelectItem value="2">Year 2</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -249,14 +277,16 @@ export default function StudentProfileForm() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="currentSemester">Current Year *</Label>
+                      <Label htmlFor="currentSemester">Current Semester *</Label>
                       <Select value={formData.currentSemester.toString()} onValueChange={(v) => handleChange('currentSemester', parseInt(v))} required>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">Year 1</SelectItem>
-                          <SelectItem value="2">Year 2</SelectItem>
+                          <SelectItem value="1">Semester 1</SelectItem>
+                          <SelectItem value="2">Semester 2</SelectItem>
+                          <SelectItem value="3">Semester 3</SelectItem>
+                          <SelectItem value="4">Semester 4</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
