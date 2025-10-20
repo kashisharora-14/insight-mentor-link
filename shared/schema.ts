@@ -1,6 +1,10 @@
 
-import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex, varchar, pgEnum, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+
+// Enums for Punjab University CS Department programs
+export const programEnum = pgEnum('program', ['MCA', 'MSCIT']);
+export const batchTypeEnum = pgEnum('batch_type', ['Morning', 'Evening']);
 
 // Authentication Tables
 
@@ -26,11 +30,14 @@ export const studentProfiles = pgTable('student_profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
   
-  // Academic Information
+  // Academic Information - Punjab University CS Department
   rollNumber: text('roll_number').unique(),
-  department: text('department'),
-  batchYear: integer('batch_year'),
-  currentSemester: integer('current_semester'),
+  department: text('department').notNull().default('Computer Science'), // Fixed for Punjab University CS Dept
+  program: programEnum('program'), // MCA or MSCIT
+  batchType: batchTypeEnum('batch_type'), // Morning or Evening
+  currentYear: integer('current_year'), // 1 or 2
+  batchYear: integer('batch_year'), // Graduation year
+  currentSemester: integer('current_semester'), // 1-4 for 2-year programs
   cgpa: decimal('cgpa', { precision: 3, scale: 2 }),
   currentBacklog: integer('current_backlog').default(0),
   

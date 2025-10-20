@@ -95,8 +95,10 @@ router.post('/profile', authenticate, async (req: any, res) => {
     }
 
     // Convert dateOfBirth to Date object if it exists
+    // Auto-set department to "Computer Science" for Punjab University
     const profileData = {
       ...data,
+      department: 'Computer Science', // Always Computer Science for Punjab University CS Dept
       dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
       updatedAt: new Date(),
     };

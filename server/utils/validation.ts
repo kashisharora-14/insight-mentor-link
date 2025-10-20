@@ -28,12 +28,32 @@ export function validateName(name: string): { valid: boolean; error?: string } {
 export function validateStudentProfile(data: any): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
+  // Punjab University CS Department specific validations
+  const validPrograms = ['MCA', 'MSCIT'];
+  const validBatchTypes = ['Morning', 'Evening'];
+
+  if (data.program && !validPrograms.includes(data.program)) {
+    errors.push('Program must be either MCA or MSCIT');
+  }
+
+  if (data.batchType && !validBatchTypes.includes(data.batchType)) {
+    errors.push('Batch type must be either Morning or Evening');
+  }
+
+  if (data.currentYear) {
+    const year = parseInt(data.currentYear);
+    if (isNaN(year) || year < 1 || year > 2) {
+      errors.push('Current year must be either 1 or 2');
+    }
+  }
+
   if (data.rollNumber && !/^[A-Z0-9\-\/]+$/i.test(data.rollNumber)) {
     errors.push('Roll number can only contain letters, numbers, hyphens, and forward slashes');
   }
 
-  if (data.department && data.department.trim().length === 0) {
-    errors.push('Department cannot be empty');
+  // Department is auto-set to "Computer Science" for Punjab University
+  if (data.department && data.department !== 'Computer Science') {
+    errors.push('Department must be Computer Science for Punjab University');
   }
 
   if (data.cgpa) {
@@ -45,8 +65,8 @@ export function validateStudentProfile(data: any): { valid: boolean; errors: str
 
   if (data.currentSemester) {
     const sem = parseInt(data.currentSemester);
-    if (isNaN(sem) || sem < 1 || sem > 12) {
-      errors.push('Current semester must be between 1 and 12');
+    if (isNaN(sem) || sem < 1 || sem > 4) {
+      errors.push('Current semester must be between 1 and 4 for 2-year programs');
     }
   }
 
