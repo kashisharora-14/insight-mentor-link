@@ -5,6 +5,7 @@ email-validator
 Flask
 Flask-CORS
 Flask-SQLAlchemy
+Flask-Mail
 psycopg2-binary
 PyJWT
 python-dotenv

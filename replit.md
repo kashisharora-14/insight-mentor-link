@@ -31,12 +31,16 @@ This is a React + TypeScript alumni platform application with PostgreSQL databas
   - `/contexts` - React contexts (AuthContext)
   - `/hooks` - Custom React hooks
   - `/lib` - Utility functions
-- `/server` - Backend server code
+- `/server` - Express/TypeScript backend (port 3001)
   - `db.ts` - Database connection and Drizzle setup
+  - `/routes` - API routes for student profiles, mentorship, etc.
+- `/backend` - Flask/Python backend (port 3002)
+  - `/routes` - Authentication, admin, and verification endpoints
+  - `/utils` - Email service and utilities
+  - `/models` - SQLAlchemy database models
 - `/shared` - Shared code between frontend and backend
   - `schema.ts` - Drizzle ORM database schema definitions
 - `/public` - Static assets
-- `/backend` - Flask backend (existing, for Python-based APIs)
 
 ## Database Schema
 The database includes the following tables:
@@ -86,10 +90,24 @@ These credentials are stored securely in Replit Secrets and persist across all d
 - `npm run db:studio` - Open Drizzle Studio for database management
 
 ## Development Setup
-- **Port**: 5000 (configured for Replit)
+The project runs three concurrent services:
+- **Frontend (Vite)**: Port 5000 - React application with hot reload
+- **Express Backend**: Port 3001 - TypeScript API for student profiles, mentorship
+- **Flask Backend**: Port 3002 - Python API for authentication and admin features
 - **Host**: 0.0.0.0 (allows external access)
-- **Development Server**: Vite dev server
-- **Hot Reload**: Enabled
+- **Proxy**: Vite proxies `/api` requests to Flask backend (port 3002)
+
+### Running the Application
+```bash
+npm run dev:all  # Runs all three services concurrently
+```
+
+Individual services:
+```bash
+npm run dev        # Frontend only (port 5000)
+npm run dev:api    # Express backend only (port 3001)
+npm run dev:flask  # Flask backend only (port 3002)
+```
 
 ## Deployment Configuration
 - **Target**: Autoscale (stateless deployment)
@@ -108,6 +126,13 @@ For testing purposes, the application includes mock authentication:
 4. Set up deployment configuration for production
 
 ## Recent Changes
+- **2025-10-20 (Latest)**: Fixed login and student data entry issues
+  - Installed Python 3.11 with pip and all dependencies
+  - Configured Flask backend to run on port 3002 (alongside Express on 3001)
+  - Updated Vite proxy configuration to route `/api` to Flask backend (port 3002)
+  - Set up concurrent workflow running all three services (Vite, Express, Flask)
+  - Added Flask-Mail dependency for email functionality
+  - All authentication and student data entry now working properly
 - **2025-10-20**: Successfully migrated and configured complete verification system
   - Installed Drizzle ORM and Neon serverless packages
   - Created comprehensive database schema based on Supabase migrations
