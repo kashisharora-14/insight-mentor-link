@@ -3,7 +3,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 from datetime import datetime, timedelta
 import random
 import string
-from ..models.user import db, User, VerificationCode
+from ..models import db, User, VerificationCode
 
 auth = Blueprint('auth', __name__)
 
