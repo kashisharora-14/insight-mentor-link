@@ -90,8 +90,10 @@ router.post('/profile', authenticate, async (req: any, res) => {
     const userId = req.user.userId;
     const data = req.body;
 
-    console.log('Received profile data:', data);
+    console.log('=== PROFILE SAVE REQUEST ===');
     console.log('User ID:', userId);
+    console.log('Received data keys:', Object.keys(data));
+    console.log('Received profile data:', JSON.stringify(data, null, 2));
 
     const validation = validateStudentProfile(data);
     if (!validation.valid) {
@@ -155,11 +157,11 @@ router.post('/profile', authenticate, async (req: any, res) => {
         .where(eq(studentProfiles.userId, userId))
         .limit(1);
 
-      console.log('Profile updated successfully');
+      console.log('✅ Profile updated successfully for user:', userId);
       return res.json({ message: 'Profile updated successfully', profile: updated[0] });
     } else {
       // Create new profile
-      console.log('Creating new profile');
+      console.log('📝 Creating new profile for user:', userId);
       const newProfile = await db.insert(studentProfiles)
         .values({
           userId,
@@ -167,11 +169,16 @@ router.post('/profile', authenticate, async (req: any, res) => {
         })
         .returning();
 
-      console.log('Profile created successfully');
+      console.log('✅ Profile created successfully for user:', userId);
       return res.json({ message: 'Profile created successfully', profile: newProfile[0] });
     }
   } catch (error) {
-    console.error('Error saving student profile:', error);
+    console.error('❌ ERROR saving student profile:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: req.user?.userId
+    });
     return res.status(500).json({ 
       error: 'Failed to save profile',
       details: error instanceof Error ? error.message : 'Unknown error'
