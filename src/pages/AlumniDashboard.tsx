@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { AlumniProfileForm } from '@/components/alumni/AlumniProfileForm';
 import { 
   Users, 
   MessageCircle, 
@@ -370,6 +371,17 @@ const AlumniDashboard = () => {
           >
             Completed ({completedRequests.length})
           </button>
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm rounded-t-lg w-full sm:w-auto ${
+              activeTab === "profile"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <User className="w-4 h-4 inline mr-1" />
+            My Profile
+          </button>
         </div>
 
         {/* Content */}
@@ -587,6 +599,30 @@ const AlumniDashboard = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          )}
+
+          {activeTab === "profile" && (
+            <div className="space-y-4">
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5 text-primary" />
+                    Alumni Profile
+                  </CardTitle>
+                  <CardDescription>
+                    Complete your profile to be visible in the Alumni Directory and available for mentorship
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AlumniProfileForm onSuccess={() => {
+                    toast({
+                      title: "Success!",
+                      description: "Your profile has been saved. It will be visible in the Alumni Directory once verified.",
+                    });
+                  }} />
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>

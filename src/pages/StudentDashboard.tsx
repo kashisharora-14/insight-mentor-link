@@ -782,87 +782,116 @@ const StudentDashboard = () => {
 
           {/* Mentorship Requests Tab */}
           <TabsContent value="requests">
-            <Card className="shadow-elegant">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-primary" />
-                  Your Mentorship Requests
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {studentRequests.length === 0 ? (
-                  <div className="text-center py-8">
-                    <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No mentorship requests yet.</p>
-                    <Button className="mt-4 bg-gradient-hero hover:opacity-90">
-                      Find Alumni Mentors
+            <div className="space-y-6">
+              {/* Available Mentors Section */}
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-primary" />
+                    Available Mentors
+                  </CardTitle>
+                  <CardDescription>
+                    Connect with verified alumni who are available for mentorship
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-4">
+                    <Button 
+                      onClick={() => window.location.href = '/mentorship'}
+                      className="bg-gradient-hero hover:opacity-90"
+                    >
+                      Browse All Mentors
                     </Button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {studentRequests.map((request) => (
-                      <Card key={request.id} className="border border-border">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                {request.alumniName.split(' ').map(n => n[0]).join('')}
+                </CardContent>
+              </Card>
+
+              {/* Your Requests Section */}
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-primary" />
+                    Your Mentorship Requests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {studentRequests.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No mentorship requests yet.</p>
+                      <Button 
+                        className="mt-4 bg-gradient-hero hover:opacity-90"
+                        onClick={() => window.location.href = '/mentorship'}
+                      >
+                        Find Alumni Mentors
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {studentRequests.map((request) => (
+                        <Card key={request.id} className="border border-border">
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                  {request.alumniName.split(' ').map(n => n[0]).join('')}
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold">{request.alumniName}</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    Requested on {new Date(request.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
                               </div>
+                              <div className="flex items-center gap-2">
+                                {getStatusIcon(request.status)}
+                                {getStatusBadge(request.status)}
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
                               <div>
-                                <h3 className="font-semibold">{request.alumniName}</h3>
-                                <p className="text-sm text-muted-foreground">
-                                  Requested on {new Date(request.createdAt).toLocaleDateString()}
-                                </p>
+                                <h4 className="font-medium text-sm mb-1">Purpose:</h4>
+                                <p className="text-sm text-muted-foreground">{request.purpose}</p>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {getStatusIcon(request.status)}
-                              {getStatusBadge(request.status)}
-                            </div>
-                          </div>
 
-                          <div className="space-y-3">
-                            <div>
-                              <h4 className="font-medium text-sm mb-1">Purpose:</h4>
-                              <p className="text-sm text-muted-foreground">{request.purpose}</p>
-                            </div>
-
-                            <div>
-                              <h4 className="font-medium text-sm mb-1">Preferred Time:</h4>
-                              <p className="text-sm text-muted-foreground">{request.preferredSlots}</p>
-                            </div>
-
-                            {request.question && (
                               <div>
-                                <h4 className="font-medium text-sm mb-1">Question:</h4>
-                                <p className="text-sm text-muted-foreground">{request.question}</p>
+                                <h4 className="font-medium text-sm mb-1">Preferred Time:</h4>
+                                <p className="text-sm text-muted-foreground">{request.preferredSlots}</p>
                               </div>
-                            )}
 
-                            {request.status === "accepted" && request.meetingLink && (
-                              <div className="bg-success/10 p-3 rounded-lg">
-                                <h4 className="font-medium text-sm mb-2 text-success">Session Scheduled!</h4>
-                                <p className="text-sm text-muted-foreground mb-2">
-                                  Scheduled: {new Date(request.scheduledTime!).toLocaleString()}
-                                </p>
-                                <Button 
-                                  size="sm" 
-                                  className="bg-success hover:bg-success/90"
-                                  onClick={() => window.open(request.meetingLink, '_blank')}
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  Join Meeting
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                              {request.question && (
+                                <div>
+                                  <h4 className="font-medium text-sm mb-1">Question:</h4>
+                                  <p className="text-sm text-muted-foreground">{request.question}</p>
+                                </div>
+                              )}
+
+                              {request.status === "accepted" && request.meetingLink && (
+                                <div className="bg-success/10 p-3 rounded-lg">
+                                  <h4 className="font-medium text-sm mb-2 text-success">Session Scheduled!</h4>
+                                  <p className="text-sm text-muted-foreground mb-2">
+                                    Scheduled: {new Date(request.scheduledTime!).toLocaleString()}
+                                  </p>
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-success hover:bg-success/90"
+                                    onClick={() => window.open(request.meetingLink, '_blank')}
+                                  >
+                                    <ExternalLink className="w-4 h-4 mr-2" />
+                                    Join Meeting
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Connections Tab */}

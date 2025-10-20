@@ -24,7 +24,8 @@ import {
   Globe,
   Zap,
   Upload,
-  Clock // Added Clock icon
+  Clock, // Added Clock icon
+  GraduationCap // Added GraduationCap icon
 } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -1145,7 +1146,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-green-200">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -1159,7 +1160,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white/60 backdrop-blur-sm p-4 rounded-lg border border-blue-200">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -1174,7 +1175,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <Button 
                 onClick={() => {
@@ -1592,7 +1593,7 @@ const AdminDashboard = () => {
                       .map((request: any) => {
                         const profile = profiles.find(p => p.id === request.userId);
                         const userName = (request.requestData as any)?.name || request.userName || 'Unknown';
-                        
+
                         return (
                           <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
                             <div className="flex-1">
