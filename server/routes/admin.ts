@@ -18,17 +18,24 @@ router.use(adminMiddleware);
 // Get all pending verification requests
 router.get('/verification-requests', async (req, res) => {
   try {
-    console.log('📋 Fetching verification requests...');
+    console.log('📋 Admin fetching verification requests...');
+    console.log(`   Admin User ID: ${req.user?.userId}`);
+    console.log(`   Admin Email: ${req.user?.email}`);
 
     // First, get all verification requests to debug
     const allRequests = await db.select().from(verificationRequests);
     console.log(`📊 Total verification requests in DB: ${allRequests.length}`);
-    console.log('📊 All requests:', allRequests.map(r => ({ 
-      id: r.id, 
-      status: r.status, 
-      userId: r.userId,
-      createdAt: r.createdAt 
-    })));
+    
+    if (allRequests.length > 0) {
+      console.log('📊 All requests breakdown:');
+      const statusCounts = allRequests.reduce((acc, r) => {
+        acc[r.status] = (acc[r.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      Object.entries(statusCounts).forEach(([status, count]) => {
+        console.log(`   - ${status}: ${count}`);
+      });
+    }
 
     const requests = await db.select({
       id: verificationRequests.id,
@@ -48,16 +55,16 @@ router.get('/verification-requests', async (req, res) => {
 
     console.log(`✅ Found ${requests.length} pending verification requests`);
     if (requests.length > 0) {
-      console.log('📋 Pending requests details:', requests.map(r => ({ 
-        id: r.id,
-        email: r.userEmail, 
-        name: r.userName,
-        studentId: r.userStudentId,
-        status: r.status,
-        requestData: r.requestData
-      })));
+      console.log('📋 Pending requests:');
+      requests.forEach((r, i) => {
+        console.log(`   ${i + 1}. ${r.userName || 'Unknown'} (${r.userEmail})`);
+        console.log(`      - Request ID: ${r.id}`);
+        console.log(`      - Student ID: ${r.userStudentId || 'N/A'}`);
+        console.log(`      - Role: ${r.userRole}`);
+        console.log(`      - Created: ${r.createdAt}`);
+      });
     } else {
-      console.log('⚠️ No pending verification requests found, but total requests:', allRequests.length);
+      console.log('⚠️ No pending requests found');
     }
 
     res.json(requests);

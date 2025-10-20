@@ -180,18 +180,26 @@ router.post('/verify-login-code', async (req, res) => {
 
         if (existingRequest.length === 0) {
           console.log(`📝 Creating verification request for existing user: ${userDetails.email}`);
-          await db.insert(verificationRequests).values({
+          const newRequest = await db.insert(verificationRequests).values({
             userId: userDetails.id,
             requestData: {
               email: userDetails.email,
               name: userDetails.name || userDetails.email.split('@')[0],
-              studentId: userDetails.studentId || null
+              studentId: userDetails.studentId || null,
+              role: userDetails.role
             },
             status: 'pending',
-          });
-          console.log(`✅ Verification request created for user ID: ${userDetails.id} with student ID: ${userDetails.studentId}`);
+          }).returning();
+          console.log(`✅ Verification request created successfully!`);
+          console.log(`   - Request ID: ${newRequest[0].id}`);
+          console.log(`   - User ID: ${userDetails.id}`);
+          console.log(`   - Email: ${userDetails.email}`);
+          console.log(`   - Student ID: ${userDetails.studentId || 'N/A'}`);
+          console.log(`   - Status: pending`);
         } else {
-          console.log(`ℹ️ Verification request already exists for user: ${userDetails.email} (Request ID: ${existingRequest[0].id})`);
+          console.log(`ℹ️ Verification request already exists for user: ${userDetails.email}`);
+          console.log(`   - Request ID: ${existingRequest[0].id}`);
+          console.log(`   - Status: ${existingRequest[0].status}`);
         }
       }
     }
