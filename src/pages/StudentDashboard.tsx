@@ -201,14 +201,15 @@ const StudentDashboard = () => {
 
         if (response.ok) {
           const data = await response.json();
+          console.log('📊 Profile API Response:', data);
           if (data.profile) {
             setStudentProfile({
               name: user?.name || 'Student',
-              studentId: data.profile.rollNumber || data.profile.roll_number || user?.student_id || 'Not set',
+              studentId: data.profile.roll_number || data.profile.rollNumber || user?.student_id || 'N/A',
               email: user?.email || 'N/A',
               department: data.profile.department || 'Not set',
-              batchYear: data.profile.batchYear || new Date().getFullYear(),
-              semester: data.profile.currentSemester || 1,
+              batchYear: data.profile.batchYear || data.profile.batch_year || new Date().getFullYear(),
+              semester: data.profile.currentSemester || data.profile.current_semester || 1,
               cgpa: data.profile.cgpa || 'N/A',
               hasProfile: true,
             });
@@ -216,7 +217,7 @@ const StudentDashboard = () => {
             // No profile yet - set basic info from user
             setStudentProfile({
               name: user?.name || 'Student',
-              studentId: user?.student_id || 'Please complete your profile',
+              studentId: user?.student_id || 'N/A',
               email: user?.email || 'N/A',
               department: 'Not set',
               batchYear: new Date().getFullYear(),
@@ -227,9 +228,10 @@ const StudentDashboard = () => {
           }
         } else {
           // Profile endpoint error - use basic user info
+          console.log('⚠️ Profile API error, using user data');
           setStudentProfile({
             name: user?.name || 'Student',
-            studentId: user?.student_id || 'Please complete your profile',
+            studentId: user?.student_id || 'N/A',
             email: user?.email || 'N/A',
             department: 'Not set',
             batchYear: new Date().getFullYear(),
