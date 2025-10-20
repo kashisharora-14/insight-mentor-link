@@ -91,6 +91,81 @@ export const studentProfiles = pgTable('student_profiles', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+// Alumni detailed profiles
+export const alumniProfiles = pgTable('alumni_profiles', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+  
+  // Academic Background - Punjab University CS Department
+  rollNumber: text('roll_number').unique(),
+  department: text('department').notNull().default('Computer Science'),
+  program: programEnum('program'), // MCA or MSCIT
+  batchType: batchTypeEnum('batch_type'), // Morning or Evening
+  graduationYear: integer('graduation_year'), // Year graduated
+  admissionYear: integer('admission_year'), // Year joined
+  cgpa: decimal('cgpa', { precision: 3, scale: 2 }),
+  
+  // Personal Details
+  dateOfBirth: timestamp('date_of_birth', { withTimezone: true }),
+  gender: text('gender'),
+  bloodGroup: text('blood_group'),
+  nationality: text('nationality').default('Indian'),
+  
+  // Contact Information
+  phoneNumber: text('phone_number'),
+  alternateEmail: text('alternate_email'),
+  currentAddress: text('current_address'),
+  city: text('city'),
+  state: text('state'),
+  country: text('country').default('India'),
+  pincode: text('pincode'),
+  
+  // Professional Information
+  currentPosition: text('current_position'), // Job title
+  currentCompany: text('current_company'),
+  companyLocation: text('company_location'),
+  industry: text('industry'), // IT, Finance, Healthcare, etc.
+  workType: text('work_type'), // Remote, Hybrid, On-site
+  yearsOfExperience: integer('years_of_experience'),
+  previousCompanies: text('previous_companies').array(),
+  
+  // Expertise and Skills
+  technicalSkills: text('technical_skills').array(),
+  softSkills: text('soft_skills').array(),
+  expertiseAreas: text('expertise_areas').array(), // Web Dev, ML, Cloud, etc.
+  certifications: text('certifications').array(),
+  achievements: text('achievements').array(),
+  
+  // Mentorship & Availability
+  isMentorAvailable: boolean('is_mentor_available').default(false),
+  mentorshipAreas: text('mentorship_areas').array(), // Areas they can mentor in
+  availableForJobReferrals: boolean('available_for_job_referrals').default(false),
+  availableForGuestLectures: boolean('available_for_guest_lectures').default(false),
+  availableForNetworking: boolean('available_for_networking').default(false),
+  preferredCommunication: text('preferred_communication'), // Email, Phone, LinkedIn
+  maxMentees: integer('max_mentees').default(3),
+  
+  // Profile Content
+  bio: text('bio'), // Professional summary
+  careerJourney: text('career_journey'), // Their story
+  adviceForStudents: text('advice_for_students'),
+  
+  // Social & Professional Links
+  linkedinUrl: text('linkedin_url'),
+  githubUrl: text('github_url'),
+  portfolioUrl: text('portfolio_url'),
+  twitterUrl: text('twitter_url'),
+  personalWebsite: text('personal_website'),
+  
+  // Profile Visibility
+  profilePictureUrl: text('profile_picture_url'),
+  isPublicProfile: boolean('is_public_profile').default(true),
+  showContactInfo: boolean('show_contact_info').default(true),
+  
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 // Email verification codes
 export const verificationCodes = pgTable('verification_codes', {
   id: uuid('id').defaultRandom().primaryKey(),
