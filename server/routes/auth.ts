@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     const { identifier } = req.body;
 
     if (!identifier) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: { message: 'Email or student ID is required' }
       });
     }
@@ -88,7 +88,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Error sending login code:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: { message: error.message || 'Failed to send login code' }
     });
   }
@@ -136,7 +136,7 @@ router.post('/verify-login-code', async (req, res) => {
       } else {
         // Extract name from email if not provided
         const defaultName = validCode.email.split('@')[0];
-        
+
         // Create new user with minimal info
         const newUsers = await db.insert(users).values({
           email: validCode.email,
@@ -154,9 +154,9 @@ router.post('/verify-login-code', async (req, res) => {
         // Create verification request for admin review with name
         await db.insert(verificationRequests).values({
           userId: actualUserId,
-          requestData: { 
+          requestData: {
             email: validCode.email,
-            name: defaultName 
+            name: defaultName
           },
         });
       }
@@ -165,7 +165,7 @@ router.post('/verify-login-code', async (req, res) => {
       const userRecord = await db.select().from(users).where(eq(users.id, validCode.userId)).limit(1);
       userDetails = userRecord.length > 0 ? userRecord[0] : null;
       actualUserId = validCode.userId;
-      
+
       // Always check and create verification request for unverified users
       if (userDetails && !userDetails.isVerified) {
         const existingRequest = await db.select()
@@ -177,12 +177,12 @@ router.post('/verify-login-code', async (req, res) => {
             )
           )
           .limit(1);
-        
+
         if (existingRequest.length === 0) {
           console.log(`📝 Creating verification request for existing user: ${userDetails.email}`);
           await db.insert(verificationRequests).values({
             userId: userDetails.id,
-            requestData: { 
+            requestData: {
               email: userDetails.email,
               name: userDetails.name || userDetails.email.split('@')[0]
             },
@@ -197,11 +197,11 @@ router.post('/verify-login-code', async (req, res) => {
 
     // Generate JWT token with proper user name
     const userName = userDetails?.name || validCode.email.split('@')[0];
-    
+
     const token = jwt.sign(
       { userId: actualUserId, email: validCode.email, name: userName, role: userDetails?.role || 'student' },
-      JWT_SECRET,
-      { expiresIn: '7d' }
+      JWT_SECRET
+      // No expiration - token valid until logout
     );
 
     res.json({
@@ -310,7 +310,7 @@ router.post('/register/send-code', async (req, res) => {
     // Send email
     await sendVerificationEmail(email, code, 'registration');
 
-    res.json({ 
+    res.json({
       message: 'Verification code sent to your email',
       expiresIn: 900 // 15 minutes in seconds
     });
@@ -652,8 +652,8 @@ router.post('/admin-login', async (req, res) => {
 
       const token = jwt.sign(
         { userId: adminUser[0].id, email, role: 'admin', isVerified: true },
-        JWT_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET
+        // No expiration - token valid until logout
       );
 
       return res.json({
@@ -690,8 +690,8 @@ router.post('/admin-login', async (req, res) => {
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: 'admin', isVerified: true },
-      JWT_SECRET,
-      { expiresIn: '7d' }
+      JWT_SECRET
+      // No expiration - token valid until logout
     );
 
     res.json({

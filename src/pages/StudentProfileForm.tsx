@@ -36,15 +36,6 @@ export default function StudentProfileForm() {
     city: '',
     state: '',
     pincode: '',
-    fatherName: '',
-    fatherOccupation: '',
-    fatherPhone: '',
-    motherName: '',
-    motherOccupation: '',
-    motherPhone: '',
-    guardianName: '',
-    guardianRelation: '',
-    guardianPhone: '',
     admissionType: '',
     scholarshipStatus: '',
     hostelResident: false,
@@ -97,15 +88,6 @@ export default function StudentProfileForm() {
             city: data.profile.city || '',
             state: data.profile.state || '',
             pincode: data.profile.pincode || '',
-            fatherName: data.profile.fatherName || '',
-            fatherOccupation: data.profile.fatherOccupation || '',
-            fatherPhone: data.profile.fatherPhone || '',
-            motherName: data.profile.motherName || '',
-            motherOccupation: data.profile.motherOccupation || '',
-            motherPhone: data.profile.motherPhone || '',
-            guardianName: data.profile.guardianName || '',
-            guardianRelation: data.profile.guardianRelation || '',
-            guardianPhone: data.profile.guardianPhone || '',
             admissionType: data.profile.admissionType || '',
             scholarshipStatus: data.profile.scholarshipStatus || '',
             hostelResident: data.profile.hostelResident || false,
@@ -506,67 +488,6 @@ export default function StudentProfileForm() {
                       id="pincode"
                       value={formData.pincode}
                       onChange={(e) => handleInputChange('pincode', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Parent/Guardian Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Parent/Guardian Information</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="fatherName">Father's Name</Label>
-                    <Input
-                      id="fatherName"
-                      value={formData.fatherName}
-                      onChange={(e) => handleInputChange('fatherName', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="fatherOccupation">Father's Occupation</Label>
-                    <Input
-                      id="fatherOccupation"
-                      value={formData.fatherOccupation}
-                      onChange={(e) => handleInputChange('fatherOccupation', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="fatherPhone">Father's Phone</Label>
-                    <Input
-                      id="fatherPhone"
-                      value={formData.fatherPhone}
-                      onChange={(e) => handleInputChange('fatherPhone', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="motherName">Mother's Name</Label>
-                    <Input
-                      id="motherName"
-                      value={formData.motherName}
-                      onChange={(e) => handleInputChange('motherName', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="motherOccupation">Mother's Occupation</Label>
-                    <Input
-                      id="motherOccupation"
-                      value={formData.motherOccupation}
-                      onChange={(e) => handleInputChange('motherOccupation', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="motherPhone">Mother's Phone</Label>
-                    <Input
-                      id="motherPhone"
-                      value={formData.motherPhone}
-                      onChange={(e) => handleInputChange('motherPhone', e.target.value)}
                     />
                   </div>
                 </div>

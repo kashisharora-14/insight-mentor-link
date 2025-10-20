@@ -41,9 +41,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     next();
   } catch (error: any) {
     console.error('❌ Auth middleware error:', error.message);
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expired' });
-    }
+    // Token won't expire since we don't set expiration
     return res.status(401).json({ error: 'Invalid token' });
   }
 };

@@ -112,29 +112,9 @@ class ApiClient {
       const data: ApiResponse<T> = await response.json();
 
       if (!response.ok) {
-        // Handle token expiration
-        if (response.status === 401 && this.token) {
-          await this.tryRefreshToken();
-          // Retry the request with new token
-          if (this.token) {
-            headers.set('Authorization', `Bearer ${this.token}`);
-            const retryResponse = await fetch(url, { ...config, headers });
-
-            if (retryResponse.status === 204 || retryResponse.headers.get('content-length') === '0') {
-              if (!retryResponse.ok) {
-                throw new Error(`Request failed with status ${retryResponse.status}`);
-              }
-              return {} as T;
-            }
-
-            const retryData: ApiResponse<T> = await retryResponse.json();
-
-            if (!retryResponse.ok) {
-              throw new Error(retryData.error?.message || 'Request failed after refresh');
-            }
-
-            return retryData.data as T;
-          }
+        // If 401, token is invalid - user needs to login again
+        if (response.status === 401) {
+          this.removeTokenFromStorage();
         }
 
         throw new Error(data.error?.message || 'Request failed');
@@ -158,35 +138,7 @@ class ApiClient {
     }
   }
 
-  private async tryRefreshToken(): Promise<void> {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) {
-      this.removeTokenFromStorage();
-      return;
-    }
-
-    try {
-      const response = await fetch(`${this.baseURL}/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${refreshToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data: ApiResponse<{ access_token: string }> = await response.json();
-        if (data.data?.access_token) {
-          this.saveTokenToStorage(data.data.access_token);
-        }
-      } else {
-        this.removeTokenFromStorage();
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      this.removeTokenFromStorage();
-    }
-  }
+  
 
   // Authentication methods
   async sendLoginCode(identifier: string): Promise<any> {
