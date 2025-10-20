@@ -179,30 +179,6 @@ export const verificationCodes = pgTable('verification_codes', {
 });
 
 // Verification requests - when users register without CSV
-export const alumniProfiles = pgTable('alumni_profiles', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id').notNull().references(() => users.id),
-  name: text('name').notNull(),
-  email: text('email').notNull(),
-  graduationYear: text('graduation_year').notNull(),
-  degree: text('degree').notNull(),
-  major: text('major').notNull(),
-  currentCompany: text('current_company'),
-  currentPosition: text('current_position'),
-  location: text('location'),
-  bio: text('bio'),
-  skills: text('skills').array(),
-  expertise: text('expertise').array(),
-  availableForMentorship: boolean('available_for_mentorship').default(true),
-  linkedinUrl: text('linkedin_url'),
-  githubUrl: text('github_url'),
-  twitterUrl: text('twitter_url'),
-  achievements: text('achievements').array(),
-  profileImage: text('profile_image'),
-  createdAt: timestamp('created_at').notNull(),
-  updatedAt: timestamp('updated_at').notNull(),
-});
-
 export const verificationRequests = pgTable('verification_requests', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
