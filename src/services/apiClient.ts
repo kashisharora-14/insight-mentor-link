@@ -46,8 +46,8 @@ class ApiClient {
 
   constructor() {
     try {
-      // Use relative URL which will be proxied by Vite dev server
-      this.baseURL = import.meta.env.VITE_API_URL || '/api';
+      // Always use relative URL for Vite proxy - ignore env var
+      this.baseURL = '/api';
       console.log('API Client initialized with base URL:', this.baseURL);
       this.loadTokenFromStorage();
     } catch (error) {
@@ -144,8 +144,11 @@ class ApiClient {
     } catch (error) {
       console.error('API Request failed for URL:', url);
       console.error('Error details:', error);
+      console.error('Error type:', error?.constructor?.name);
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error(`Cannot connect to API server at ${this.baseURL}. Make sure the server is running.`);
+        throw new Error(`Cannot connect to API server. Make sure the server is running on port 3001.`);
       }
       if (error instanceof SyntaxError) {
         // This happens on empty or non-JSON responses
