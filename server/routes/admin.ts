@@ -53,19 +53,30 @@ router.get('/verification-requests', async (req, res) => {
     .where(eq(verificationRequests.status, 'pending'))
     .orderBy(verificationRequests.createdAt);
 
-    console.log(`✅ Found ${requests.length} pending verification requests`);
+    console.log(`\n📊 VERIFICATION REQUESTS SUMMARY:`);
+    console.log(`   Total in DB: ${allRequests.length}`);
+    console.log(`   Pending: ${requests.length}`);
+    console.log(`   Approved: ${allRequests.filter(r => r.status === 'approved').length}`);
+    console.log(`   Rejected: ${allRequests.filter(r => r.status === 'rejected').length}`);
+    
     if (requests.length > 0) {
-      console.log('📋 Pending requests:');
+      console.log('\n📋 PENDING VERIFICATION REQUESTS:');
       requests.forEach((r, i) => {
-        console.log(`   ${i + 1}. ${r.userName || 'Unknown'} (${r.userEmail})`);
+        console.log(`\n   ${i + 1}. ${r.userName || 'Unknown'} (${r.userEmail})`);
         console.log(`      - Request ID: ${r.id}`);
+        console.log(`      - User ID: ${r.userId}`);
         console.log(`      - Student ID: ${r.userStudentId || 'N/A'}`);
         console.log(`      - Role: ${r.userRole}`);
         console.log(`      - Created: ${r.createdAt}`);
+        console.log(`      - Request Data: ${JSON.stringify(r.requestData)}`);
       });
     } else {
-      console.log('⚠️ No pending requests found');
+      console.log('\n⚠️ No pending verification requests found');
+      if (allRequests.length > 0) {
+        console.log('   But there are processed requests in the system.');
+      }
     }
+    console.log('\n');
 
     res.json(requests);
   } catch (error) {
