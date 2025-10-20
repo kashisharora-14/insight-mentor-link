@@ -7,6 +7,7 @@ import { sql } from 'drizzle-orm';
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   email: text('email').notNull().unique(),
+  name: text('name'), // User's full name
   passwordHash: text('password_hash').notNull(),
   role: text('role').notNull(), // 'student', 'alumni', 'admin'
   studentId: text('student_id').unique(), // Optional, only for students

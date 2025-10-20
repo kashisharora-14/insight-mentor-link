@@ -20,6 +20,11 @@ router.get('/verification-requests', async (req, res) => {
   try {
     console.log('📋 Fetching verification requests...');
     
+    // First, get all verification requests to debug
+    const allRequests = await db.select().from(verificationRequests);
+    console.log(`📊 Total verification requests in DB: ${allRequests.length}`);
+    console.log('📊 Request statuses:', allRequests.map(r => ({ id: r.id, status: r.status, userId: r.userId })));
+    
     const requests = await db.select({
       id: verificationRequests.id,
       userId: verificationRequests.userId,
@@ -29,6 +34,7 @@ router.get('/verification-requests', async (req, res) => {
       userEmail: users.email,
       userRole: users.role,
       userStudentId: users.studentId,
+      userName: users.name,
     })
     .from(verificationRequests)
     .leftJoin(users, eq(verificationRequests.userId, users.id))
@@ -36,6 +42,13 @@ router.get('/verification-requests', async (req, res) => {
     .orderBy(verificationRequests.createdAt);
 
     console.log(`✅ Found ${requests.length} pending verification requests`);
+    if (requests.length > 0) {
+      console.log('📋 Pending requests:', requests.map(r => ({ 
+        email: r.userEmail, 
+        name: r.userName,
+        status: r.status 
+      })));
+    }
     
     res.json(requests);
   } catch (error) {

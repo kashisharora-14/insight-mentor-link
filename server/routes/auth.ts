@@ -163,22 +163,33 @@ router.post('/verify-login-code', async (req, res) => {
       // Get existing user details
       const userRecord = await db.select().from(users).where(eq(users.id, validCode.userId)).limit(1);
       userDetails = userRecord.length > 0 ? userRecord[0] : null;
+      actualUserId = validCode.userId;
       
-      // If user exists but doesn't have verification request, create one
+      // Always check and create verification request for unverified users
       if (userDetails && !userDetails.isVerified) {
         const existingRequest = await db.select()
           .from(verificationRequests)
-          .where(eq(verificationRequests.userId, userDetails.id))
+          .where(
+            and(
+              eq(verificationRequests.userId, userDetails.id),
+              eq(verificationRequests.status, 'pending')
+            )
+          )
           .limit(1);
         
         if (existingRequest.length === 0) {
+          console.log(`📝 Creating verification request for existing user: ${userDetails.email}`);
           await db.insert(verificationRequests).values({
             userId: userDetails.id,
             requestData: { 
               email: userDetails.email,
               name: userDetails.name || userDetails.email.split('@')[0]
             },
+            status: 'pending',
           });
+          console.log(`✅ Verification request created for user ID: ${userDetails.id}`);
+        } else {
+          console.log(`ℹ️ Verification request already exists for user: ${userDetails.email}`);
         }
       }
     }
