@@ -143,6 +143,8 @@ router.post('/verify-login-code', async (req, res) => {
         // Use the role that was stored when the login code was sent
         const userRole = validCode.role || 'student';
 
+        console.log(`📝 Creating new user with role: ${userRole}`);
+
         // Create new user with minimal info
         const newUsers = await db.insert(users).values({
           email: validCode.email,
@@ -153,6 +155,8 @@ router.post('/verify-login-code', async (req, res) => {
           isVerified: false,
           verificationMethod: 'pending',
         }).returning();
+
+        console.log(`✅ New user created with role: ${newUsers[0].role}`);
 
         userDetails = newUsers[0];
         actualUserId = userDetails.id;
@@ -172,6 +176,21 @@ router.post('/verify-login-code', async (req, res) => {
       const userRecord = await db.select().from(users).where(eq(users.id, validCode.userId)).limit(1);
       userDetails = userRecord.length > 0 ? userRecord[0] : null;
       actualUserId = validCode.userId;
+
+      console.log(`📋 Existing user found:`, {
+        email: userDetails?.email,
+        currentRole: userDetails?.role,
+        loginCodeRole: validCode.role
+      });
+
+      // If user exists but is logging in with a different role, update their role
+      if (userDetails && validCode.role && userDetails.role !== validCode.role) {
+        console.log(`🔄 Updating user role from ${userDetails.role} to ${validCode.role}`);
+        await db.update(users)
+          .set({ role: validCode.role })
+          .where(eq(users.id, userDetails.id));
+        userDetails.role = validCode.role; // Update in-memory object
+      }
 
       // Always check and create verification request for unverified users
       if (userDetails && !userDetails.isVerified) {
@@ -224,10 +243,13 @@ router.post('/verify-login-code', async (req, res) => {
 
     // Generate JWT token with proper user name and role
     const userName = userDetails?.name || validCode.email.split('@')[0];
+    // Priority: user's existing role (if they exist) > role from login code > default to student
     const userRole = userDetails?.role || validCode.role || 'student';
 
-    console.log('Generating token for user:', validCode.email);
-    console.log('User role:', userRole);
+    console.log('🎫 Generating token for user:', validCode.email);
+    console.log('   - User DB role:', userDetails?.role);
+    console.log('   - Login code role:', validCode.role);
+    console.log('   - Final token role:', userRole);
 
     const token = jwt.sign(
       { userId: actualUserId, email: validCode.email, name: userName, role: userRole, student_id: userDetails?.studentId || null },
