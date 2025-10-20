@@ -28,12 +28,37 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // For demo purposes, generate a code and return mock data
+    // Determine if identifier is email or student ID
+    const isEmail = identifier.includes('@');
+    let email: string;
+    let userId: string;
+
+    if (isEmail) {
+      email = identifier;
+      // Check if user exists with this email
+      const userRecord = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (userRecord.length > 0) {
+        userId = userRecord[0].id;
+      } else {
+        userId = 'temp_' + Date.now();
+      }
+    } else {
+      // Look up user by student ID
+      const userRecord = await db.select().from(users).where(eq(users.studentId, identifier)).limit(1);
+      if (userRecord.length > 0) {
+        email = userRecord[0].email;
+        userId = userRecord[0].id;
+      } else {
+        return res.status(404).json({
+          error: { message: 'Student ID not found. Please use your email address or contact admin.' }
+        });
+      }
+    }
+
+    // Generate code
     const code = generateCode();
-    const userId = 'demo_' + Date.now();
-    const email = identifier.includes('@') ? identifier : `${identifier}@demo.com`;
     
-    // Store demo code (expires in 5 minutes)
+    // Store code (expires in 5 minutes)
     demoLoginCodes.set(email, {
       code,
       userId,
@@ -41,7 +66,17 @@ router.post('/login', async (req, res) => {
       expiresAt: Date.now() + 5 * 60 * 1000
     });
 
-    console.log(`Demo login code for ${email}: ${code}`);
+    console.log(`Login code for ${email}: ${code}`);
+
+    // Send email with the code
+    try {
+      await sendVerificationEmail(email, code, 'login');
+      console.log(`✅ Email sent successfully to ${email}`);
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      // Still return success but log the error
+      // In production, you might want to return an error here
+    }
 
     res.json({
       data: {

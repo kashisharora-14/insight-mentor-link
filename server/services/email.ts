@@ -38,16 +38,29 @@ async function getResendClient() {
   };
 }
 
-export async function sendVerificationEmail(email: string, code: string, type: 'registration' | 'password_reset' = 'registration') {
+export async function sendVerificationEmail(email: string, code: string, type: 'registration' | 'password_reset' | 'login' = 'registration') {
   try {
     const { client, fromEmail } = await getResendClient();
     
-    const subject = type === 'registration' 
-      ? 'Verify your email - Alumni Platform'
-      : 'Reset your password - Alumni Platform';
-    
-    const html = type === 'registration'
-      ? `
+    let subject: string;
+    let html: string;
+
+    if (type === 'login') {
+      subject = 'Your Login Code - Re-Connect Alumni Platform';
+      html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">🔐 Your Login Code</h2>
+          <p>Here's your one-time login code for Re-Connect:</p>
+          <div style="background-color: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
+            <h1 style="font-size: 36px; letter-spacing: 8px; margin: 0; color: #1f2937;">${code}</h1>
+          </div>
+          <p>This code will expire in <strong>5 minutes</strong>.</p>
+          <p style="color: #6b7280; font-size: 14px;">If you didn't request this login code, please ignore this email and your account will remain secure.</p>
+        </div>
+      `;
+    } else if (type === 'registration') {
+      subject = 'Verify your email - Alumni Platform';
+      html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2563eb;">Welcome to the Alumni Platform!</h2>
           <p>Thank you for registering. Please use the verification code below to complete your registration:</p>
@@ -57,8 +70,10 @@ export async function sendVerificationEmail(email: string, code: string, type: '
           <p>This code will expire in 15 minutes.</p>
           <p style="color: #6b7280; font-size: 14px;">If you didn't request this verification code, please ignore this email.</p>
         </div>
-      `
-      : `
+      `;
+    } else {
+      subject = 'Reset your password - Alumni Platform';
+      html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2563eb;">Password Reset Request</h2>
           <p>You requested to reset your password. Please use the code below:</p>
@@ -69,6 +84,7 @@ export async function sendVerificationEmail(email: string, code: string, type: '
           <p style="color: #6b7280; font-size: 14px;">If you didn't request this password reset, please ignore this email and your password will remain unchanged.</p>
         </div>
       `;
+    }
 
     const { data, error } = await client.emails.send({
       from: fromEmail,
