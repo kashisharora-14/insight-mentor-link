@@ -326,8 +326,8 @@ router.post('/register/verify', async (req, res) => {
   }
 });
 
-// Login endpoint
-router.post('/login', async (req, res) => {
+// Password-based login endpoint (alternative login method)
+router.post('/login-password', async (req, res) => {
   try {
     const { email, studentId, password } = req.body;
 
