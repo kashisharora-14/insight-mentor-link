@@ -9,7 +9,7 @@ packages = ["zip"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npx", "vite", "preview", "--host", "0.0.0.0", "--port"]
+run = ["bash", "-c", "npm run dev:api & npm run preview"]
 build = ["npm", "run", "build"]
 
 [workflows]
