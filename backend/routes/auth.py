@@ -37,10 +37,12 @@ def send_registration_code():
     db.session.commit()
     
     # TODO: Send email with verification code
-    # For development, return the code in response
+    # Email service integration needed here
+    # For now, print to console (remove in production)
+    print(f"Verification code for {email}: {code}")
+    
     return jsonify({
-        'message': 'Verification code sent',
-        'code': code,  # Remove this in production
+        'message': 'Verification code sent to your email',
         'expires_in': 900  # 15 minutes in seconds
     }), 200
 
