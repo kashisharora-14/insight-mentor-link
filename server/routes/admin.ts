@@ -18,6 +18,8 @@ router.use(adminMiddleware);
 // Get all pending verification requests
 router.get('/verification-requests', async (req, res) => {
   try {
+    console.log('📋 Fetching verification requests...');
+    
     const requests = await db.select({
       id: verificationRequests.id,
       userId: verificationRequests.userId,
@@ -33,9 +35,11 @@ router.get('/verification-requests', async (req, res) => {
     .where(eq(verificationRequests.status, 'pending'))
     .orderBy(verificationRequests.createdAt);
 
+    console.log(`✅ Found ${requests.length} pending verification requests`);
+    
     res.json(requests);
   } catch (error) {
-    console.error('Error fetching verification requests:', error);
+    console.error('❌ Error fetching verification requests:', error);
     res.status(500).json({ error: 'Failed to fetch verification requests' });
   }
 });

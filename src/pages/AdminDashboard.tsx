@@ -1046,6 +1046,20 @@ const AdminDashboard = () => {
     fetchVerificationRequests(); // Also fetch verification requests on mount
   }, []);
 
+  // Refresh verification requests when switching to verification tab
+  useEffect(() => {
+    const handleTabChange = () => {
+      fetchVerificationRequests();
+    };
+    
+    // Listen for tab visibility changes
+    document.addEventListener('visibilitychange', handleTabChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleTabChange);
+    };
+  }, []);
+
 
   if (loading) {
     return (
@@ -1472,6 +1486,16 @@ const AdminDashboard = () => {
 
           {/* Verification Tab */}
           <TabsContent value="verification">
+            <div className="mb-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Verification Management</h2>
+              <Button onClick={() => {
+                fetchVerificationRequests();
+                fetchProfiles();
+                toast({ title: "Refreshed", description: "Verification data has been refreshed" });
+              }}>
+                Refresh Data
+              </Button>
+            </div>
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <Card>
                 <CardHeader>
@@ -1505,11 +1529,22 @@ const AdminDashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Verification Requests</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Verification Requests</span>
+                    <Badge variant="secondary">{verificationRequests.filter((req: any) => req.status === 'pending').length} pending</Badge>
+                  </CardTitle>
                   <CardDescription>Review and manage user verification requests</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {verificationRequests.length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">Loading verification requests...</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Total requests in system: {verificationRequests.length}
+                        </p>
+                      </div>
+                    )}
                     {verificationRequests.filter((req: any) => req.status === 'pending').map((request: any) => {
                       // Extract user info from the API response or request data
                       const userName = (request.requestData as any)?.name || 
@@ -1524,7 +1559,11 @@ const AdminDashboard = () => {
                           <div>
                             <h4 className="font-medium">{userName}</h4>
                             <p className="text-sm text-muted-foreground">{userEmail}</p>
-                            <p className="text-xs text-muted-foreground mt-1">Requested: {new Date(request.createdAt).toLocaleDateString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Requested: {new Date(request.createdAt).toLocaleDateString()} | 
+                              Role: {request.userRole || 'N/A'} | 
+                              Student ID: {request.userStudentId || 'N/A'}
+                            </p>
                           </div>
                           <div className="flex gap-2">
                             <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
@@ -1539,8 +1578,13 @@ const AdminDashboard = () => {
                         </div>
                       );
                     })}
-                    {verificationRequests.filter((req: any) => req.status === 'pending').length === 0 && (
-                      <p className="text-muted-foreground text-center py-4">No pending verification requests.</p>
+                    {verificationRequests.length > 0 && verificationRequests.filter((req: any) => req.status === 'pending').length === 0 && (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground">No pending verification requests.</p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Total requests in system: {verificationRequests.length} (all processed)
+                        </p>
+                      </div>
                     )}
                   </div>
                 </CardContent>
