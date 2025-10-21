@@ -64,22 +64,19 @@ const AlumniDashboard = () => {
       try {
         const response = await fetch('/api/mentorship/my-requests', {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           },
         });
 
         if (response.ok) {
           const data = await response.json();
           setAlumniRequests(data);
-          setLoading(false);
-          return;
         }
       } catch (error) {
         console.error('Error fetching mentorship requests:', error);
+      } finally {
+        setLoading(false);
       }
-
-      // No fallback to mock data - show empty state if no data
-      setLoading(false);
     };
 
     fetchMentorshipRequests();
@@ -257,37 +254,49 @@ const AlumniDashboard = () => {
                 <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{alumniRequests.length}</div>
-                <div className="text-sm text-muted-foreground">Total Requests</div>
+                <div className="text-2xl font-bold">4.9</div>
+                <div className="text-sm text-muted-foreground">Avg Rating</div>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Verification Status Card */}
-        <Card className="mb-8 border-l-4" style={{
-          borderLeftColor: user?.isVerified ? '#10b981' : '#f59e0b'
-        }}>
+        <Card className="mb-8 border-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {user?.isVerified ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              ) : (
-                <Clock className="w-5 h-5 text-orange-500" />
-              )}
-              Verification Status
+              Account Verification Status
+              {user?.isVerified && <Badge className="bg-green-600">Verified</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {user?.isVerified ? (
-              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                <p className="text-green-800 font-semibold">✓ Verified Account</p>
-                <p className="text-green-700 text-sm mt-1">Your profile is verified and visible to students.</p>
+              <div className="flex items-start gap-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Account Verified ✓</h3>
+                  <p className="text-sm text-green-700 dark:text-green-300 mb-3">
+                    Your account has been verified. You can now access all mentorship features and appear in the alumni directory.
+                  </p>
+                  <div className="text-xs text-green-600 dark:text-green-400">
+                    Verification Method: {user?.verificationMethod === 'admin_manual' ? 'Manually approved by admin' : 
+                                         user?.verificationMethod === 'csv_upload' ? 'Verified via CSV upload' : 
+                                         'Verified'}
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded">
-                <p className="text-orange-800 font-semibold">⏳ Verification Pending</p>
-                <p className="text-orange-700 text-sm mt-1">Please wait for an admin to verify your account. You'll receive an email once approved.</p>
+              <div className="flex items-start gap-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">Verification Pending</h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
+                    Your account is awaiting admin approval. You'll receive an email notification once verified.
+                  </p>
+                  <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                    While waiting, you can complete your profile. Full mentorship features will be available after verification.
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>

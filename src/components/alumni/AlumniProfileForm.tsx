@@ -161,13 +161,13 @@ export function AlumniProfileForm({ onSuccess }: AlumniProfileFormProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         },
         body: JSON.stringify(profileData),
       });
 
       if (response.ok) {
-        toast.success("Profile submitted successfully! Waiting for admin verification.");
+        toast.success("Profile submitted successfully! Your profile will appear in the directory once verified by admin.");
         if (onSuccess) onSuccess();
       } else {
         const error = await response.json();

@@ -157,17 +157,17 @@ export function StudentProfileForm({ onSuccess }: StudentProfileFormProps) {
         currentBacklog: parseInt(values.currentBacklog),
       };
 
-      const response = await fetch('/api/student/profile', {
+      const response = await fetch('/api/student-profile/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         },
         body: JSON.stringify(profileData),
       });
 
       if (response.ok) {
-        toast.success("Profile submitted successfully! Waiting for admin verification.");
+        toast.success("Profile submitted successfully! Your account will be verified by admin.");
         if (onSuccess) onSuccess();
       } else {
         const error = await response.json();

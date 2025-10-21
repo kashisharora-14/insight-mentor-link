@@ -199,6 +199,7 @@ const StudentDashboard = () => {
         const response = await fetch('/api/student-profile/profile', {
           headers: {
             'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         });
 
@@ -422,7 +423,7 @@ const StudentDashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={isMobile 
             ? "flex w-full overflow-x-auto overflow-y-hidden p-1 gap-1 scrollbar-hide" 
-            : "grid w-full grid-cols-7"
+            : "grid w-full grid-cols-6"
           }>
             <TabsTrigger value="requests" className={isMobile 
               ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
@@ -472,13 +473,6 @@ const StudentDashboard = () => {
             }>
               <User className="w-4 h-4" />
               {isMobile ? "Profile" : "Profile"}
-            </TabsTrigger>
-            <TabsTrigger value="alumni" className={isMobile 
-              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
-              : "flex items-center gap-2"
-            }>
-              <GraduationCap className="w-4 h-4" />
-              {isMobile ? "Alumni" : "Alumni Mentors"}
             </TabsTrigger>
           </TabsList>
 
@@ -1029,103 +1023,6 @@ const StudentDashboard = () => {
                   <Button onClick={() => navigate('/complete-profile')} className="bg-gradient-hero hover:opacity-90">
                     {studentProfile?.hasProfile ? 'Edit Profile' : 'Complete Profile'}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Alumni Mentors Tab - NEW */}
-          <TabsContent value="alumni">
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-purple-600" />
-                  Alumni Mentors Available
-                </CardTitle>
-                <CardDescription>
-                  Connect with verified alumni from Punjab University CS Department for guidance and mentorship
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    💡 Visit the <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/alumni-directory')}>
-                      Alumni Directory
-                    </Button> to browse all available mentors, view their profiles, and request mentorship.
-                  </p>
-                  
-                  <div className="grid gap-4">
-                    <div className="p-6 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5 text-center">
-                      <Users className="w-12 h-12 text-primary mx-auto mb-3" />
-                      <h3 className="font-semibold text-lg mb-2">Find Your Mentor</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Browse our directory of {Math.floor(Math.random() * 50) + 100}+ verified alumni mentors ready to guide you
-                      </p>
-                      <Button onClick={() => navigate('/alumni-directory')} className="bg-gradient-hero hover:opacity-90">
-                        <Users className="w-4 h-4 mr-2" />
-                        Browse Alumni Directory
-                      </Button>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <Card className="border-green-200 dark:border-green-800">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                              <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-sm mb-1">Request Mentorship</h4>
-                              <p className="text-xs text-muted-foreground">
-                                Send mentorship requests to alumni working in your field of interest
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-blue-200 dark:border-blue-800">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                              <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-sm mb-1">Get Career Guidance</h4>
-                              <p className="text-xs text-muted-foreground">
-                                Learn from alumni experiences and get advice on your career path
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-orange-500" />
-                        Quick Tips for Connecting with Alumni
-                      </h4>
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span>Complete your student profile to make a great first impression</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span>Be specific about what you want to learn or achieve</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span>Show respect for their time and be flexible with scheduling</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span>Follow up after sessions and apply what you learn</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
