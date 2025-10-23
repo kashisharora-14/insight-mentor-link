@@ -812,6 +812,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
         return;
       }
 
+      console.log('📡 Making request to /api/dcsa/events?status=all');
       const response = await fetch('/api/dcsa/events?status=all', {
         method: 'GET',
         headers: {
@@ -839,9 +840,18 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       const data = await response.json();
       console.log('📅 Admin Dashboard - Fetched events raw data:', data);
       console.log('📊 Number of events:', Array.isArray(data) ? data.length : 0);
+      console.log('📊 Data type:', typeof data);
 
       if (!Array.isArray(data)) {
         console.error('❌ Invalid data format received:', typeof data, data);
+        // Set empty array but don't throw error - just log it
+        setEvents([]);
+        console.log('⚠️ Set events to empty array due to invalid data format');
+        return;
+      }
+
+      if (data.length === 0) {
+        console.log('ℹ️ No events returned from API');
         setEvents([]);
         return;
       }
@@ -869,7 +879,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       console.log('✅ Admin Dashboard - Transformed events:', transformedEvents);
       console.log('✅ Setting events state with', transformedEvents.length, 'events');
       setEvents(transformedEvents);
-      console.log('✅ Events state updated');
+      console.log('✅ Events state set successfully');
     } catch (error) {
       console.error('❌ Error in fetchEvents:', error);
       console.error('❌ Error details:', {
@@ -885,7 +895,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       });
       setEvents([]);
     } finally {
-      console.log('✅ fetchEvents completed');
+      console.log('✅ fetchEvents completed, events array length:', events.length);
     }
   };
 
