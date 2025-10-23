@@ -44,9 +44,16 @@ router.post('/login', async (req, res) => {
       if (userRecord.length > 0) {
         userId = userRecord[0].id;
       } else {
-        return res.status(404).json({
-          error: { message: 'Email not found. Please register first.' }
-        });
+        // For alumni, allow first-time login (they'll be created during verification)
+        // For students, require registration first
+        if (userRole === 'alumni') {
+          userId = `temp_${email}_${Date.now()}`;
+          console.log(`📝 Alumni first-time login - will create account on verification: ${email}`);
+        } else {
+          return res.status(404).json({
+            error: { message: 'Email not found. Please register first.' }
+          });
+        }
       }
     } else {
       // Look up user by student ID
