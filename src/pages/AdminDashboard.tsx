@@ -560,6 +560,42 @@ const handleRejectVerification = async (requestId: string) => {
   }
 };
 
+const handleMarkAttendance = async (eventId: string, participantId: string, currentStatus: string | null) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const newStatus = currentStatus === 'attended' ? null : 'attended';
+    
+    const response = await fetch(`/api/dcsa/events/${eventId}/participants/${participantId}/attendance`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ attendanceStatus: newStatus }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update attendance');
+    }
+
+    toast({
+      title: "Success",
+      description: newStatus === 'attended' ? "Attendance marked successfully" : "Attendance unmarked successfully",
+    });
+
+    // Refresh participants list
+    await fetchEventParticipants(eventId);
+
+  } catch (error) {
+    console.error('Error marking attendance:', error);
+    toast({
+      title: "Error",
+      description: error instanceof Error ? error.message : "Failed to update attendance",
+      variant: "destructive",
+    });
+  }
+};
 
 const handleCSVUpload = async (formData: FormData) => {
   try {
@@ -1866,54 +1902,22 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                       </div>
 
                       {/* Statistics Summary */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="bg-background p-4 rounded-lg border">
-                          <p className="text-sm text-muted-foreground">Total</p>
+                          <p className="text-sm text-muted-foreground">Total Registered</p>
                           <p className="text-2xl font-bold">{eventParticipants.length}</p>
                         </div>
                         <div className="bg-background p-4 rounded-lg border">
-                          <p className="text-sm text-muted-foreground">Approved</p>
-                          <p className="text-2xl font-bold text-green-600">
-                            {eventParticipants.filter(p => p.participant_status === 'approved').length}
-                          </p>
-                        </div>
-                        <div className="bg-background p-4 rounded-lg border">
-                          <p className="text-sm text-muted-foreground">Pending</p>
-                          <p className="text-2xl font-bold text-yellow-600">
-                            {eventParticipants.filter(p => p.participant_status === 'pending').length}
-                          </p>
-                        </div>
-                        <div className="bg-background p-4 rounded-lg border">
                           <p className="text-sm text-muted-foreground">Attended</p>
-                          <p className="text-2xl font-bold text-blue-600">
+                          <p className="text-2xl font-bold text-green-600">
                             {eventParticipants.filter(p => p.attendance_status === 'attended').length}
                           </p>
                         </div>
-                      </div>
-
-                      {/* Program Distribution */}
-                      <div className="mb-6 p-4 bg-background rounded-lg border">
-                        <h4 className="font-semibold mb-3">Program Distribution</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {Object.entries(programCounts).map(([program, count]) => (
-                            <div key={program} className="flex items-center justify-between p-2 bg-muted rounded">
-                              <span className="font-medium">{program}</span>
-                              <Badge variant="secondary">{count}</Badge>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Department Distribution */}
-                      <div className="mb-6 p-4 bg-background rounded-lg border">
-                        <h4 className="font-semibold mb-3">Department Distribution</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {Object.entries(deptCounts).map(([dept, count]) => (
-                            <div key={dept} className="flex items-center justify-between p-2 bg-muted rounded">
-                              <span className="font-medium">{dept}</span>
-                              <Badge variant="secondary">{count}</Badge>
-                            </div>
-                          ))}
+                        <div className="bg-background p-4 rounded-lg border">
+                          <p className="text-sm text-muted-foreground">Not Attended</p>
+                          <p className="text-2xl font-bold text-orange-600">
+                            {eventParticipants.filter(p => !p.attendance_status || p.attendance_status !== 'attended').length}
+                          </p>
                         </div>
                       </div>
 
@@ -1998,26 +2002,28 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 )}
                               </div>
                               <div className="flex gap-2 items-center">
-                                <Badge 
-                                  variant={
-                                    participant.participant_status === 'approved' ? 'default' :
-                                    participant.participant_status === 'pending' ? 'secondary' :
-                                    participant.participant_status === 'rejected' ? 'destructive' :
-                                    'outline'
-                                  }
-                                  className={
-                                    participant.participant_status === 'approved' ? 'bg-green-600' :
-                                    participant.participant_status === 'pending' ? 'bg-yellow-600' :
-                                    ''
-                                  }
+                                <Button
+                                  size="sm"
+                                  variant={participant.attendance_status === 'attended' ? 'outline' : 'default'}
+                                  className={participant.attendance_status === 'attended' ? 'bg-green-600 text-white hover:bg-green-700' : ''}
+                                  onClick={() => handleMarkAttendance(
+                                    selectedEventForParticipants!,
+                                    participant.id,
+                                    participant.attendance_status
+                                  )}
                                 >
-                                  {participant.participant_status}
-                                </Badge>
-                                {participant.attendance_status && (
-                                  <Badge variant="outline" className={participant.attendance_status === 'attended' ? 'bg-blue-100' : ''}>
-                                    {participant.attendance_status}
-                                  </Badge>
-                                )}
+                                  {participant.attendance_status === 'attended' ? (
+                                    <>
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                      Attended
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Clock className="w-4 h-4 mr-1" />
+                                      Mark Attendance
+                                    </>
+                                  )}
+                                </Button>
                               </div>
                             </div>
                           ))}
