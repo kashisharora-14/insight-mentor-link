@@ -441,17 +441,7 @@ const AdminDashboard = () => {
     ];
 
     setProfiles(mockProfiles);
-    }
-  } catch (error) {
-    console.error('Error fetching donations:', error);
   }
-
-  // Fallback to mock data
-  const mockDonations: Donation[] = [
-    // ... (rest of the code remains the same)
-  ];
-
-  setDonations(mockDonations);
 };
 
 
