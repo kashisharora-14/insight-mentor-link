@@ -330,36 +330,6 @@ const StudentDashboard = () => {
     if (user?.role !== 'student') {
       navigate('/dashboard');
     }
-
-    // Refresh user data to get latest verification status
-    const checkVerificationStatus = async () => {
-      try {
-        const response = await fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('📊 Updated user verification status:', userData.isVerified);
-
-          // Update the user in the auth context if verification status changed
-          if (userData.isVerified !== user?.isVerified) {
-            console.log('✅ Verification status updated - user is now verified!');
-            // Force a page reload to update the UI with new user data
-            window.location.reload();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to check verification status:', error);
-      }
-    };
-
-    // Check verification status on mount
-    if (user && !user.isVerified) {
-      checkVerificationStatus();
-    }
   }, [user, navigate]);
 
   if (!user || profileLoading) {
