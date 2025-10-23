@@ -228,7 +228,7 @@ router.post('/verify-login-code', async (req, res) => {
           console.log(`📝 Creating verification request for existing user: ${userDetails.email}`);
           console.log(`   - User is verified: ${userDetails.isVerified}`);
           console.log(`   - Current verification method: ${userDetails.verificationMethod}`);
-          
+
           const newRequest = await db.insert(verificationRequests).values({
             userId: userDetails.id,
             requestData: {
@@ -239,7 +239,7 @@ router.post('/verify-login-code', async (req, res) => {
             },
             status: 'pending',
           }).returning();
-          
+
           console.log(`✅ Verification request created successfully!`);
           console.log(`   - Request ID: ${newRequest[0].id}`);
           console.log(`   - User ID: ${userDetails.id}`);
@@ -730,9 +730,16 @@ router.post('/admin-login', async (req, res) => {
       }
 
       const token = jwt.sign(
-        { userId: adminUser[0].id, email, role: 'admin', isVerified: true, student_id: adminUser[0].studentId, name: adminUser[0].name },
-        JWT_SECRET
-        // No expiration - token valid until logout
+        { 
+          userId: adminUser[0].id, 
+          email, 
+          role: 'admin', 
+          isVerified: true, 
+          student_id: adminUser[0].studentId || null, 
+          name: adminUser[0].name || 'Admin'
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
       );
 
       return res.json({
@@ -768,9 +775,16 @@ router.post('/admin-login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: 'admin', isVerified: true, student_id: user.studentId, name: user.name },
-      JWT_SECRET
-      // No expiration - token valid until logout
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: 'admin', 
+        isVerified: true, 
+        student_id: user.studentId || null, 
+        name: user.name || 'Admin'
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
     );
 
     res.json({
