@@ -418,7 +418,27 @@ router.post('/events', authMiddleware, async (req, res) => {
 
     const [insertedEvent] = await db.insert(events).values(eventPayload).returning();
 
-    const response = buildEventResponse(insertedEvent);
+    // Fetch organizer details for complete response
+    const [organizerProfile] = insertedEvent.organizerId
+      ? await db
+          .select({ userId: profiles.userId, name: profiles.name, email: profiles.email, role: profiles.role })
+          .from(profiles)
+          .where(eq(profiles.userId, insertedEvent.organizerId))
+          .limit(1)
+      : [null];
+
+    const response = buildEventResponse(insertedEvent, {
+      organizer: organizerProfile
+        ? {
+            id: organizerProfile.userId,
+            name: organizerProfile.name ?? null,
+            email: organizerProfile.email ?? null,
+            role: organizerProfile.role ?? null,
+          }
+        : null,
+      participantTotal: 0,
+      participantByDept: [],
+    });
 
     res.status(201).json({ message: 'Event created', event: response });
   } catch (error) {

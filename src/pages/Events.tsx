@@ -356,8 +356,10 @@ const Events = () => {
       }
       const query = params.toString() ? `?${params}` : "";
       const data = await apiClient.get<EventRecord[]>(`/dcsa/events${query}`);
+      console.log("Loaded events:", data);
       setEvents(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error("Error loading events:", error);
       toast({
         title: "Error",
         description: getErrorMessage(error) || "Failed to load events.",
@@ -568,8 +570,11 @@ const Events = () => {
 
       setIsPostDialogOpen(false);
       resetForm();
-      loadEvents();
+      
+      // Force reload events to ensure new event appears
+      await loadEvents();
     } catch (error) {
+      console.error("Error posting event:", error);
       toast({
         title: "Error posting event",
         description: getErrorMessage(error) || "Please try again later.",
