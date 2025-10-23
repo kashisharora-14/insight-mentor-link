@@ -64,10 +64,24 @@ interface Event {
   id: string;
   title: string;
   date_time: string;
+  end_date?: string;
   location?: string;
   department?: string;
   is_active: boolean;
+  status?: string;
   created_at: string;
+  created_by_role?: string;
+  organizer?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    role: string | null;
+  } | null;
+  max_participants?: number | null;
+  participant_summary?: {
+    total: number;
+    by_department: { department: string | null; count: number }[];
+  };
 }
 
 interface MentorshipRequest {
@@ -776,7 +790,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('/api/admin/events', {
+      const response = await fetch('/api/dcsa/events?status=all', {
         headers: token
           ? {
               Authorization: `Bearer ${token}`,
@@ -789,17 +803,34 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       }
 
       const data = await response.json();
-      setEvents(data);
+      console.log('📅 Fetched events:', data);
+      
+      // Transform the data to match our Event interface
+      const transformedEvents: Event[] = (data || []).map((event: any) => ({
+        id: event.id,
+        title: event.title,
+        date_time: event.start_date || event.date_time,
+        end_date: event.end_date,
+        location: event.venue || event.location,
+        department: event.department,
+        is_active: event.status === 'approved',
+        status: event.status,
+        created_at: event.created_at,
+        created_by_role: event.created_by_role,
+        organizer: event.organizer,
+        max_participants: event.max_participants,
+        participant_summary: event.participant_summary
+      }));
+      
+      setEvents(transformedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
-      // Fallback to mock data if API fails
-      const mockEvents: Event[] = [
-        { id: 'e1', title: 'Annual Alumni Meet 2024', date_time: '2024-08-15T18:00:00Z', location: 'University Auditorium', is_active: true, created_at: '2024-01-20T09:00:00Z', department: 'Alumni Relations' },
-        { id: 'e2', title: 'Tech Innovators Conference', date_time: '2024-09-10T09:00:00Z', location: 'UIET Campus', is_active: true, created_at: '2024-02-01T11:00:00Z', department: 'UICET' },
-        { id: 'e3', title: 'Business Leadership Summit', date_time: '2024-07-22T10:00:00Z', location: 'UBS Auditorium', is_active: false, created_at: '2024-01-05T16:00:00Z', department: 'UBS' },
-        { id: 'e4', title: 'Career Fair 2024', date_time: '2024-05-05T09:30:00Z', location: 'Central Ground', is_active: true, created_at: '2024-01-18T14:00:00Z', department: 'Placement Cell' },
-      ];
-      setEvents(mockEvents);
+      toast({
+        title: "Error",
+        description: "Failed to load events. Please try again.",
+        variant: "destructive",
+      });
+      setEvents([]);
     }
   };
 
@@ -1643,65 +1674,78 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                 <CardDescription>Manage university events and activities</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {events.map((event) => {
-                    const participants = eventParticipants.filter(p => p.event_id === event.id);
-                    const approvedCount = participants.filter(p => p.participant_status === 'approved').length;
-                    const pendingCount = participants.filter(p => p.participant_status === 'pending').length;
-                    
-                    return (
-                      <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <h3 className="font-medium">{event.title}</h3>
-                            <Badge variant={event.is_active ? 'default' : 'secondary'}>
-                              {event.is_active ? 'Active' : 'Inactive'}
-                            </Badge>
-                            {event.department && (
-                              <Badge variant="outline">{event.department}</Badge>
-                            )}
-                            <Badge variant="outline" className="flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              {participants.length} Total
-                            </Badge>
-                            {approvedCount > 0 && (
-                              <Badge variant="default" className="flex items-center gap-1 bg-green-600">
-                                <CheckCircle className="w-3 h-3" />
-                                {approvedCount} Approved
+                {events.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No events found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {events.map((event) => {
+                      const totalParticipants = event.participant_summary?.total || 0;
+                      const participants = eventParticipants.filter(p => p.event_id === event.id);
+                      const approvedCount = participants.length > 0 
+                        ? participants.filter(p => p.participant_status === 'approved').length 
+                        : 0;
+                      const pendingCount = participants.length > 0
+                        ? participants.filter(p => p.participant_status === 'pending').length
+                        : 0;
+                      
+                      return (
+                        <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <h3 className="font-medium">{event.title}</h3>
+                              <Badge variant={event.status === 'approved' ? 'default' : event.status === 'pending' ? 'secondary' : 'outline'}>
+                                {event.status || 'Active'}
                               </Badge>
-                            )}
-                            {pendingCount > 0 && (
-                              <Badge variant="secondary" className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {pendingCount} Pending
+                              {event.department && (
+                                <Badge variant="outline">{event.department}</Badge>
+                              )}
+                              {event.created_by_role && (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                  By {event.created_by_role}
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                {totalParticipants} {totalParticipants === 1 ? 'Participant' : 'Participants'}
                               </Badge>
-                            )}
+                              {approvedCount > 0 && (
+                                <Badge variant="default" className="flex items-center gap-1 bg-green-600">
+                                  <CheckCircle className="w-3 h-3" />
+                                  {approvedCount} Approved
+                                </Badge>
+                              )}
+                              {pendingCount > 0 && (
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {pendingCount} Pending
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="mt-1 text-sm text-muted-foreground">
+                              <span>{new Date(event.date_time).toLocaleDateString()}</span>
+                              {event.end_date && <span className="ml-2">- {new Date(event.end_date).toLocaleDateString()}</span>}
+                              {event.location && <span className="ml-4">📍 {event.location}</span>}
+                              {event.organizer && (
+                                <span className="ml-4">Organized by: {event.organizer.name || event.organizer.email}</span>
+                              )}
+                            </div>
                           </div>
-                          <div className="mt-1 text-sm text-muted-foreground">
-                            <span>{new Date(event.date_time).toLocaleDateString()}</span>
-                            {event.location && <span className="ml-4">{event.location}</span>}
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => fetchEventParticipants(event.id)}
+                              disabled={selectedEventForParticipants === event.id}
+                            >
+                              {selectedEventForParticipants === event.id ? 'Viewing...' : 'View Participants'}
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant={event.is_active ? "destructive" : "default"}
-                            onClick={() => toggleEventStatus(event.id, event.is_active)}
-                          >
-                            {event.is_active ? 'Deactivate' : 'Activate'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => fetchEventParticipants(event.id)}
-                            disabled={selectedEventForParticipants === event.id}
-                          >
-                            {selectedEventForParticipants === event.id ? 'Viewing...' : 'View Participants'}
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
 
                 {/* Participants View with Filtering */}
