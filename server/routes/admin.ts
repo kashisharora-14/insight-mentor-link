@@ -445,18 +445,19 @@ router.get('/events/:eventId/participants', async (req, res) => {
         id: eventRegistrations.id,
         userId: eventRegistrations.userId,
         eventId: eventRegistrations.eventId,
-        name: eventRegistrations.participantName,
-        email: eventRegistrations.participantEmail,
-        phone: eventRegistrations.participantPhone,
+        name: profiles.name,
+        email: profiles.email,
+        phone: profiles.phone,
         department: eventRegistrations.department,
         program: eventRegistrations.program,
-        graduation_year: eventRegistrations.graduationYear,
-        participant_status: eventRegistrations.status,
+        graduation_year: profiles.graduationYear,
+        participant_status: eventRegistrations.participantStatus,
         registered_at: eventRegistrations.registeredAt,
         user_role: users.role,
       })
       .from(eventRegistrations)
       .leftJoin(users, eq(eventRegistrations.userId, users.id))
+      .leftJoin(profiles, eq(eventRegistrations.userId, profiles.userId))
       .where(eq(eventRegistrations.eventId, eventId))
       .orderBy(eventRegistrations.registeredAt);
 
