@@ -1644,72 +1644,270 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {events.map((event) => (
-                    <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-medium">{event.title}</h3>
-                          <Badge variant={event.is_active ? 'default' : 'secondary'}>
-                            {event.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                          {event.department && (
-                            <Badge variant="outline">{event.department}</Badge>
-                          )}
-                          <Badge variant="outline" className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {eventParticipants.filter(p => p.event_id === event.id).length} Participants
-                          </Badge>
+                  {events.map((event) => {
+                    const participants = eventParticipants.filter(p => p.event_id === event.id);
+                    const approvedCount = participants.filter(p => p.participant_status === 'approved').length;
+                    const pendingCount = participants.filter(p => p.participant_status === 'pending').length;
+                    
+                    return (
+                      <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <h3 className="font-medium">{event.title}</h3>
+                            <Badge variant={event.is_active ? 'default' : 'secondary'}>
+                              {event.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
+                            {event.department && (
+                              <Badge variant="outline">{event.department}</Badge>
+                            )}
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {participants.length} Total
+                            </Badge>
+                            {approvedCount > 0 && (
+                              <Badge variant="default" className="flex items-center gap-1 bg-green-600">
+                                <CheckCircle className="w-3 h-3" />
+                                {approvedCount} Approved
+                              </Badge>
+                            )}
+                            {pendingCount > 0 && (
+                              <Badge variant="secondary" className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {pendingCount} Pending
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="mt-1 text-sm text-muted-foreground">
+                            <span>{new Date(event.date_time).toLocaleDateString()}</span>
+                            {event.location && <span className="ml-4">{event.location}</span>}
+                          </div>
                         </div>
-                        <div className="mt-1 text-sm text-muted-foreground">
-                          <span>{new Date(event.date_time).toLocaleDateString()}</span>
-                          {event.location && <span className="ml-4">{event.location}</span>}
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant={event.is_active ? "destructive" : "default"}
+                            onClick={() => toggleEventStatus(event.id, event.is_active)}
+                          >
+                            {event.is_active ? 'Deactivate' : 'Activate'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => fetchEventParticipants(event.id)}
+                            disabled={selectedEventForParticipants === event.id}
+                          >
+                            {selectedEventForParticipants === event.id ? 'Viewing...' : 'View Participants'}
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant={event.is_active ? "destructive" : "default"}
-                          onClick={() => toggleEventStatus(event.id, event.is_active)}
-                        >
-                          {event.is_active ? 'Deactivate' : 'Activate'}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => fetchEventParticipants(event.id)}
-                          disabled={selectedEventForParticipants === event.id}
-                        >
-                          {selectedEventForParticipants === event.id ? 'Viewing Participants...' : 'View Participants'}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
-                {/* Participants View */}
-                {selectedEventForParticipants && (
-                  <div className="mt-8 p-6 border rounded-lg bg-muted/30">
-                    <h3 className="text-xl font-bold mb-4">Participants for: {events.find(e => e.id === selectedEventForParticipants)?.title}</h3>
-                    {eventParticipants.length > 0 ? (
-                      <div className="space-y-3">
-                        {eventParticipants.map((participant) => (
-                          <div key={participant.id} className="flex items-center justify-between p-3 bg-background rounded-lg shadow">
-                            <div>
-                              <p className="font-medium">{participant.name || participant.email}</p>
-                              <p className="text-sm text-muted-foreground">{participant.email}</p>
-                            </div>
-                            <Badge variant="secondary">{participant.role || 'Participant'}</Badge>
-                          </div>
-                        ))}
+                {/* Participants View with Filtering */}
+                {selectedEventForParticipants && (() => {
+                  const [programFilter, setProgramFilter] = React.useState<string>('all');
+                  const [statusFilter, setStatusFilter] = React.useState<string>('all');
+                  
+                  const filteredParticipants = eventParticipants.filter(p => {
+                    if (programFilter !== 'all' && p.program !== programFilter) return false;
+                    if (statusFilter !== 'all' && p.participant_status !== statusFilter) return false;
+                    return true;
+                  });
+
+                  const programCounts = eventParticipants.reduce((acc, p) => {
+                    const prog = p.program || 'Unknown';
+                    acc[prog] = (acc[prog] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>);
+
+                  const deptCounts = eventParticipants.reduce((acc, p) => {
+                    const dept = p.department || 'Unknown';
+                    acc[dept] = (acc[dept] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>);
+
+                  return (
+                    <div className="mt-8 p-6 border rounded-lg bg-muted/30">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-bold">
+                          Participants: {events.find(e => e.id === selectedEventForParticipants)?.title}
+                        </h3>
+                        <Button variant="outline" size="sm" onClick={() => setSelectedEventForParticipants(null)}>
+                          Close
+                        </Button>
                       </div>
-                    ) : (
-                      <p className="text-muted-foreground">No participants found for this event or loading...</p>
-                    )}
-                    <Button variant="outline" size="sm" className="mt-4" onClick={() => setSelectedEventForParticipants(null)}>
-                      Hide Participants
-                    </Button>
-                  </div>
-                )}
+
+                      {/* Statistics Summary */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-background p-4 rounded-lg border">
+                          <p className="text-sm text-muted-foreground">Total</p>
+                          <p className="text-2xl font-bold">{eventParticipants.length}</p>
+                        </div>
+                        <div className="bg-background p-4 rounded-lg border">
+                          <p className="text-sm text-muted-foreground">Approved</p>
+                          <p className="text-2xl font-bold text-green-600">
+                            {eventParticipants.filter(p => p.participant_status === 'approved').length}
+                          </p>
+                        </div>
+                        <div className="bg-background p-4 rounded-lg border">
+                          <p className="text-sm text-muted-foreground">Pending</p>
+                          <p className="text-2xl font-bold text-yellow-600">
+                            {eventParticipants.filter(p => p.participant_status === 'pending').length}
+                          </p>
+                        </div>
+                        <div className="bg-background p-4 rounded-lg border">
+                          <p className="text-sm text-muted-foreground">Attended</p>
+                          <p className="text-2xl font-bold text-blue-600">
+                            {eventParticipants.filter(p => p.attendance_status === 'attended').length}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Program Distribution */}
+                      <div className="mb-6 p-4 bg-background rounded-lg border">
+                        <h4 className="font-semibold mb-3">Program Distribution</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {Object.entries(programCounts).map(([program, count]) => (
+                            <div key={program} className="flex items-center justify-between p-2 bg-muted rounded">
+                              <span className="font-medium">{program}</span>
+                              <Badge variant="secondary">{count}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Department Distribution */}
+                      <div className="mb-6 p-4 bg-background rounded-lg border">
+                        <h4 className="font-semibold mb-3">Department Distribution</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {Object.entries(deptCounts).map(([dept, count]) => (
+                            <div key={dept} className="flex items-center justify-between p-2 bg-muted rounded">
+                              <span className="font-medium">{dept}</span>
+                              <Badge variant="secondary">{count}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Filters */}
+                      <div className="flex gap-4 mb-6 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium">Program:</label>
+                          <select
+                            value={programFilter}
+                            onChange={(e) => setProgramFilter(e.target.value)}
+                            className="px-3 py-1 border rounded-md bg-background text-sm"
+                          >
+                            <option value="all">All Programs</option>
+                            <option value="MCA">MCA</option>
+                            <option value="MSCIT">MSC IT</option>
+                            {Object.keys(programCounts).filter(p => p !== 'MCA' && p !== 'MSCIT' && p !== 'Unknown').map(prog => (
+                              <option key={prog} value={prog}>{prog}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium">Status:</label>
+                          <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="px-3 py-1 border rounded-md bg-background text-sm"
+                          >
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="waitlisted">Waitlisted</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="attended">Attended</option>
+                          </select>
+                        </div>
+
+                        <div className="ml-auto">
+                          <Badge variant="outline">
+                            Showing {filteredParticipants.length} of {eventParticipants.length}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Participants List */}
+                      {filteredParticipants.length > 0 ? (
+                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                          {filteredParticipants.map((participant) => (
+                            <div key={participant.id} className="flex items-center justify-between p-4 bg-background rounded-lg border hover:border-primary transition-colors">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3">
+                                  <div>
+                                    <p className="font-medium">{participant.user_name || participant.user_email}</p>
+                                    <p className="text-sm text-muted-foreground">{participant.user_email}</p>
+                                  </div>
+                                  <Badge variant="outline">{participant.user_role}</Badge>
+                                </div>
+                                <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                                  {participant.program && (
+                                    <span className="flex items-center gap-1">
+                                      <GraduationCap className="w-3 h-3" />
+                                      {participant.program}
+                                    </span>
+                                  )}
+                                  {participant.department && (
+                                    <span className="flex items-center gap-1">
+                                      <Users className="w-3 h-3" />
+                                      {participant.department}
+                                    </span>
+                                  )}
+                                  {participant.registered_at && (
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {new Date(participant.registered_at).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                                {participant.notes && (
+                                  <p className="mt-2 text-xs text-muted-foreground italic">
+                                    Note: {participant.notes}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex gap-2 items-center">
+                                <Badge 
+                                  variant={
+                                    participant.participant_status === 'approved' ? 'default' :
+                                    participant.participant_status === 'pending' ? 'secondary' :
+                                    participant.participant_status === 'rejected' ? 'destructive' :
+                                    'outline'
+                                  }
+                                  className={
+                                    participant.participant_status === 'approved' ? 'bg-green-600' :
+                                    participant.participant_status === 'pending' ? 'bg-yellow-600' :
+                                    ''
+                                  }
+                                >
+                                  {participant.participant_status}
+                                </Badge>
+                                {participant.attendance_status && (
+                                  <Badge variant="outline" className={participant.attendance_status === 'attended' ? 'bg-blue-100' : ''}>
+                                    {participant.attendance_status}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                          <p className="text-muted-foreground">
+                            {eventParticipants.length === 0 
+                              ? 'No participants registered yet' 
+                              : 'No participants match the selected filters'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
