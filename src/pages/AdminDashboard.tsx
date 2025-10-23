@@ -1907,22 +1907,38 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
 
                       {/* Statistics Summary */}
                       <div className="grid grid-cols-3 gap-4 mb-6">
-                        <div className="bg-background p-4 rounded-lg border">
-                          <p className="text-sm text-muted-foreground">Total Registered</p>
-                          <p className="text-2xl font-bold">{eventParticipants.length}</p>
-                        </div>
-                        <div className="bg-background p-4 rounded-lg border">
-                          <p className="text-sm text-muted-foreground">Attended</p>
-                          <p className="text-2xl font-bold text-green-600">
-                            {eventParticipants.filter(p => p.attendance_status === 'attended').length}
-                          </p>
-                        </div>
-                        <div className="bg-background p-4 rounded-lg border">
-                          <p className="text-sm text-muted-foreground">Not Attended</p>
-                          <p className="text-2xl font-bold text-orange-600">
-                            {eventParticipants.filter(p => !p.attendance_status || p.attendance_status !== 'attended').length}
-                          </p>
-                        </div>
+                        {(() => {
+                          const selectedEvent = events.find(e => e.id === selectedEventForParticipants);
+                          const eventEndDate = selectedEvent?.end_date ? new Date(selectedEvent.end_date) : new Date(selectedEvent?.date_time || '');
+                          const isEventCompleted = eventEndDate < new Date();
+                          const attendedCount = eventParticipants.filter(p => p.attendance_status === 'attended').length;
+                          const notAttendedCount = isEventCompleted 
+                            ? eventParticipants.filter(p => !p.attendance_status || p.attendance_status !== 'attended').length 
+                            : 0;
+
+                          return (
+                            <>
+                              <div className="bg-background p-4 rounded-lg border">
+                                <p className="text-sm text-muted-foreground">Total Registered</p>
+                                <p className="text-2xl font-bold">{eventParticipants.length}</p>
+                              </div>
+                              <div className="bg-background p-4 rounded-lg border">
+                                <p className="text-sm text-muted-foreground">Attended</p>
+                                <p className="text-2xl font-bold text-green-600">
+                                  {attendedCount}
+                                </p>
+                              </div>
+                              <div className="bg-background p-4 rounded-lg border">
+                                <p className="text-sm text-muted-foreground">
+                                  {isEventCompleted ? 'Not Attended' : 'Pending (Event Not Completed)'}
+                                </p>
+                                <p className="text-2xl font-bold text-orange-600">
+                                  {isEventCompleted ? notAttendedCount : eventParticipants.length}
+                                </p>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Filters */}

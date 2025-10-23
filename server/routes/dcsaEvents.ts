@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { events, eventRegistrations, profiles, users } from '../../shared/schema';
+import { events, eventRegistrations, profiles, users, studentProfiles } from '../../shared/schema';
 import { authMiddleware, AuthRequest, adminMiddleware } from '../middleware/auth';
 import { and, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
 
@@ -764,14 +764,17 @@ router.get('/events/:eventId/participants', authMiddleware, async (req, res) => 
         userName: users.name,
         userEmail: users.email,
         userRole: users.role,
+        userStudentId: users.studentId,
         profileName: profiles.name,
-        profileProgram: profiles.program,
         profileDepartment: profiles.department,
-        profileStudentId: profiles.studentId,
+        studentProgram: studentProfiles.program,
+        studentRollNumber: studentProfiles.rollNumber,
+        studentDepartment: studentProfiles.department,
       })
       .from(eventRegistrations)
       .leftJoin(users, eq(users.id, eventRegistrations.userId))
       .leftJoin(profiles, eq(profiles.userId, eventRegistrations.userId))
+      .leftJoin(studentProfiles, eq(studentProfiles.userId, eventRegistrations.userId))
       .where(eq(eventRegistrations.eventId, eventId))
       .orderBy(eventRegistrations.registeredAt);
 
@@ -781,12 +784,12 @@ router.get('/events/:eventId/participants', authMiddleware, async (req, res) => 
       user_name: p.profileName || p.userName || 'Unknown',
       user_email: p.userEmail ?? '',
       user_role: p.userRole ?? '',
-      student_id: p.profileStudentId || null,
+      student_id: p.userStudentId || p.studentRollNumber || null,
       registered_at: p.registeredAt ? p.registeredAt.toISOString() : null,
       participant_status: p.participantStatus ?? 'pending',
       attendance_status: p.attendanceStatus ?? null,
-      department: p.profileDepartment || p.department || null,
-      program: p.profileProgram || p.program || null,
+      department: p.studentDepartment || p.profileDepartment || p.department || null,
+      program: p.studentProgram || p.program || null,
       club: p.club,
       notes: p.notes,
       checked_in_at: p.checkedInAt ? p.checkedInAt.toISOString() : null,
