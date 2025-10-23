@@ -748,7 +748,7 @@ router.get('/events/:eventId/participants', authMiddleware, async (req, res) => 
       return res.status(403).json({ error: 'You can only view participants for your own events' });
     }
 
-    // Get all participants with user details
+    // Get all participants with user details and profile information
     const participants = await db
       .select({
         id: eventRegistrations.id,
@@ -764,23 +764,29 @@ router.get('/events/:eventId/participants', authMiddleware, async (req, res) => 
         userName: users.name,
         userEmail: users.email,
         userRole: users.role,
+        profileName: profiles.name,
+        profileProgram: profiles.program,
+        profileDepartment: profiles.department,
+        profileStudentId: profiles.studentId,
       })
       .from(eventRegistrations)
       .leftJoin(users, eq(users.id, eventRegistrations.userId))
+      .leftJoin(profiles, eq(profiles.userId, eventRegistrations.userId))
       .where(eq(eventRegistrations.eventId, eventId))
       .orderBy(eventRegistrations.registeredAt);
 
     const response = participants.map((p) => ({
       id: p.id,
       user_id: p.userId,
-      user_name: p.userName ?? 'Unknown',
+      user_name: p.profileName || p.userName || 'Unknown',
       user_email: p.userEmail ?? '',
       user_role: p.userRole ?? '',
+      student_id: p.profileStudentId || null,
       registered_at: p.registeredAt ? p.registeredAt.toISOString() : null,
       participant_status: p.participantStatus ?? 'pending',
       attendance_status: p.attendanceStatus ?? null,
-      department: p.department,
-      program: p.program,
+      department: p.profileDepartment || p.department || null,
+      program: p.profileProgram || p.program || null,
       club: p.club,
       notes: p.notes,
       checked_in_at: p.checkedInAt ? p.checkedInAt.toISOString() : null,

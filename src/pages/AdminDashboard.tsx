@@ -562,8 +562,12 @@ const handleRejectVerification = async (requestId: string) => {
 
 const handleMarkAttendance = async (eventId: string, participantId: string, currentStatus: string | null) => {
   try {
+    // Only allow marking as attended, not unmarking
+    if (currentStatus === 'attended') {
+      return;
+    }
+
     const token = localStorage.getItem('authToken');
-    const newStatus = currentStatus === 'attended' ? null : 'attended';
     
     const response = await fetch(`/api/dcsa/events/${eventId}/participants/${participantId}/attendance`, {
       method: 'PATCH',
@@ -571,7 +575,7 @@ const handleMarkAttendance = async (eventId: string, participantId: string, curr
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ attendanceStatus: newStatus }),
+      body: JSON.stringify({ attendanceStatus: 'attended' }),
     });
 
     if (!response.ok) {
@@ -581,7 +585,7 @@ const handleMarkAttendance = async (eventId: string, participantId: string, curr
 
     toast({
       title: "Success",
-      description: newStatus === 'attended' ? "Attendance marked successfully" : "Attendance unmarked successfully",
+      description: "Attendance marked successfully",
     });
 
     // Refresh participants list
@@ -2002,28 +2006,47 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 )}
                               </div>
                               <div className="flex gap-2 items-center">
-                                <Button
-                                  size="sm"
-                                  variant={participant.attendance_status === 'attended' ? 'outline' : 'default'}
-                                  className={participant.attendance_status === 'attended' ? 'bg-green-600 text-white hover:bg-green-700' : ''}
-                                  onClick={() => handleMarkAttendance(
-                                    selectedEventForParticipants!,
-                                    participant.id,
-                                    participant.attendance_status
-                                  )}
-                                >
-                                  {participant.attendance_status === 'attended' ? (
-                                    <>
-                                      <CheckCircle className="w-4 h-4 mr-1" />
-                                      Attended
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Clock className="w-4 h-4 mr-1" />
-                                      Mark Attendance
-                                    </>
-                                  )}
-                                </Button>
+                                {(() => {
+                                  const selectedEvent = events.find(e => e.id === selectedEventForParticipants);
+                                  const eventEndDate = selectedEvent?.end_date ? new Date(selectedEvent.end_date) : new Date(selectedEvent?.date_time || '');
+                                  const isEventCompleted = eventEndDate < new Date();
+                                  const isAttended = participant.attendance_status === 'attended';
+
+                                  return (
+                                    <Button
+                                      size="sm"
+                                      variant={isAttended ? 'outline' : 'default'}
+                                      className={isAttended ? 'bg-green-600 text-white hover:bg-green-600 cursor-not-allowed' : ''}
+                                      disabled={!isEventCompleted || isAttended}
+                                      onClick={() => {
+                                        if (!isAttended && isEventCompleted) {
+                                          handleMarkAttendance(
+                                            selectedEventForParticipants!,
+                                            participant.id,
+                                            participant.attendance_status
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      {isAttended ? (
+                                        <>
+                                          <CheckCircle className="w-4 h-4 mr-1" />
+                                          Attended
+                                        </>
+                                      ) : !isEventCompleted ? (
+                                        <>
+                                          <Clock className="w-4 h-4 mr-1" />
+                                          Event Not Yet Completed
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Clock className="w-4 h-4 mr-1" />
+                                          Mark Attendance
+                                        </>
+                                      )}
+                                    </Button>
+                                  );
+                                })()}
                               </div>
                             </div>
                           ))}
