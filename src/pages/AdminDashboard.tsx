@@ -798,6 +798,11 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       
       if (!token) {
         console.error('❌ No auth token found');
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to view events.",
+          variant: "destructive",
+        });
         setEvents([]);
         return;
       }
@@ -857,7 +862,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       });
 
       console.log('✅ Admin Dashboard - Transformed events:', transformedEvents);
+      console.log('✅ Setting events state with', transformedEvents.length, 'events');
       setEvents(transformedEvents);
+      console.log('✅ Events state updated');
     } catch (error) {
       console.error('❌ Error in fetchEvents:', error);
       console.error('❌ Error details:', {
@@ -873,7 +880,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       });
       setEvents([]);
     } finally {
-      console.log('✅ fetchEvents completed');
+      console.log('✅ fetchEvents completed, current events length:', events.length);
     }
   };
 
