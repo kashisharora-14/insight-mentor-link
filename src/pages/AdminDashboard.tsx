@@ -748,6 +748,11 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
     };
   }, []);
 
+  // Log events state for debugging
+  useEffect(() => {
+    console.log('🎯 Events tab - Current events:', events);
+  }, [events]);
+
 
   if (loading) {
     return (
@@ -1735,14 +1740,28 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
           <TabsContent value="events">
             <Card>
               <CardHeader>
-                <CardTitle>Events Management</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Events Management</span>
+                  <Badge variant="secondary">{events.length} {events.length === 1 ? 'Event' : 'Events'}</Badge>
+                </CardTitle>
                 <CardDescription>Manage university events and activities</CardDescription>
               </CardHeader>
               <CardContent>
-                {events.length === 0 ? (
+                {!events || events.length === 0 ? (
                   <div className="text-center py-8">
                     <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">No events found</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => {
+                        console.log('🔄 Manually refreshing events...');
+                        fetchEvents();
+                      }}
+                    >
+                      Refresh Events
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
