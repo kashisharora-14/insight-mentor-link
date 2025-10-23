@@ -1364,10 +1364,10 @@ const Events = () => {
                     onRefresh={loadEvents}
                   />
 
-                  {event.organizer && (
+                  {event.organizer && (event.organizer.name || event.created_by_role) && (
                     <div className="text-xs text-muted-foreground bg-muted/40 p-3 rounded">
                       <p className="font-semibold mb-1">Organized by</p>
-                      <p>{event.organizer.name || "Unknown organizer"}</p>
+                      <p>{event.organizer.name || (event.created_by_role ? event.created_by_role.charAt(0).toUpperCase() + event.created_by_role.slice(1) : "Unknown organizer")}</p>
                       {event.organizer.email && (
                         <p className="flex items-center gap-1">
                           <Mail className="w-3 h-3" /> {event.organizer.email}
