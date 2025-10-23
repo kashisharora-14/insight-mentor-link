@@ -341,10 +341,32 @@ router.get('/users', async (req, res) => {
 
     const allUsers = await query.orderBy(users.createdAt);
 
-    // Remove password hashes from response
+    console.log('📊 Database users verification status:', allUsers.map(u => ({
+      email: u.email,
+      role: u.role,
+      isVerified: u.isVerified,
+      verificationMethod: u.verificationMethod
+    })));
+
+    // Remove password hashes from response and ensure correct field names
     const sanitizedUsers = allUsers.map(user => {
       const { passwordHash, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+      return {
+        ...userWithoutPassword,
+        // Ensure camelCase for frontend
+        isVerified: user.isVerified,
+        isEmailVerified: user.isEmailVerified,
+        verificationMethod: user.verificationMethod,
+        verifiedBy: user.verifiedBy,
+        verifiedAt: user.verifiedAt,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        studentId: user.studentId,
+        graduationYear: null, // Add from profile if needed
+        currentJob: null, // Add from profile if needed
+        company: null, // Add from profile if needed
+        isMentorAvailable: false // Add from profile if needed
+      };
     });
 
     res.json(sanitizedUsers);

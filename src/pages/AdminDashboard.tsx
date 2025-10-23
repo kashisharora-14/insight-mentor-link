@@ -201,21 +201,35 @@ const AdminDashboard = () => {
 
       const users = await response.json();
 
+      console.log('📊 Fetched users from database:', users.map((u: any) => ({
+        email: u.email,
+        role: u.role,
+        isVerified: u.isVerified,
+        verificationMethod: u.verificationMethod
+      })));
+
       const transformedProfiles: Profile[] = users.map((user: any) => ({
         id: user.id,
         user_id: user.id,
         name: user.name || user.email.split('@')[0],
         email: user.email,
         role: user.role,
-        graduation_year: user.graduation_year,
+        graduation_year: user.graduationYear,
         department: user.department,
-        current_job: user.current_job,
+        current_job: user.currentJob,
         company: user.company,
-        is_verified: user.is_verified || false,
-        verification_status: user.verification_status || 'pending',
-        is_mentor_available: user.is_mentor_available || false,
-        created_at: user.created_at,
+        is_verified: user.isVerified === true,
+        verification_status: user.isVerified ? 'approved' : (user.verificationStatus || 'pending'),
+        is_mentor_available: user.isMentorAvailable || false,
+        created_at: user.createdAt,
       }));
+
+      console.log('📊 Transformed profiles:', transformedProfiles.map(p => ({
+        email: p.email,
+        role: p.role,
+        isVerified: p.is_verified,
+        verificationStatus: p.verification_status
+      })));
 
       setProfiles(transformedProfiles);
     } catch (error) {
