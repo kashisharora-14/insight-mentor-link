@@ -795,7 +795,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
     try {
       console.log('🔍 Admin Dashboard: Starting to fetch events...');
       const token = localStorage.getItem('authToken');
-      
+
       if (!token) {
         console.error('❌ No auth token found');
         toast({
