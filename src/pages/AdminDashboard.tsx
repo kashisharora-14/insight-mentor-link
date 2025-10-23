@@ -120,7 +120,7 @@ const AdminDashboard = () => {
   // Real data will be fetched from APIs
   const [eventParticipants, setEventParticipants] = useState<any[]>([]);
   const [selectedEventForParticipants, setSelectedEventForParticipants] = useState<string | null>(null);
-  
+
   // Participant filter states
   const [programFilter, setProgramFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -814,7 +814,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       const data = await response.json();
       console.log('📅 Admin Dashboard - Fetched events raw data:', data);
       console.log('📊 Number of events:', data?.length || 0);
-      
+
       // Transform the data to match our Event interface
       const transformedEvents: Event[] = (data || []).map((event: any) => {
         console.log('🔄 Transforming event:', event.title, event);
@@ -834,7 +834,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
           participant_summary: event.participant_summary
         };
       });
-      
+
       console.log('✅ Admin Dashboard - Transformed events:', transformedEvents);
       setEvents(transformedEvents);
     } catch (error) {
@@ -1648,7 +1648,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                             Unverify
                           </Button>
                         )}
-                        
+
                         {/* Show verification actions for unverified users */}
                         {!profile.is_verified && profile.verification_status === 'pending' && (() => {
                           const request = verificationRequests.find((req: any) => req.userId === profile.id && req.status === 'pending');
@@ -1699,7 +1699,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                       const pendingCount = participants.length > 0
                         ? participants.filter(p => p.participant_status === 'pending').length
                         : 0;
-                      
+
                       return (
                         <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex-1">
@@ -1859,7 +1859,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                             ))}
                           </select>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <label className="text-sm font-medium">Status:</label>
                           <select
