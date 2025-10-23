@@ -697,17 +697,11 @@ router.post('/events/:eventId/participation', authMiddleware, async (req, res) =
       return res.status(400).json({ error: 'Participation already requested' });
     }
 
-    const isWaitlisted = Boolean(
-      eventRecord.maxAttendees &&
-      eventRecord.waitlistEnabled &&
-      eventRecord.maxAttendees > 0
-    );
-
     await db.insert(eventRegistrations).values({
       eventId,
       userId,
       registeredAt: new Date(),
-      participantStatus: isWaitlisted ? 'waitlisted' : 'pending',
+      participantStatus: 'approved',
       department: eventRecord.department,
       program: null,
       club: eventRecord.club,
@@ -796,6 +790,57 @@ router.get('/events/:eventId/participants', authMiddleware, async (req, res) => 
   } catch (error) {
     console.error('Error fetching event participants:', error);
     res.status(500).json({ error: 'Failed to fetch participants' });
+  }
+});
+
+// Mark/unmark attendance for a participant
+router.patch('/events/:eventId/participants/:participantId/attendance', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { eventId, participantId } = req.params;
+    const { attendanceStatus } = req.body;
+
+    if (!eventId || !participantId) {
+      return res.status(400).json({ error: 'Event ID and Participant ID are required' });
+    }
+
+    // Validate attendance status
+    const validStatuses = ['attended', 'absent', null];
+    if (attendanceStatus !== null && !validStatuses.includes(attendanceStatus)) {
+      return res.status(400).json({ error: 'Invalid attendance status' });
+    }
+
+    // Check if participant exists
+    const [participant] = await db
+      .select()
+      .from(eventRegistrations)
+      .where(
+        and(
+          eq(eventRegistrations.id, participantId),
+          eq(eventRegistrations.eventId, eventId)
+        )
+      )
+      .limit(1);
+
+    if (!participant) {
+      return res.status(404).json({ error: 'Participant not found' });
+    }
+
+    // Update attendance status
+    await db
+      .update(eventRegistrations)
+      .set({
+        attendanceStatus: attendanceStatus,
+        checkedInAt: attendanceStatus === 'attended' ? new Date() : null,
+      })
+      .where(eq(eventRegistrations.id, participantId));
+
+    res.json({ 
+      message: 'Attendance updated successfully',
+      attendanceStatus: attendanceStatus
+    });
+  } catch (error) {
+    console.error('Error updating attendance:', error);
+    res.status(500).json({ error: 'Failed to update attendance' });
   }
 });
 
