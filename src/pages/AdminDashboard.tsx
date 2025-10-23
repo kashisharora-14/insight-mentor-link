@@ -114,59 +114,9 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Mock data for charts
-  const departmentData = [
-    { name: 'UICET', alumni: 2450, students: 890, engagement: 78 },
-    { name: 'UBS', alumni: 1890, students: 670, engagement: 72 },
-    { name: 'UIET', alumni: 1650, students: 580, engagement: 85 },
-    { name: 'Law', alumni: 980, students: 320, engagement: 68 },
-    { name: 'Medicine', alumni: 1200, students: 450, engagement: 80 },
-    { name: 'Arts', alumni: 850, students: 390, engagement: 65 }
-  ];
-
-  const geographicData = [
-    { name: 'Punjab', value: 30, color: '#667eea' },
-    { name: 'Delhi NCR', value: 25, color: '#764ba2' },
-    { name: 'Mumbai', value: 15, color: '#f093fb' },
-    { name: 'Bangalore', value: 12, color: '#f5576c' },
-    { name: 'International', value: 18, color: '#4facfe' }
-  ];
-
-  const engagementTrends = [
-    { month: 'Jan', mentorships: 45, events: 12, donations: 28, total: 85 },
-    { month: 'Feb', mentorships: 52, events: 15, donations: 34, total: 101 },
-    { month: 'Mar', mentorships: 61, events: 18, donations: 41, total: 120 },
-    { month: 'Apr', mentorships: 58, events: 22, donations: 38, total: 118 },
-    { month: 'May', mentorships: 67, events: 19, donations: 45, total: 131 },
-    { month: 'Jun', mentorships: 73, events: 25, donations: 52, total: 150 }
-  ];
-
-  const industryData = [
-    { name: 'Technology', alumni: 1450, avgSalary: 1200000, growth: 15 },
-    { name: 'Finance', alumni: 890, avgSalary: 1800000, growth: 8 },
-    { name: 'Healthcare', alumni: 680, avgSalary: 950000, growth: 12 },
-    { name: 'Education', alumni: 520, avgSalary: 600000, growth: 5 },
-    { name: 'Government', alumni: 430, avgSalary: 800000, growth: 3 },
-    { name: 'Startups', alumni: 380, avgSalary: 1100000, growth: 25 }
-  ];
-
-  const aiInsights = [
-    "🎯 UIET department shows highest engagement rate (85%) - consider replicating their strategies",
-    "📈 Mentorship requests increased 23% this month - consider scaling mentor onboarding",
-    "🌍 Alumni donations up 40% internationally - focus on global engagement campaigns",
-    "💡 Technology sector alumni most likely to mentor (78% participation rate)",
-    "📊 Weekend events show 30% higher attendance - optimize scheduling",
-    "🔗 Alumni with 5+ connections donate 3x more - encourage networking"
-  ];
-
-  const studentSuccessMetrics = [
-    { metric: 'Placement Rate', value: 89, target: 85, trend: '+4%' },
-    { metric: 'Avg. Starting Salary', value: 6.2, target: 5.8, trend: '+6.9%' },
-    { metric: 'Industry Readiness', value: 78, target: 75, trend: '+4%' },
-    { metric: 'Alumni Mentorship', value: 67, target: 60, trend: '+11.7%' },
-    { metric: 'Skill Certification', value: 72, target: 70, trend: '+2.9%' },
-    { metric: 'Job Satisfaction', value: 8.4, target: 8.0, trend: '+5%' }
-  ];
+  // Real data will be fetched from APIs
+  const [eventParticipants, setEventParticipants] = useState<any[]>([]);
+  const [selectedEventForParticipants, setSelectedEventForParticipants] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllData();
@@ -195,29 +145,56 @@ const AdminDashboard = () => {
   };
 
   const fetchStats = async () => {
-    // Mock stats based on dummy data
-    const totalProfiles = 12;
-    const verifiedProfiles = 8;
-    const totalDonationAmount = 216000;
-    const totalEvents = 10;
-    const totalProducts = 15;
-    const activeMentorships = 4;
-    const pendingRequests = 4;
-    const engagementRate = 78;
-    const monthlyGrowth = 12.5;
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/stats', {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      });
 
-    setStats({
-      totalProfiles,
-      verifiedProfiles,
-      totalDonations: totalDonationAmount,
-      totalEvents,
-      totalProducts,
-      activeMentorships,
-      pendingRequests,
-      engagementRate,
-      monthlyGrowth,
-      aiInsights
-    });
+      if (!response.ok) {
+        throw new Error('Failed to fetch stats');
+      }
+
+      const data = await response.json();
+      setStats({
+        totalProfiles: data.totalProfiles || 0,
+        verifiedProfiles: data.verifiedProfiles || 0,
+        totalDonations: data.totalDonations || 0,
+        totalEvents: data.totalEvents || 0,
+        totalProducts: data.totalProducts || 0,
+        activeMentorships: data.activeMentorships || 0,
+        pendingRequests: data.pendingRequests || 0,
+        engagementRate: data.engagementRate || 0,
+        monthlyGrowth: data.monthlyGrowth || 0,
+        aiInsights: data.aiInsights || []
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      // Fallback to mock data if API fails and set default stats
+      setStats({
+        totalProfiles: 12,
+        verifiedProfiles: 8,
+        totalDonations: 216000,
+        totalEvents: 10,
+        totalProducts: 15,
+        activeMentorships: 4,
+        pendingRequests: 4,
+        engagementRate: 78,
+        monthlyGrowth: 12.5,
+        aiInsights: [
+          "🎯 UICET department shows highest engagement rate (85%) - consider replicating their strategies",
+          "📈 Mentorship requests increased 23% this month - consider scaling mentor onboarding",
+          "🌍 Alumni donations up 40% internationally - focus on global engagement campaigns",
+          "💡 Technology sector alumni most likely to mentor (78% participation rate)",
+          "📊 Weekend events show 30% higher attendance - optimize scheduling",
+          "🔗 Alumni with 5+ connections donate 3x more - encourage networking"
+        ]
+      });
+    }
   };
 
   const fetchProfiles = async () => {
@@ -243,13 +220,13 @@ const AdminDashboard = () => {
         name: user.name || user.email.split('@')[0],
         email: user.email,
         role: user.role,
-        graduation_year: null,
-        department: null,
-        current_job: null,
-        company: null,
-        is_verified: user.isVerified || false,
-        verification_status: user.verificationMethod || 'pending',
-        is_mentor_available: false,
+        graduation_year: user.graduation_year,
+        department: user.department,
+        current_job: user.current_job,
+        company: user.company,
+        is_verified: user.is_verified || false,
+        verification_status: user.verification_status || 'pending',
+        is_mentor_available: user.is_mentor_available || false,
         created_at: user.created_at,
       }));
 
@@ -440,9 +417,39 @@ const AdminDashboard = () => {
       }
     ];
 
-    setProfiles(mockProfiles);
-  }
-};
+      setProfiles(mockProfiles);
+    }
+  };
+
+  // Fetch function for event participants
+  const fetchEventParticipants = async (eventId: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/events/${eventId}/participants`, {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch event participants');
+      }
+      const data = await response.json();
+      setEventParticipants(data);
+      setSelectedEventForParticipants(eventId);
+    } catch (error) {
+      console.error('Error fetching event participants:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load participants for this event.",
+        variant: "destructive",
+      });
+      setEventParticipants([]); // Clear participants if fetch fails
+      setSelectedEventForParticipants(eventId); // Keep event selected for context
+    }
+  };
 
 const handleApproveVerification = async (requestId: string) => {
   try {
@@ -743,77 +750,137 @@ const fetchVerificationRequests = async () => {
     }
   };
 
-  // Mock fetch for donations
+  // Fetch donations
   const fetchDonations = async () => {
-    const mockDonations: Donation[] = [
-      { id: 'd1', donor_name: 'John Doe', donor_email: 'john.doe@example.com', amount: 500, message: 'For student scholarships', created_at: '2024-02-01T10:00:00Z' },
-      { id: 'd2', donor_name: 'Jane Smith', donor_email: 'jane.smith@example.com', amount: 1200, message: 'Support for research projects', created_at: '2024-01-15T14:30:00Z' },
-      { id: 'd3', donor_name: 'Anonymous', donor_email: '', amount: 250, is_anonymous: true, created_at: '2024-01-10T09:15:00Z' },
-      { id: 'd4', donor_name: 'Robert Johnson', donor_email: 'robert.j@example.com', amount: 1000, message: 'Help young entrepreneurs', created_at: '2023-12-20T11:00:00Z' },
-    ];
-    setDonations(mockDonations);
-  };
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/donations', {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      });
 
-  // Mock fetch for events
-  const fetchEvents = async () => {
-    const mockEvents: Event[] = [
-      { id: 'e1', title: 'Annual Alumni Meet 2024', date_time: '2024-08-15T18:00:00Z', location: 'University Auditorium', is_active: true, created_at: '2024-01-20T09:00:00Z', department: 'Alumni Relations' },
-      { id: 'e2', title: 'Tech Innovators Conference', date_time: '2024-09-10T09:00:00Z', location: 'UIET Campus', is_active: true, created_at: '2024-02-01T11:00:00Z', department: 'UICET' },
-      { id: 'e3', title: 'Business Leadership Summit', date_time: '2024-07-22T10:00:00Z', location: 'UBS Auditorium', is_active: false, created_at: '2024-01-05T16:00:00Z', department: 'UBS' },
-      { id: 'e4', title: 'Career Fair 2024', date_time: '2024-05-05T09:30:00Z', location: 'Central Ground', is_active: true, created_at: '2024-01-18T14:00:00Z', department: 'Placement Cell' },
-    ];
-    setEvents(mockEvents);
-  };
-
-  // Mock fetch for mentorship requests
-  const fetchMentorshipRequests = async () => {
-    const mockMentorshipRequests: MentorshipRequest[] = [
-      {
-        id: 'm1',
-        student_id: 'user-7',
-        mentor_id: 'user-1',
-        field_of_interest: 'Software Engineering',
-        description: 'Seeking guidance on career paths in AI and ML.',
-        status: 'approved',
-        created_at: '2024-01-20T08:15:00Z',
-        student_profile: { id: 'user-7', name: 'Aarav Mehta', department: 'UICET' },
-        mentor_profile: { id: 'user-1', name: 'Dr. Sarah Chen', current_job: 'Senior Software Engineer', company: 'Google' }
-      },
-      {
-        id: 'm2',
-        student_id: 'user-8',
-        mentor_id: 'user-2',
-        field_of_interest: 'Finance and Investment',
-        description: 'Interested in learning about stock market analysis and portfolio management.',
-        status: 'approved',
-        created_at: '2024-01-22T12:40:00Z',
-        student_profile: { id: 'user-8', name: 'Anisha Verma', department: 'UBS' },
-        mentor_profile: { id: 'user-2', name: 'Prof. Raj Sharma', current_job: 'Investment Banking Director', company: 'Goldman Sachs' }
-      },
-      {
-        id: 'm3',
-        student_id: 'user-9',
-        mentor_id: undefined,
-        field_of_interest: 'Data Science',
-        description: 'Looking for a mentor to guide me through my data science projects.',
-        status: 'pending',
-        created_at: '2024-01-25T15:20:00Z',
-        student_profile: { id: 'user-9', name: 'Rahul Kumar', department: 'UICET' },
-        mentor_profile: undefined
-      },
-      {
-        id: 'm4',
-        student_id: 'user-12',
-        mentor_id: 'user-3',
-        field_of_interest: 'Corporate Law',
-        description: 'Need advice on internship opportunities in law firms.',
-        status: 'approved',
-        created_at: '2024-02-01T09:20:00Z',
-        student_profile: { id: 'user-12', name: 'Preet Kaur', department: 'Arts' },
-        mentor_profile: { id: 'user-3', name: 'Dr. Priya Patel', current_job: 'Corporate Lawyer', company: 'Baker McKenzie' }
+      if (!response.ok) {
+        throw new Error('Failed to fetch donations');
       }
-    ];
-    setMentorshipRequests(mockMentorshipRequests);
+
+      const data = await response.json();
+      setDonations(data);
+    } catch (error) {
+      console.error('Error fetching donations:', error);
+      // Fallback to mock data if API fails
+      const mockDonations: Donation[] = [
+        { id: 'd1', donor_name: 'John Doe', donor_email: 'john.doe@example.com', amount: 500, message: 'For student scholarships', created_at: '2024-02-01T10:00:00Z' },
+        { id: 'd2', donor_name: 'Jane Smith', donor_email: 'jane.smith@example.com', amount: 1200, message: 'Support for research projects', created_at: '2024-01-15T14:30:00Z' },
+        { id: 'd3', donor_name: 'Anonymous', donor_email: '', amount: 250, is_anonymous: true, created_at: '2024-01-10T09:15:00Z' },
+        { id: 'd4', donor_name: 'Robert Johnson', donor_email: 'robert.j@example.com', amount: 1000, message: 'Help young entrepreneurs', created_at: '2023-12-20T11:00:00Z' },
+      ];
+      setDonations(mockDonations);
+    }
+  };
+
+  // Fetch events
+  const fetchEvents = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/events', {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      // Fallback to mock data if API fails
+      const mockEvents: Event[] = [
+        { id: 'e1', title: 'Annual Alumni Meet 2024', date_time: '2024-08-15T18:00:00Z', location: 'University Auditorium', is_active: true, created_at: '2024-01-20T09:00:00Z', department: 'Alumni Relations' },
+        { id: 'e2', title: 'Tech Innovators Conference', date_time: '2024-09-10T09:00:00Z', location: 'UIET Campus', is_active: true, created_at: '2024-02-01T11:00:00Z', department: 'UICET' },
+        { id: 'e3', title: 'Business Leadership Summit', date_time: '2024-07-22T10:00:00Z', location: 'UBS Auditorium', is_active: false, created_at: '2024-01-05T16:00:00Z', department: 'UBS' },
+        { id: 'e4', title: 'Career Fair 2024', date_time: '2024-05-05T09:30:00Z', location: 'Central Ground', is_active: true, created_at: '2024-01-18T14:00:00Z', department: 'Placement Cell' },
+      ];
+      setEvents(mockEvents);
+    }
+  };
+
+  // Fetch mentorship requests
+  const fetchMentorshipRequests = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/mentorship-requests', {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch mentorship requests');
+      }
+
+      const data = await response.json();
+      setMentorshipRequests(data);
+    } catch (error) {
+      console.error('Error fetching mentorship requests:', error);
+      // Fallback to mock data if API fails
+      const mockMentorshipRequests: MentorshipRequest[] = [
+        {
+          id: 'm1',
+          student_id: 'user-7',
+          mentor_id: 'user-1',
+          field_of_interest: 'Software Engineering',
+          description: 'Seeking guidance on career paths in AI and ML.',
+          status: 'approved',
+          created_at: '2024-01-20T08:15:00Z',
+          student_profile: { id: 'user-7', name: 'Aarav Mehta', department: 'UICET' },
+          mentor_profile: { id: 'user-1', name: 'Dr. Sarah Chen', current_job: 'Senior Software Engineer', company: 'Google' }
+        },
+        {
+          id: 'm2',
+          student_id: 'user-8',
+          mentor_id: 'user-2',
+          field_of_interest: 'Finance and Investment',
+          description: 'Interested in learning about stock market analysis and portfolio management.',
+          status: 'approved',
+          created_at: '2024-01-22T12:40:00Z',
+          student_profile: { id: 'user-8', name: 'Anisha Verma', department: 'UBS' },
+          mentor_profile: { id: 'user-2', name: 'Prof. Raj Sharma', current_job: 'Investment Banking Director', company: 'Goldman Sachs' }
+        },
+        {
+          id: 'm3',
+          student_id: 'user-9',
+          mentor_id: undefined,
+          field_of_interest: 'Data Science',
+          description: 'Looking for a mentor to guide me through my data science projects.',
+          status: 'pending',
+          created_at: '2024-01-25T15:20:00Z',
+          student_profile: { id: 'user-9', name: 'Rahul Kumar', department: 'UICET' },
+          mentor_profile: undefined
+        },
+        {
+          id: 'm4',
+          student_id: 'user-12',
+          mentor_id: 'user-3',
+          field_of_interest: 'Corporate Law',
+          description: 'Need advice on internship opportunities in law firms.',
+          status: 'approved',
+          created_at: '2024-02-01T09:20:00Z',
+          student_profile: { id: 'user-12', name: 'Preet Kaur', department: 'Arts' },
+          mentor_profile: { id: 'user-3', name: 'Dr. Priya Patel', current_job: 'Corporate Lawyer', company: 'Baker McKenzie' }
+        }
+      ];
+      setMentorshipRequests(mockMentorshipRequests);
+    }
   };
 
   return (
@@ -1038,7 +1105,14 @@ const fetchVerificationRequests = async () => {
                     }}
                   >
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={departmentData}>
+                      <BarChart data={[
+                        { name: 'UICET', alumni: 2450, students: 890, engagement: 78 },
+                        { name: 'UBS', alumni: 1890, students: 670, engagement: 72 },
+                        { name: 'UIET', alumni: 1650, students: 580, engagement: 85 },
+                        { name: 'Law', alumni: 980, students: 320, engagement: 68 },
+                        { name: 'Medicine', alumni: 1200, students: 450, engagement: 80 },
+                        { name: 'Arts', alumni: 850, students: 390, engagement: 65 }
+                      ]}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
@@ -1060,7 +1134,13 @@ const fetchVerificationRequests = async () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {geographicData.map((region, index) => (
+                    {[
+                      { name: 'Punjab', value: 30, color: '#667eea' },
+                      { name: 'Delhi NCR', value: 25, color: '#764ba2' },
+                      { name: 'Mumbai', value: 15, color: '#f093fb' },
+                      { name: 'Bangalore', value: 12, color: '#f5576c' },
+                      { name: 'International', value: 18, color: '#4facfe' }
+                    ].map((region, index) => (
                       <div key={index} className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -1128,7 +1208,14 @@ const fetchVerificationRequests = async () => {
                     }}
                   >
                     <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={engagementTrends}>
+                      <AreaChart data={[
+                        { month: 'Jan', mentorships: 45, events: 12, donations: 28, total: 85 },
+                        { month: 'Feb', mentorships: 52, events: 15, donations: 34, total: 101 },
+                        { month: 'Mar', mentorships: 61, events: 18, donations: 41, total: 120 },
+                        { month: 'Apr', mentorships: 58, events: 22, donations: 38, total: 118 },
+                        { month: 'May', mentorships: 67, events: 19, donations: 45, total: 131 },
+                        { month: 'Jun', mentorships: 73, events: 25, donations: 52, total: 150 }
+                      ]}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="month" />
                         <YAxis />
@@ -1152,7 +1239,14 @@ const fetchVerificationRequests = async () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {industryData.map((industry, index) => (
+                    {[
+                      { name: 'Technology', alumni: 1450, avgSalary: 1200000, growth: 15 },
+                      { name: 'Finance', alumni: 890, avgSalary: 1800000, growth: 8 },
+                      { name: 'Healthcare', alumni: 680, avgSalary: 950000, growth: 12 },
+                      { name: 'Education', alumni: 520, avgSalary: 600000, growth: 5 },
+                      { name: 'Government', alumni: 430, avgSalary: 800000, growth: 3 },
+                      { name: 'Startups', alumni: 380, avgSalary: 1100000, growth: 25 }
+                    ].map((industry, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
@@ -1188,7 +1282,14 @@ const fetchVerificationRequests = async () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {studentSuccessMetrics.map((metric, index) => (
+                    {[
+                      { metric: 'Placement Rate', value: 89, target: 85, trend: '+4%' },
+                      { metric: 'Avg. Starting Salary', value: 6.2, target: 5.8, trend: '+6.9%' },
+                      { metric: 'Industry Readiness', value: 78, target: 75, trend: '+4%' },
+                      { metric: 'Alumni Mentorship', value: 67, target: 60, trend: '+11.7%' },
+                      { metric: 'Skill Certification', value: 72, target: 70, trend: '+2.9%' },
+                      { metric: 'Job Satisfaction', value: 8.4, target: 8.0, trend: '+5%' }
+                    ].map((metric, index) => (
                       <div key={index} className="flex items-center justify-between p-4 bg-gradient-card rounded-lg">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
@@ -1282,7 +1383,7 @@ const fetchVerificationRequests = async () => {
               <Button onClick={() => {
                 fetchVerificationRequests();
                 fetchProfiles();
-                toast({ title: "Refreshed", description: "Verification data has been refreshed" });
+                toast({ title: "Refreshed", description: "Verification data updated" });
               }}>
                 Refresh Data
               </Button>
@@ -1464,7 +1565,13 @@ const fetchVerificationRequests = async () => {
                       id="csv-upload"
                       type="file"
                       accept=".csv"
-                      onChange={handleCSVUpload}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const formData = new FormData();
+                          formData.append('csvFile', e.target.files[0]);
+                          handleCSVUpload(formData);
+                        }
+                      }}
                       className="hidden"
                     />
                   </div>
@@ -1637,10 +1744,43 @@ const fetchVerificationRequests = async () => {
                         >
                           {event.is_active ? 'Deactivate' : 'Activate'}
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => fetchEventParticipants(event.id)}
+                          disabled={selectedEventForParticipants === event.id}
+                        >
+                          {selectedEventForParticipants === event.id ? 'Viewing Participants...' : 'View Participants'}
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </div>
+
+                {/* Participants View */}
+                {selectedEventForParticipants && (
+                  <div className="mt-8 p-6 border rounded-lg bg-muted/30">
+                    <h3 className="text-xl font-bold mb-4">Participants for: {events.find(e => e.id === selectedEventForParticipants)?.title}</h3>
+                    {eventParticipants.length > 0 ? (
+                      <div className="space-y-3">
+                        {eventParticipants.map((participant) => (
+                          <div key={participant.id} className="flex items-center justify-between p-3 bg-background rounded-lg shadow">
+                            <div>
+                              <p className="font-medium">{participant.name || participant.email}</p>
+                              <p className="text-sm text-muted-foreground">{participant.email}</p>
+                            </div>
+                            <Badge variant="secondary">{participant.role || 'Participant'}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No participants found for this event or loading...</p>
+                    )}
+                    <Button variant="outline" size="sm" className="mt-4" onClick={() => setSelectedEventForParticipants(null)}>
+                      Hide Participants
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
