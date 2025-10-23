@@ -1287,120 +1287,155 @@ const fetchVerificationRequests = async () => {
                 Refresh Data
               </Button>
             </div>
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pending Alumni Verifications</CardTitle>
-                  <CardDescription>Alumni waiting for verification approval</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {verificationRequests
-                      .filter((req: any) => req.status === 'pending' && req.userRole === 'alumni')
-                      .slice(0, 5)
-                      .map((request: any) => {
-                        const profile = profiles.find(p => p.id === request.userId);
-                        const userName = (request.requestData as any)?.name || request.userName || 'Unknown';
 
-                        return (
-                          <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div className="flex-1">
-                              <h4 className="font-medium">{userName}</h4>
-                              <p className="text-sm text-muted-foreground">{request.userEmail}</p>
-                              {profile && (
-                                <p className="text-xs text-muted-foreground">
-                                  {profile.department} • Class of {profile.graduation_year}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => handleApproveVerification(request.id)}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Verify
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    {verificationRequests.filter((req: any) => req.status === 'pending' && req.userRole === 'alumni').length === 0 && (
-                      <div className="text-center py-4">
-                        <p className="text-muted-foreground">No pending alumni verifications.</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Sub-tabs for Alumni and Student */}
+            <Tabs defaultValue="alumni-requests" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="alumni-requests">
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                  Alumni Requests ({verificationRequests.filter((req: any) => req.status === 'pending' && req.userRole === 'alumni').length})
+                </TabsTrigger>
+                <TabsTrigger value="student-requests">
+                  <Users className="w-4 h-4 mr-2" />
+                  Student Requests ({verificationRequests.filter((req: any) => req.status === 'pending' && req.userRole === 'student').length})
+                </TabsTrigger>
+              </TabsList>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Verification Requests</span>
-                    <Badge variant="secondary">{verificationRequests.filter((req: any) => req.status === 'pending').length} pending</Badge>
-                  </CardTitle>
-                  <CardDescription>Review and manage user verification requests</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {verificationRequests.length === 0 && (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">Loading verification requests...</p>
-                      </div>
-                    )}
-                    {verificationRequests.filter((req: any) => req.status === 'pending').map((request: any) => {
-                      const userName = (request.requestData as any)?.name ||
-                                      request.userName ||
-                                      request.userEmail?.split('@')[0] ||
-                                      'User';
-                      const userEmail = request.userEmail ||
-                                       (request.requestData as any)?.email ||
-                                       'Email not available';
-                      const isStudent = request.userRole === 'student';
-                      const isAlumni = request.userRole === 'alumni';
-
-                      return (
-                        <div key={request.id} className="p-4 border rounded-lg">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="font-semibold">{userName}</p>
-                                <Badge variant={isStudent ? "secondary" : "default"}>
-                                  {isStudent ? "Student" : isAlumni ? "Alumni" : request.userRole}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{userEmail}</p>
-                              <div className="mt-2 text-xs text-muted-foreground">
-                                <p>Requested: {new Date(request.createdAt).toLocaleDateString()}</p>
-                                {request.userStudentId && <p>Student ID: {request.userStudentId}</p>}
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(request.id)}>
-                                <XCircle className="w-4 h-4 mr-1" />
-                                Reject
-                              </Button>
-                            </div>
-                          </div>
+              {/* Alumni Verification Requests */}
+              <TabsContent value="alumni-requests">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>Pending Alumni Verifications</span>
+                      <Badge variant="secondary">
+                        {verificationRequests.filter((req: any) => req.status === 'pending' && req.userRole === 'alumni').length} pending
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>Alumni waiting for verification approval</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {verificationRequests.length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">Loading verification requests...</p>
                         </div>
-                      );
-                    })}
-                    {verificationRequests.length > 0 && verificationRequests.filter((req: any) => req.status === 'pending').length === 0 && (
-                      <div className="text-center py-4">
-                        <p className="text-muted-foreground">No pending verification requests.</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                      )}
+                      {verificationRequests
+                        .filter((req: any) => req.status === 'pending' && req.userRole === 'alumni')
+                        .map((request: any) => {
+                          const profile = profiles.find(p => p.id === request.userId);
+                          const userName = (request.requestData as any)?.name || request.userName || 'Unknown';
+                          const userEmail = request.userEmail || (request.requestData as any)?.email || 'Email not available';
 
-            <Card>
+                          return (
+                            <div key={request.id} className="p-4 border rounded-lg">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-semibold">{userName}</h4>
+                                    <Badge variant="default">Alumni</Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">{userEmail}</p>
+                                  {profile && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {profile.department} • Class of {profile.graduation_year}
+                                    </p>
+                                  )}
+                                  <div className="mt-2 text-xs text-muted-foreground">
+                                    <p>Requested: {new Date(request.createdAt).toLocaleDateString()}</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
+                                    <CheckCircle className="w-4 h-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(request.id)}>
+                                    <XCircle className="w-4 h-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      {verificationRequests.filter((req: any) => req.status === 'pending' && req.userRole === 'alumni').length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">No pending alumni verifications.</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Student Verification Requests */}
+              <TabsContent value="student-requests">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>Pending Student Verifications</span>
+                      <Badge variant="secondary">
+                        {verificationRequests.filter((req: any) => req.status === 'pending' && req.userRole === 'student').length} pending
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>Students waiting for verification approval</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {verificationRequests.length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">Loading verification requests...</p>
+                        </div>
+                      )}
+                      {verificationRequests
+                        .filter((req: any) => req.status === 'pending' && req.userRole === 'student')
+                        .map((request: any) => {
+                          const profile = profiles.find(p => p.id === request.userId);
+                          const userName = (request.requestData as any)?.name || request.userName || request.userEmail?.split('@')[0] || 'User';
+                          const userEmail = request.userEmail || (request.requestData as any)?.email || 'Email not available';
+
+                          return (
+                            <div key={request.id} className="p-4 border rounded-lg">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-semibold">{userName}</h4>
+                                    <Badge variant="secondary">Student</Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">{userEmail}</p>
+                                  <div className="mt-2 text-xs text-muted-foreground">
+                                    <p>Requested: {new Date(request.createdAt).toLocaleDateString()}</p>
+                                    {request.userStudentId && <p>Student ID: {request.userStudentId}</p>}
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
+                                    <CheckCircle className="w-4 h-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button size="sm" variant="destructive" onClick={() => handleRejectVerification(request.id)}>
+                                    <XCircle className="w-4 h-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      {verificationRequests.filter((req: any) => req.status === 'pending' && req.userRole === 'student').length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">No pending student verifications.</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+
+            {/* Bulk Actions Section */}
+            <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Bulk Verification Actions</CardTitle>
                 <CardDescription>Manage multiple verifications at once</CardDescription>
