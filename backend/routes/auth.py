@@ -1,7 +1,12 @@
 
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, create_refresh_token
-from datetime import datetime, timedelta
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    get_jwt_identity,
+    jwt_required,
+)
+from datetime import datetime, timedelta, timezone
 import random
 import string
 from ..models import db, User, VerificationCode
@@ -31,7 +36,7 @@ def send_login_code():
     
     # Generate verification code
     code = generate_verification_code()
-    expires_at = datetime.utcnow() + timedelta(minutes=15)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
     
     # Save verification code
     verification = VerificationCode(
@@ -54,7 +59,19 @@ def send_login_code():
         }
     }), 200
 
+@auth.route('/api/auth/me', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify(user.to_dict()), 200
+
 @auth.route('/api/auth/login/verify-code', methods=['POST'])
+@auth.route('/api/auth/verify-login-code', methods=['POST'])
 def verify_login_code():
     data = request.get_json()
     user_id = data.get('user_id')
@@ -76,12 +93,12 @@ def verify_login_code():
         is_used=False
     ).first()
     
-    if not verification or verification.expires_at < datetime.utcnow():
+    if not verification or verification.expires_at < datetime.now(timezone.utc):
         return jsonify({'error': 'Invalid or expired verification code'}), 400
     
     # Mark code as used
     verification.is_used = True
-    verification.used_at = datetime.utcnow()
+    verification.used_at = datetime.now(timezone.utc)
     db.session.commit()
     
     # Generate tokens
@@ -113,7 +130,7 @@ def send_registration_code():
     
     # Generate verification code
     code = generate_verification_code()
-    expires_at = datetime.utcnow() + timedelta(minutes=15)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
     
     # Save verification code
     verification = VerificationCode(
@@ -153,7 +170,7 @@ def verify_registration():
         is_used=False
     ).first()
     
-    if not verification or verification.expires_at < datetime.utcnow():
+    if not verification or verification.expires_at < datetime.now(timezone.utc):
         return jsonify({'error': 'Invalid or expired verification code'}), 400
     
     # Create user
@@ -162,7 +179,7 @@ def verify_registration():
     user.is_verified = True
     
     verification.is_used = True
-    verification.used_at = datetime.utcnow()
+    verification.used_at = datetime.now(timezone.utc)
     
     db.session.add(user)
     db.session.commit()

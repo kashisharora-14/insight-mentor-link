@@ -20,6 +20,9 @@ import AIChat from './pages/AIChat';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AlumniDirectory from './pages/AlumniDirectory';
+import Chat from './pages/Chat';
+import MyMentorships from './pages/MyMentorships';
+import PublicAlumniProfile from './pages/PublicAlumniProfile';
 import GlobalMap from './pages/GlobalMap';
 import Donations from './pages/Donations';
 import GiftShop from './pages/GiftShop';
@@ -36,7 +39,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin-login" element={<Navigate to="/admin/login" replace />} />
             <Route path="/admin" element={<Navigate to="/admin-dashboard" replace />} />
 
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -51,6 +54,9 @@ function App() {
             <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
             <Route path="/alumni-profile-edit" element={<ProtectedRoute><AlumniProfileEdit /></ProtectedRoute>} />
             <Route path="/alumni-directory" element={<ProtectedRoute><AlumniDirectory /></ProtectedRoute>} />
+            <Route path="/chat/:requestId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/my-mentorships" element={<ProtectedRoute><MyMentorships /></ProtectedRoute>} />
+            <Route path="/alumni/:id" element={<ProtectedRoute><PublicAlumniProfile /></ProtectedRoute>} />
             <Route path="/global-map" element={<ProtectedRoute><GlobalMap /></ProtectedRoute>} />
             <Route path="/donations" element={<ProtectedRoute><Donations /></ProtectedRoute>} />
             <Route path="/gift-shop" element={<ProtectedRoute><GiftShop /></ProtectedRoute>} />

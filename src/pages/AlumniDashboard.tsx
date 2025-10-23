@@ -54,6 +54,8 @@ const AlumniDashboard = () => {
   const [declineReason, setDeclineReason] = useState("");
   const [alumniRequests, setAlumniRequests] = useState<MentorshipRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [publicProfile, setPublicProfile] = useState<any | null>(null);
+  const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -82,20 +84,85 @@ const AlumniDashboard = () => {
     fetchMentorshipRequests();
   }, []);
 
-  const handleAcceptRequest = (requestId: string) => {
-    setAlumniRequests(prev => 
-      prev.map(req => 
-        req.id === requestId 
-          ? { ...req, status: 'accepted' as const }
-          : req
-      )
-    );
-    setAcceptingRequest(null);
-    setMeetingLink("");
-    toast({
-      title: "Request Accepted",
-      description: "The mentorship request has been accepted successfully!",
-    });
+  // Load public profile preview for the logged-in alumni
+  useEffect(() => {
+    const loadPublicProfile = async () => {
+      try {
+        if (!user?.id) return;
+        const resp = await fetch(`/api/alumni-profile/profile/${user.id}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        setPublicProfile(data.profile || null);
+      } catch {}
+    };
+    loadPublicProfile();
+  }, [user?.id]);
+
+  // After requests load, fetch ratings for each mentorship
+  useEffect(() => {
+    const loadRatings = async () => {
+      try {
+        const all = [...alumniRequests];
+        const entries = await Promise.all(all.map(async (req) => {
+          try {
+            const resp = await fetch(`/api/mentorship/${req.id}/reviews`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+            });
+            if (!resp.ok) return [req.id, { average: 0, count: 0 }] as const;
+            const data = await resp.json();
+            return [req.id, { average: Number(data.average || 0), count: Number(data.count || 0) }] as const;
+          } catch {
+            return [req.id, { average: 0, count: 0 }] as const;
+          }
+        }));
+        setRatings(Object.fromEntries(entries));
+      } catch {}
+    };
+    if (alumniRequests.length) loadRatings();
+  }, [alumniRequests]);
+
+  const overallRating = (() => {
+    const vals = Object.values(ratings);
+    if (!vals.length) return { avg: 0, count: 0 };
+    const totalCount = vals.reduce((s, r) => s + r.count, 0);
+    const weighted = vals.reduce((s, r) => s + r.average * r.count, 0);
+    const avg = totalCount ? weighted / totalCount : 0;
+    return { avg, count: totalCount };
+  })();
+
+  const handleAcceptRequest = async (requestId: string) => {
+    try {
+      const resp = await fetch(`/api/mentorship/${requestId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ status: 'accepted' }),
+      });
+      if (!resp.ok) {
+        const e = await resp.json().catch(() => ({}));
+        throw new Error(e.error || 'Failed to accept request');
+      }
+      setAlumniRequests(prev => 
+        prev.map(req => 
+          req.id === requestId 
+            ? { ...req, status: 'accepted' as const }
+            : req
+        )
+      );
+      setAcceptingRequest(null);
+      setMeetingLink("");
+      toast({
+        title: "Request Accepted",
+        description: "Chat has been opened for this mentorship.",
+      });
+      navigate(`/chat/${requestId}`);
+    } catch (err: any) {
+      toast({ title: 'Failed', description: err.message || 'Could not accept request', variant: 'destructive' });
+    }
   };
 
   const handleDeclineRequest = (requestId: string) => {
@@ -114,18 +181,34 @@ const AlumniDashboard = () => {
     });
   };
 
-  const handleCompleteRequest = (requestId: string) => {
-    setAlumniRequests(prev => 
-      prev.map(req => 
-        req.id === requestId 
-          ? { ...req, status: 'completed' as const }
-          : req
-      )
-    );
-    toast({
-      title: "Mentorship Completed",
-      description: "The mentorship has been marked as completed.",
-    });
+  const handleCompleteRequest = async (requestId: string) => {
+    try {
+      const resp = await fetch(`/api/mentorship/${requestId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ status: 'completed' }),
+      });
+      if (!resp.ok) {
+        const e = await resp.json().catch(() => ({}));
+        throw new Error(e.error || 'Failed to update status');
+      }
+      setAlumniRequests(prev => 
+        prev.map(req => 
+          req.id === requestId 
+            ? { ...req, status: 'completed' as const }
+            : req
+        )
+      );
+      toast({
+        title: "Mentorship Completed",
+        description: "The mentorship has been marked as completed.",
+      });
+    } catch (err: any) {
+      toast({ title: 'Failed', description: err.message || 'Could not mark as completed', variant: 'destructive' });
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -254,8 +337,8 @@ const AlumniDashboard = () => {
                 <Star className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <div className="text-2xl font-bold">4.9</div>
-                <div className="text-sm text-muted-foreground">Avg Rating</div>
+                <div className="text-2xl font-bold">{overallRating.count ? overallRating.avg.toFixed(1) : '—'}</div>
+                <div className="text-sm text-muted-foreground">Avg Rating{overallRating.count ? ` (${overallRating.count})` : ''}</div>
               </div>
             </CardContent>
           </Card>
@@ -345,7 +428,7 @@ const AlumniDashboard = () => {
             }`}
           >
             <User className="w-4 h-4 inline mr-1" />
-            My Profile
+            Public Profile (Preview)
           </button>
         </div>
 
@@ -531,12 +614,29 @@ const AlumniDashboard = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      <strong>Focus:</strong> {request.subject}
+                    <p className="text-sm text-muted-foreground mb-2"><strong>Focus:</strong> {request.subject}</p>
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      {ratings[request.id]?.count ? `${ratings[request.id].average.toFixed(1)} (${ratings[request.id].count})` : 'No ratings yet'}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       <strong>Started:</strong> {formatDate(request.createdAt)}
                     </p>
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/chat/${request.id}`)}
+                      >
+                        Open Chat
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleCompleteRequest(request.id)}
+                      >
+                        Mark Complete
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -555,8 +655,10 @@ const AlumniDashboard = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      <strong>Focus:</strong> {request.subject}
+                    <p className="text-sm text-muted-foreground mb-2"><strong>Focus:</strong> {request.subject}</p>
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      {ratings[request.id]?.count ? `${ratings[request.id].average.toFixed(1)} (${ratings[request.id].count})` : 'No ratings yet'}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       <strong>Completed:</strong> {formatDate(request.createdAt)}
@@ -576,16 +678,16 @@ const AlumniDashboard = () => {
                     Alumni Profile
                   </CardTitle>
                   <CardDescription>
-                    Complete your profile to be visible in the Alumni Directory and available for mentorship
+                    Manage your profile details, mentorship preferences, visibility and profile picture in the dedicated editor.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <AlumniProfileForm onSuccess={() => {
-                    toast({
-                      title: "Success!",
-                      description: "Your profile has been saved. It will be visible in the Alumni Directory once verified.",
-                    });
-                  }} />
+                <CardContent className="space-y-4">
+                  <div className="p-4 rounded bg-muted/50 text-sm text-muted-foreground">
+                    Editing from dashboard has been consolidated to a single page to simplify your experience.
+                  </div>
+                  <Button onClick={() => navigate('/alumni-profile-edit')} className="bg-gradient-to-r from-purple-600 to-blue-600">
+                    Go to Profile Editor
+                  </Button>
                 </CardContent>
               </Card>
             </div>

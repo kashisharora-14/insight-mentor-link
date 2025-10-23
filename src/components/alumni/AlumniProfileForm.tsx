@@ -28,51 +28,51 @@ import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 
 const alumniProfileSchema = z.object({
-  // Academic Information
-  rollNumber: z.string().min(1, "Roll number is required"),
-  program: z.enum(["MCA", "MSCIT"], { required_error: "Program is required" }),
-  batchType: z.enum(["Morning", "Evening"], { required_error: "Batch type is required" }),
-  graduationYear: z.string().min(4, "Graduation year is required"),
-  admissionYear: z.string().min(4, "Admission year is required"),
-  cgpa: z.string().optional(),
-  
-  // Personal Details
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
-  gender: z.string().min(1, "Gender is required"),
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+  // Academic Information (optional to avoid blocking alumni who don't remember)
+  rollNumber: z.string().optional().or(z.literal('')),
+  program: z.enum(["MCA", "MSCIT"]).optional(),
+  batchType: z.enum(["Morning", "Evening"]).optional(),
+  graduationYear: z.string().optional().or(z.literal('')),
+  admissionYear: z.string().optional().or(z.literal('')),
+  cgpa: z.string().optional().or(z.literal('')),
+
+  // Personal Details (optional)
+  dateOfBirth: z.string().optional().or(z.literal('')),
+  gender: z.string().optional().or(z.literal('')),
+  phoneNumber: z.string().optional().or(z.literal('')),
   alternateEmail: z.string().email("Invalid email").optional().or(z.literal('')),
-  currentAddress: z.string().min(1, "Current address is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
-  country: z.string().default("India"),
-  pincode: z.string().min(6, "Pincode must be at least 6 digits"),
-  
-  // Professional Information
-  currentPosition: z.string().min(1, "Current position is required"),
-  currentCompany: z.string().min(1, "Current company is required"),
-  companyLocation: z.string().optional(),
-  industry: z.string().min(1, "Industry is required"),
-  workType: z.enum(["Remote", "Hybrid", "On-site"], { required_error: "Work type is required" }),
-  yearsOfExperience: z.string().min(1, "Years of experience is required"),
-  
+  currentAddress: z.string().optional().or(z.literal('')),
+  city: z.string().optional().or(z.literal('')),
+  state: z.string().optional().or(z.literal('')),
+  country: z.string().default("India").optional(),
+  pincode: z.string().optional().or(z.literal('')),
+
+  // Professional Information (optional)
+  currentPosition: z.string().optional().or(z.literal('')),
+  currentCompany: z.string().optional().or(z.literal('')),
+  companyLocation: z.string().optional().or(z.literal('')),
+  industry: z.string().optional().or(z.literal('')),
+  workType: z.enum(["Remote", "Hybrid", "On-site"]).optional(),
+  yearsOfExperience: z.string().optional().or(z.literal('')),
+
   // Mentorship Preferences
   isMentorAvailable: z.boolean().default(false),
   availableForJobReferrals: z.boolean().default(false),
   availableForGuestLectures: z.boolean().default(false),
   availableForNetworking: z.boolean().default(false),
-  preferredCommunication: z.enum(["Email", "Phone", "LinkedIn", "WhatsApp"]).optional(),
-  maxMentees: z.string().optional(),
-  
-  // Profile Content
-  bio: z.string().min(50, "Bio must be at least 50 characters").max(500),
-  careerJourney: z.string().min(100, "Career journey must be at least 100 characters").optional(),
-  adviceForStudents: z.string().optional(),
-  
-  // Social Links
-  linkedinUrl: z.string().url("Invalid URL").or(z.literal('')).optional(),
-  githubUrl: z.string().url("Invalid URL").or(z.literal('')).optional(),
-  portfolioUrl: z.string().url("Invalid URL").or(z.literal('')).optional(),
-  
+  preferredCommunication: z.enum(["email", "phone", "linkedin", "whatsapp"]).optional(),
+  maxMentees: z.string().optional().or(z.literal('')),
+
+  // Profile Content (optional)
+  bio: z.string().optional().or(z.literal('')),
+  careerJourney: z.string().optional().or(z.literal('')),
+  adviceForStudents: z.string().optional().or(z.literal('')),
+
+  // Social Links (optional)
+  linkedinUrl: z.string().url("Invalid URL").optional().or(z.literal('')),
+  githubUrl: z.string().url("Invalid URL").optional().or(z.literal('')),
+  portfolioUrl: z.string().url("Invalid URL").optional().or(z.literal('')),
+
   // Profile Visibility
   isPublicProfile: z.boolean().default(true),
   showContactInfo: z.boolean().default(true),
@@ -150,14 +150,14 @@ export function AlumniProfileForm({ onSuccess }: AlumniProfileFormProps) {
         technicalSkills: skills,
         expertiseAreas: expertiseAreas,
         mentorshipAreas: form.watch('isMentorAvailable') ? mentorshipAreas : [],
-        graduationYear: parseInt(values.graduationYear),
-        admissionYear: parseInt(values.admissionYear),
-        yearsOfExperience: parseInt(values.yearsOfExperience),
-        maxMentees: values.maxMentees ? parseInt(values.maxMentees) : 3,
-        cgpa: values.cgpa ? parseFloat(values.cgpa) : null,
+        graduationYear: values.graduationYear ? parseInt(values.graduationYear) : undefined,
+        admissionYear: values.admissionYear ? parseInt(values.admissionYear) : undefined,
+        yearsOfExperience: values.yearsOfExperience ? parseInt(values.yearsOfExperience) : undefined,
+        maxMentees: values.maxMentees ? parseInt(values.maxMentees) : undefined,
+        cgpa: values.cgpa ? parseFloat(values.cgpa) : undefined,
       };
 
-      const response = await fetch('/api/alumni/profile', {
+      const response = await fetch('/api/alumni-profile/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -654,7 +654,7 @@ export function AlumniProfileForm({ onSuccess }: AlumniProfileFormProps) {
                     name="preferredCommunication"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Preferred Communication</FormLabel>
+                        <FormLabel>Preferred Communication (Optional)</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -662,10 +662,10 @@ export function AlumniProfileForm({ onSuccess }: AlumniProfileFormProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Email">Email</SelectItem>
-                            <SelectItem value="Phone">Phone</SelectItem>
-                            <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                            <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="phone">Phone</SelectItem>
+                            <SelectItem value="linkedin">LinkedIn</SelectItem>
+                            <SelectItem value="whatsapp">WhatsApp</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

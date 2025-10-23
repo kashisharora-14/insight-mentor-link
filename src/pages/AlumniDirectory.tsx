@@ -42,6 +42,79 @@ interface AlumniProfile {
   isVerified: boolean;
 }
 
+const normalizeList = (value: unknown): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map(item => (typeof item === "string" ? item : String(item)))
+      .map(item => item.trim())
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value
+      .split(/[,;\n]/)
+      .map(item => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const normalizeBoolean = (value: unknown): boolean => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") return value.trim().toLowerCase() === "true" || value.trim() === "1";
+  return false;
+};
+
+const normalizeProgram = (value: unknown): string => {
+  if (!value) return "";
+  const text = String(value).trim();
+  if (!text) return "";
+  const upper = text.toUpperCase();
+  if (upper.includes("MSC")) return "MSCIT";
+  if (upper.includes("MCA")) return "MCA";
+  return text;
+};
+
+const transformAlumniProfile = (raw: any): AlumniProfile => {
+  const program = normalizeProgram(raw.program ?? raw.batchType ?? raw.department);
+  const technicalSkills = normalizeList(raw.technicalSkills ?? raw.skills);
+  const expertiseAreas = normalizeList(raw.expertiseAreas ?? raw.mentorshipAreas);
+  const mentorshipAreas = normalizeList(raw.mentorshipAreas);
+
+  return {
+    id: String(raw.id ?? raw.profile?.id ?? raw.userId ?? ""),
+    userId: String(raw.userId ?? raw.id ?? raw.profile?.userId ?? ""),
+    name: raw.name ?? raw.user?.name ?? "Alumni",
+    email: raw.email ?? null,
+    phoneNumber: raw.phoneNumber ?? null,
+    program,
+    batchType: raw.batchType ?? "",
+    graduationYear: Number(raw.graduationYear ?? raw.graduation_year ?? 0) || 0,
+    currentPosition: raw.currentPosition ?? raw.current_position ?? "",
+    currentCompany: raw.currentCompany ?? raw.current_company ?? "",
+    companyLocation: raw.companyLocation ?? raw.company_location ?? "",
+    industry: raw.industry ?? "",
+    workType: raw.workType ?? "",
+    yearsOfExperience: Number(raw.yearsOfExperience ?? 0) || 0,
+    technicalSkills,
+    expertiseAreas,
+    isMentorAvailable: normalizeBoolean(raw.isMentorAvailable ?? raw.is_mentor_available),
+    mentorshipAreas,
+    availableForJobReferrals: normalizeBoolean(raw.availableForJobReferrals),
+    availableForGuestLectures: normalizeBoolean(raw.availableForGuestLectures),
+    availableForNetworking: normalizeBoolean(raw.availableForNetworking),
+    bio: raw.bio ?? "",
+    careerJourney: raw.careerJourney ?? "",
+    adviceForStudents: raw.adviceForStudents ?? "",
+    linkedinUrl: raw.linkedinUrl ?? raw.linkedin_profile ?? "",
+    githubUrl: raw.githubUrl ?? "",
+    portfolioUrl: raw.portfolioUrl ?? "",
+    profilePictureUrl: raw.profilePictureUrl ?? "",
+    isVerified: normalizeBoolean(raw.isVerified ?? raw.user?.isVerified),
+  };
+};
+
 const AlumniDirectory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProgram, setSelectedProgram] = useState("all");
@@ -57,10 +130,11 @@ const AlumniDirectory = () => {
 
   const fetchAlumni = async () => {
     try {
-      const response = await fetch('/api/alumni/directory');
+      const response = await fetch('/api/alumni-profile/directory');
       if (response.ok) {
         const data = await response.json();
-        setAlumni(data.alumni || []);
+        const list = Array.isArray(data.alumni) ? data.alumni.map(transformAlumniProfile) : [];
+        setAlumni(list);
       } else {
         toast.error("Failed to load alumni directory");
       }
@@ -90,6 +164,8 @@ const AlumniDirectory = () => {
 
   const industries = [...new Set(alumni.map(a => a.industry).filter(Boolean))];
   const graduationYears = [...new Set(alumni.map(a => a.graduationYear).filter(Boolean))].sort((a, b) => b - a);
+  const programs = Array.from(new Set(alumni.map(a => a.program).filter(Boolean))).sort();
+  const programOptions = programs.length ? programs : ["MCA", "MSCIT"];
 
   const getInitials = (name: string) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?';
@@ -214,7 +290,7 @@ const AlumniDirectory = () => {
                     )}
                     {person.isVerified && (
                       <div className="absolute -bottom-1 -right-1">
-                        <VerifiedBadge size="small" />
+                        <VerifiedBadge size="sm" />
                       </div>
                     )}
                   </div>
@@ -302,29 +378,51 @@ const AlumniDirectory = () => {
                   )}
                 </div>
 
-                {/* Action Button */}
-                {person.isMentorAvailable ? (
-                  <Link to={`/mentorship?alumniId=${person.userId}`}>
-                    <Button className="w-full bg-gradient-hero hover:opacity-90 transition-opacity">
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Request Mentorship
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      if (person.linkedinUrl) {
-                        window.open(person.linkedinUrl, '_blank');
-                      } else {
-                        toast.info("No LinkedIn profile available");
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-1/2"
+                    onClick={() => window.location.assign(`/alumni/${person.userId}`)}
+                  >
+                    View Full Profile
+                  </Button>
+                  <Button
+                    className="w-1/2 bg-gradient-hero hover:opacity-90 transition-opacity"
+                    disabled={!person.isMentorAvailable}
+                    onClick={async () => {
+                      if (!person.isMentorAvailable) {
+                        return;
+                      }
+                      try {
+                        const token = localStorage.getItem('authToken');
+                        if (!token) {
+                          toast.error('Please log in to request mentorship');
+                          return;
+                        }
+                        const resp = await fetch('/api/mentorship/requests', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                          },
+                          body: JSON.stringify({ mentorId: person.userId, fieldOfInterest: 'General Mentorship' }),
+                        });
+                        if (resp.ok) {
+                          toast.success('Request sent! The alumni must accept before chat opens.');
+                        } else {
+                          const e = await resp.json().catch(() => ({}));
+                          toast.error(e.error || 'Could not send request');
+                        }
+                      } catch (err) {
+                        console.error('Request mentorship failed', err);
+                        toast.error('Could not send request');
                       }
                     }}
                   >
-                    View Profile
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    {person.isMentorAvailable ? 'Request Mentorship' : 'Mentor Unavailable'}
                   </Button>
-                )}
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -332,9 +430,6 @@ const AlumniDirectory = () => {
 
         {filteredAlumni.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg mb-2">
-              No alumni found matching your criteria.
-            </p>
             <p className="text-sm text-muted-foreground">
               Try adjusting your filters or search terms.
             </p>
@@ -357,3 +452,4 @@ const AlumniDirectory = () => {
 };
 
 export default AlumniDirectory;
+

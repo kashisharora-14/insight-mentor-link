@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, X, Briefcase, GraduationCap, Award, MapPin, Linkedin, Github, Twitter } from 'lucide-react';
+import { ArrowLeft, Plus, X, Briefcase, GraduationCap, Award, MapPin, Linkedin, Github, Twitter, Users, Sparkles } from 'lucide-react';
 import apiClient from '@/services/apiClient';
 
 interface AlumniProfile {
@@ -21,16 +21,25 @@ interface AlumniProfile {
   major: string;
   currentCompany: string;
   currentPosition: string;
-  location: string;
+  location: string; // maps to companyLocation
   bio: string;
-  skills: string[];
-  expertise: string[];
-  availableForMentorship: boolean;
+  skills: string[]; // maps to technicalSkills
+  expertise: string[]; // maps to expertiseAreas
+  achievements: string[];
   linkedinUrl?: string;
   githubUrl?: string;
   twitterUrl?: string;
-  achievements: string[];
-  profileImage?: string;
+  profileImage?: string; // maps to profilePictureUrl
+  // mentorship and visibility
+  availableForMentorship: boolean; // maps to isMentorAvailable
+  mentorshipAreas: string[];
+  preferredCommunication?: string;
+  maxMentees?: number;
+  availableForGuestLectures?: boolean;
+  availableForNetworking?: boolean;
+  availableForJobReferrals?: boolean;
+  isPublicProfile?: boolean;
+  showContactInfo?: boolean;
 }
 
 export default function AlumniProfileEdit() {
@@ -40,6 +49,7 @@ export default function AlumniProfileEdit() {
   const [newSkill, setNewSkill] = useState('');
   const [newExpertise, setNewExpertise] = useState('');
   const [newAchievement, setNewAchievement] = useState('');
+  const [newMentorshipArea, setNewMentorshipArea] = useState('');
   
   const [profile, setProfile] = useState<AlumniProfile>({
     name: '',
@@ -54,11 +64,42 @@ export default function AlumniProfileEdit() {
     skills: [],
     expertise: [],
     availableForMentorship: true,
+    mentorshipAreas: [],
     linkedinUrl: '',
     githubUrl: '',
     twitterUrl: '',
     achievements: [],
+    profileImage: '',
+    preferredCommunication: 'email',
+    maxMentees: 3,
+    availableForGuestLectures: false,
+    availableForNetworking: false,
+    availableForJobReferrals: false,
+    isPublicProfile: true,
+    showContactInfo: true,
   });
+
+  // normalization helpers
+  const titleCase = (s: string) => s.toLowerCase().split(' ').filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+  const normalizeTag = (raw: string) => {
+    const v = raw.trim().toLowerCase();
+    const corrections: Record<string, string> = {
+      'machine liearing': 'Machine Learning',
+      'machine learng': 'Machine Learning',
+      'ml': 'Machine Learning',
+      'ds': 'Data Science',
+      'dsa': 'DSA',
+      'ui ux': 'UI/UX',
+      'uiux': 'UI/UX',
+      'frontend': 'Frontend',
+      'back-end': 'Backend',
+      'node js': 'Node.js',
+      'javascript': 'JavaScript',
+      'react js': 'React',
+    };
+    if (corrections[v]) return corrections[v];
+    return titleCase(raw.trim());
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -66,14 +107,37 @@ export default function AlumniProfileEdit() {
 
   const fetchProfile = async () => {
     try {
-      const response = await apiClient.get('/alumni/profile');
-      if (response.data) {
-        setProfile({
-          ...response.data,
-          skills: response.data.skills || [],
-          expertise: response.data.expertise || [],
-          achievements: response.data.achievements || [],
-        });
+      const response = await apiClient.get('/alumni-profile/profile');
+      const data = (response as any)?.profile || (response as any);
+      if (data) {
+        setProfile(prev => ({
+          ...prev,
+          name: data.name || prev.name,
+          email: user?.email || prev.email,
+          graduationYear: String(data.graduationYear || ''),
+          degree: data.degree || prev.degree,
+          major: data.major || prev.major,
+          currentCompany: data.currentCompany || '',
+          currentPosition: data.currentPosition || '',
+          location: data.companyLocation || '',
+          bio: data.bio || '',
+          skills: data.technicalSkills || [],
+          expertise: data.expertiseAreas || [],
+          achievements: data.achievements || [],
+          linkedinUrl: data.linkedinUrl || '',
+          githubUrl: data.githubUrl || '',
+          twitterUrl: data.twitterUrl || '',
+          profileImage: data.profilePictureUrl || '',
+          availableForMentorship: Boolean(data.isMentorAvailable),
+          mentorshipAreas: data.mentorshipAreas || [],
+          preferredCommunication: data.preferredCommunication || 'email',
+          maxMentees: data.maxMentees ?? 3,
+          availableForGuestLectures: Boolean(data.availableForGuestLectures),
+          availableForNetworking: Boolean(data.availableForNetworking),
+          availableForJobReferrals: Boolean(data.availableForJobReferrals),
+          isPublicProfile: data.isPublicProfile !== false,
+          showContactInfo: data.showContactInfo !== false,
+        }));
       }
     } catch (error: any) {
       if (error.response?.status !== 404) {
@@ -88,8 +152,9 @@ export default function AlumniProfileEdit() {
   };
 
   const addSkill = () => {
-    if (newSkill.trim() && !profile.skills.includes(newSkill.trim())) {
-      setProfile(prev => ({ ...prev, skills: [...prev.skills, newSkill.trim()] }));
+    const norm = normalizeTag(newSkill);
+    if (norm && !profile.skills.map(s => s.toLowerCase()).includes(norm.toLowerCase())) {
+      setProfile(prev => ({ ...prev, skills: [...prev.skills, norm] }));
       setNewSkill('');
     }
   };
@@ -99,8 +164,9 @@ export default function AlumniProfileEdit() {
   };
 
   const addExpertise = () => {
-    if (newExpertise.trim() && !profile.expertise.includes(newExpertise.trim())) {
-      setProfile(prev => ({ ...prev, expertise: [...prev.expertise, newExpertise.trim()] }));
+    const norm = normalizeTag(newExpertise);
+    if (norm && !profile.expertise.map(s => s.toLowerCase()).includes(norm.toLowerCase())) {
+      setProfile(prev => ({ ...prev, expertise: [...prev.expertise, norm] }));
       setNewExpertise('');
     }
   };
@@ -120,12 +186,55 @@ export default function AlumniProfileEdit() {
     setProfile(prev => ({ ...prev, achievements: prev.achievements.filter(a => a !== achievement) }));
   };
 
+  const addMentorshipArea = () => {
+    const norm = normalizeTag(newMentorshipArea);
+    if (norm && !profile.mentorshipAreas.map(s => s.toLowerCase()).includes(norm.toLowerCase())) {
+      setProfile(prev => ({ ...prev, mentorshipAreas: [...prev.mentorshipAreas, norm] }));
+      setNewMentorshipArea('');
+    }
+  };
+
+  const removeMentorshipArea = (area: string) => {
+    setProfile(prev => ({ ...prev, mentorshipAreas: prev.mentorshipAreas.filter(a => a !== area) }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await apiClient.post('/alumni/profile', profile);
+      // Map UI state to backend payload
+      const payload: any = {
+        currentCompany: profile.currentCompany,
+        currentPosition: profile.currentPosition,
+        companyLocation: profile.location,
+        bio: profile.bio,
+        technicalSkills: profile.skills,
+        expertiseAreas: profile.expertise,
+        achievements: profile.achievements,
+        linkedinUrl: profile.linkedinUrl,
+        githubUrl: profile.githubUrl,
+        twitterUrl: profile.twitterUrl,
+        profilePictureUrl: profile.profileImage,
+        isMentorAvailable: profile.availableForMentorship,
+        mentorshipAreas: profile.mentorshipAreas,
+        preferredCommunication: profile.preferredCommunication,
+        maxMentees: profile.maxMentees,
+        availableForGuestLectures: profile.availableForGuestLectures,
+        availableForNetworking: profile.availableForNetworking,
+        availableForJobReferrals: profile.availableForJobReferrals,
+        isPublicProfile: profile.isPublicProfile,
+        showContactInfo: profile.showContactInfo,
+        graduationYear: profile.graduationYear ? Number(profile.graduationYear) : undefined,
+        degree: profile.degree || undefined,
+        program: profile.degree || undefined,
+        batchType: undefined,
+        industry: undefined,
+        workType: undefined,
+        yearsOfExperience: undefined,
+      };
+
+      await apiClient.post('/alumni-profile/profile', payload);
       toast.success('Profile saved successfully!');
       navigate('/alumni-dashboard');
     } catch (error: any) {
@@ -157,7 +266,8 @@ export default function AlumniProfileEdit() {
           </CardHeader>
 
           <CardContent className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
               {/* Personal Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -426,17 +536,224 @@ export default function AlumniProfileEdit() {
                     I am available to mentor students
                   </Label>
                 </div>
+
+                {/* Mentorship Areas */}
+                {profile.availableForMentorship && (
+                  <div className="space-y-3">
+                    <Label>Mentorship Areas</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newMentorshipArea}
+                        onChange={(e) => setNewMentorshipArea(e.target.value)}
+                        placeholder="Add an area (e.g., Career, DSA, Resume)"
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addMentorshipArea())}
+                      />
+                      <Button type="button" onClick={addMentorshipArea}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.mentorshipAreas.map((area, index) => (
+                        <Badge key={index} variant="outline" className="px-3 py-1">
+                          {area}
+                          <button type="button" onClick={() => removeMentorshipArea(area)} className="ml-2 hover:text-red-600">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Preferences */}
+                {profile.availableForMentorship && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="preferredCommunication">Preferred Communication</Label>
+                      <select
+                        id="preferredCommunication"
+                        className="w-full border rounded h-10 px-3"
+                        value={profile.preferredCommunication}
+                        onChange={(e) => setProfile(prev => ({ ...prev, preferredCommunication: e.target.value }))}
+                      >
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
+                        <option value="chat">Chat</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="maxMentees">Max Mentees</Label>
+                      <Input
+                        id="maxMentees"
+                        type="number"
+                        min={1}
+                        value={profile.maxMentees}
+                        onChange={(e) => setProfile(prev => ({ ...prev, maxMentees: Number(e.target.value || 0) }))}
+                        placeholder="3"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 mt-6">
+                      <input
+                        type="checkbox"
+                        id="availableForJobReferrals"
+                        checked={!!profile.availableForJobReferrals}
+                        onChange={(e) => setProfile(prev => ({ ...prev, availableForJobReferrals: e.target.checked }))}
+                      />
+                      <Label htmlFor="availableForJobReferrals">Available for Job Referrals</Label>
+                    </div>
+                  </div>
+                )}
+
+                {profile.availableForMentorship && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="availableForGuestLectures"
+                        checked={!!profile.availableForGuestLectures}
+                        onChange={(e) => setProfile(prev => ({ ...prev, availableForGuestLectures: e.target.checked }))}
+                      />
+                      <Label htmlFor="availableForGuestLectures">Available for Guest Lectures</Label>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="availableForNetworking"
+                        checked={!!profile.availableForNetworking}
+                        onChange={(e) => setProfile(prev => ({ ...prev, availableForNetworking: e.target.checked }))}
+                      />
+                      <Label htmlFor="availableForNetworking">Available for Networking</Label>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="flex gap-4">
-                <Button type="submit" disabled={loading} className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600">
-                  {loading ? 'Saving...' : 'Save Profile'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => navigate('/alumni-dashboard')}>
-                  Cancel
-                </Button>
+              {/* Visibility & Profile Picture */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Visibility</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded">
+                    <input
+                      type="checkbox"
+                      id="isPublicProfile"
+                      checked={!!profile.isPublicProfile}
+                      onChange={(e) => setProfile(prev => ({ ...prev, isPublicProfile: e.target.checked }))}
+                    />
+                    <div>
+                      <Label htmlFor="isPublicProfile">Public Profile</Label>
+                      <p className="text-xs text-muted-foreground">Show in the Alumni Directory</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded">
+                    <input
+                      type="checkbox"
+                      id="showContactInfo"
+                      checked={!!profile.showContactInfo}
+                      onChange={(e) => setProfile(prev => ({ ...prev, showContactInfo: e.target.checked }))}
+                    />
+                    <div>
+                      <Label htmlFor="showContactInfo">Show Contact Info</Label>
+                      <p className="text-xs text-muted-foreground">Allow students to see your email/phone</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="profileImage">Profile Picture (optional)</Label>
+                  <Input
+                    id="profileImage"
+                    name="profileImage"
+                    value={profile.profileImage}
+                    onChange={handleInputChange}
+                    placeholder="https://.../your-photo.jpg"
+                  />
+                </div>
               </div>
-            </form>
+
+                <div className="flex gap-4">
+                  <Button type="submit" disabled={loading} className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600">
+                    {loading ? 'Saving...' : 'Save Profile'}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => navigate('/alumni-dashboard')}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+
+              {/* Live Preview */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Preview</h3>
+                <div className="rounded-xl border shadow-elegant p-6 bg-white">
+                  <div className="flex items-start space-x-4 mb-4">
+                    <div className="relative">
+                      {profile.profileImage ? (
+                        <img src={profile.profileImage} alt={profile.name || 'Profile'} className="w-16 h-16 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-16 h-16 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          {(profile.name || '?').split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold">{profile.name || 'Your Name'}</h3>
+                      <div className="text-xs text-muted-foreground">
+                        {profile.degree ? `${profile.degree} • ` : ''}{profile.graduationYear || 'Year'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-3 text-sm text-muted-foreground">
+                    {profile.currentPosition && (
+                      <div className="flex items-center"><Briefcase className="w-4 h-4 mr-2 text-primary" />{profile.currentPosition}</div>
+                    )}
+                    {profile.currentCompany && (
+                      <div className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-primary" />{profile.currentCompany}{profile.location ? ` • ${profile.location}` : ''}</div>
+                    )}
+                  </div>
+
+                  {profile.bio && (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{profile.bio}</p>
+                  )}
+
+                  {profile.expertise?.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">Expertise:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {profile.expertise.slice(0, 3).map((a, i) => (
+                          <Badge key={i} variant="outline" className="text-xs">{a}</Badge>
+                        ))}
+                        {profile.expertise.length > 3 && (
+                          <Badge variant="outline" className="text-xs">+{profile.expertise.length - 3}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {profile.availableForMentorship && (
+                      <Badge className="bg-green-500 hover:bg-green-600 text-white gap-1">
+                        <Users className="w-3 h-3" /> Mentor
+                      </Badge>
+                    )}
+                    {profile.availableForJobReferrals && (
+                      <Badge className="bg-blue-500 hover:bg-blue-600 text-white gap-1">
+                        <Briefcase className="w-3 h-3" /> Referrals
+                      </Badge>
+                    )}
+                    {profile.availableForGuestLectures && (
+                      <Badge className="bg-purple-500 hover:bg-purple-600 text-white gap-1">
+                        <Award className="w-3 h-3" /> Lectures
+                      </Badge>
+                    )}
+                    {profile.availableForNetworking && (
+                      <Badge className="bg-orange-500 hover:bg-orange-600 text-white gap-1">
+                        <Sparkles className="w-3 h-3" /> Networking
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

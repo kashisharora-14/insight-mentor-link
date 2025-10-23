@@ -12,6 +12,8 @@ import mentorshipRoutes from './routes/mentorship';
 import studentProfileRoutes from './routes/studentProfile';
 import alumniProfileRoutes from './routes/alumniProfile';
 import alumniRoutes from './routes/alumni';
+import chatRoutes from './routes/chat';
+import dcsaEventsRoutes from './routes/dcsaEvents';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +45,8 @@ app.use('/api/mentorship', mentorshipRoutes);
 app.use('/api/student-profile', studentProfileRoutes);
 app.use('/api/alumni-profile', alumniProfileRoutes);
 app.use('/api/alumni', alumniRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/dcsa', dcsaEventsRoutes);
 
 // Serve static files in production
 if (isProduction) {

@@ -1,6 +1,8 @@
 from datetime import datetime
 from sqlalchemy import Enum
 
+from .user import db, User
+
 # Course information specific to DCSA
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -65,13 +67,20 @@ class DepartmentEvent(db.Model):
     start_date = db.Column(db.DateTime)
     end_date = db.Column(db.DateTime)
     venue = db.Column(db.String(200))
+    department = db.Column(db.String(100))
     organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     registration_required = db.Column(db.Boolean, default=False)
     max_participants = db.Column(db.Integer)
     is_featured = db.Column(db.Boolean, default=False)
-    
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    created_by_role = db.Column(db.String(20))
+    is_paid = db.Column(db.Boolean, default=False)
+    fee_amount = db.Column(db.Numeric(10, 2))
+    approval_notes = db.Column(db.Text)
+
     # Event participants
-    participants = db.relationship('User', secondary='event_participants')
+    participants = db.relationship('User', secondary='event_participants', backref='events_joined')
+    participant_links = db.relationship('EventParticipant', backref='event', cascade='all, delete-orphan')
 
 class EventParticipant(db.Model):
     __tablename__ = 'event_participants'
@@ -80,3 +89,9 @@ class EventParticipant(db.Model):
     registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     attendance_status = db.Column(db.String(20))  # Registered, Attended, Cancelled
     certificate_issued = db.Column(db.Boolean, default=False)
+    approval_status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    program = db.Column(db.String(50))
+    department = db.Column(db.String(100))
+    notes = db.Column(db.Text)
+
+    user = db.relationship('User', backref=db.backref('event_participations', cascade='all, delete-orphan'))

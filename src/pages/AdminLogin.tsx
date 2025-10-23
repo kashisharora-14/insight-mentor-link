@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { ShieldCheck } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { ShieldCheck } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -13,48 +14,29 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('admin@example.com');
   const [password, setPassword] = useState('admin123');
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/admin-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const success = await login(email, password);
+
+      if (!success) {
+        throw new Error("Invalid credentials or failed to authenticate");
+      }
+
+      toast({
+        title: "Admin Login Successful",
+        description: "Welcome to the admin dashboard!",
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store token and user info
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        console.log('✅ Admin logged in successfully:', data.user);
-        
-        toast({
-          title: "Admin Login Successful",
-          description: "Welcome to the admin dashboard!",
-        });
-
-        // Force reload to reinitialize auth context
-        window.location.href = '/admin';
-      } else {
-        toast({
-          title: "Login Failed",
-          description: data.error || 'Invalid credentials',
-          variant: "destructive",
-        });
-      }
+      navigate("/admin-dashboard", { replace: true });
     } catch (error) {
-      console.error('Admin login error:', error);
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {

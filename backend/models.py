@@ -27,13 +27,22 @@ class User(db.Model):
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
     
     def to_dict(self):
+        name = getattr(self, 'name', None)
+        verification_method = getattr(self, 'verification_method', None)
+
         return {
             'id': self.id,
             'email': self.email,
             'role': self.role,
+            'name': name,
             'student_id': self.student_id,
-            'is_verified': self.is_verified,
-            'is_email_verified': self.is_email_verified,
+            'studentId': self.student_id,
+            'is_verified': bool(self.is_verified),
+            'isVerified': bool(self.is_verified),
+            'is_email_verified': bool(self.is_email_verified),
+            'isEmailVerified': bool(self.is_email_verified),
+            'verification_method': verification_method,
+            'verificationMethod': verification_method,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

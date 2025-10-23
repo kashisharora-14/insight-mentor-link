@@ -1,10 +1,13 @@
 
-import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex, varchar, pgEnum, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex, varchar, pgEnum, check, date } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Enums for Panjab University CS Department programs
 export const programEnum = pgEnum('program', ['MCA', 'MSCIT']);
 export const batchTypeEnum = pgEnum('batch_type', ['Morning', 'Evening']);
+export const eventStatusEnum = pgEnum('event_status', ['draft', 'pending', 'approved', 'rejected', 'cancelled']);
+export const eventVisibilityEnum = pgEnum('event_visibility', ['public', 'students', 'alumni', 'faculty']);
+export const eventParticipantStatusEnum = pgEnum('event_participant_status', ['pending', 'approved', 'waitlisted', 'rejected', 'attended', 'cancelled']);
 
 // Authentication Tables
 
@@ -275,15 +278,49 @@ export const orderItems = pgTable('order_items', {
 export const events = pgTable('events', {
   id: uuid('id').defaultRandom().primaryKey(),
   title: text('title').notNull(),
+  slug: text('slug'),
   description: text('description'),
-  dateTime: timestamp('date_time', { withTimezone: true }).notNull(),
-  location: text('location'),
+  summary: text('summary'),
+  eventType: text('event_type'),
+  organizedBy: text('organized_by'),
+  club: text('club'),
   department: text('department'),
-  organizerId: uuid('organizer_id').notNull(),
+  targetAudience: text('target_audience').array(),
+  visibility: eventVisibilityEnum('visibility').default('public'),
+  dateTime: timestamp('date_time', { withTimezone: true }),
+  endDateTime: timestamp('end_date_time', { withTimezone: true }),
+  venue: text('venue'),
+  location: text('location'),
+  city: text('city'),
+  state: text('state'),
+  country: text('country'),
+  registrationRequired: boolean('registration_required').default(true),
+  registrationDeadline: timestamp('registration_deadline', { withTimezone: true }),
   registrationLink: text('registration_link'),
-  imageUrl: text('image_url'),
   maxAttendees: integer('max_attendees'),
-  isActive: boolean('is_active').default(true),
+  waitlistEnabled: boolean('waitlist_enabled').default(false),
+  isPaid: boolean('is_paid').default(false),
+  feeAmount: decimal('fee_amount', { precision: 10, scale: 2 }),
+  feeCurrency: text('fee_currency').default('INR'),
+  guestSpeakers: jsonb('guest_speakers'),
+  agenda: jsonb('agenda'),
+  resources: jsonb('resources'),
+  posterUrl: text('poster_url'),
+  bannerUrl: text('banner_url'),
+  imageGallery: jsonb('image_gallery'),
+  livestreamLink: text('livestream_link'),
+  status: eventStatusEnum('status').default('pending'),
+  approvalNotes: text('approval_notes'),
+  organizerId: uuid('organizer_id').references(() => users.id, { onDelete: 'set null' }),
+  createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  createdByRole: text('created_by_role'),
+  approvedById: uuid('approved_by_id').references(() => users.id, { onDelete: 'set null' }),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  primaryContactName: text('primary_contact_name'),
+  primaryContactEmail: text('primary_contact_email'),
+  primaryContactPhone: text('primary_contact_phone'),
+  tags: text('tags').array(),
+  metadata: jsonb('metadata'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -294,6 +331,15 @@ export const eventRegistrations = pgTable('event_registrations', {
   eventId: uuid('event_id').notNull().references(() => events.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').notNull(),
   registeredAt: timestamp('registered_at', { withTimezone: true }).defaultNow().notNull(),
+  participantStatus: eventParticipantStatusEnum('participant_status').default('pending'),
+  attendanceStatus: eventParticipantStatusEnum('attendance_status'),
+  program: text('program'),
+  department: text('department'),
+  club: text('club'),
+  notes: text('notes'),
+  isWaitlisted: boolean('is_waitlisted').default(false),
+  checkedInAt: timestamp('checked_in_at', { withTimezone: true }),
+  certificateIssued: boolean('certificate_issued').default(false),
 }, (table) => ({
   uniqueEventUser: uniqueIndex('event_user_unique').on(table.eventId, table.userId),
 }));
@@ -344,9 +390,13 @@ export const mentorshipRequests = pgTable('mentorship_requests', {
   mentorId: uuid('mentor_id').references(() => profiles.userId, { onDelete: 'set null' }),
   fieldOfInterest: text('field_of_interest').notNull(),
   description: text('description'),
+  goals: text('goals'),
+  preferredTime: text('preferred_time'),
   status: text('status').notNull().default('pending'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  chatClosedReason: text('chat_closed_reason'),
+  chatClosedAt: timestamp('chat_closed_at', { withTimezone: true }),
 });
 
 // Mentorship sessions table
@@ -371,6 +421,9 @@ export const messages = pgTable('messages', {
   isRead: boolean('is_read').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+// Chat blocks per mentorship request
+// chatBlocks removed: simple chat flow without blocking
 
 // Career roadmaps table
 export const careerRoadmaps = pgTable('career_roadmaps', {
@@ -421,3 +474,16 @@ export const yearlyMilestones = pgTable('yearly_milestones', {
   targetAchievements: jsonb('target_achievements').default(sql`'[]'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).default(sql`timezone('utc'::text, now())`).notNull(),
 });
+
+// Mentorship reviews table
+export const mentorshipReviews = pgTable('mentorship_reviews', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  mentorshipRequestId: uuid('mentorship_request_id').notNull().references(() => mentorshipRequests.id, { onDelete: 'cascade' }),
+  reviewerId: uuid('reviewer_id').notNull().references(() => profiles.userId, { onDelete: 'cascade' }), // student
+  rating: integer('rating').notNull(), // 1-5
+  comment: text('comment'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueReviewer: uniqueIndex('review_unique_per_request').on(table.mentorshipRequestId, table.reviewerId),
+  ratingCheck: check('rating_between_1_5', sql`${table.rating} >= 1 AND ${table.rating} <= 5`),
+}));

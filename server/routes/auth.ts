@@ -2,7 +2,8 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { db } from '../db';
-import { users, verificationCodes, approvedUsers, verificationRequests } from '@shared/schema';
+import { users, verificationCodes, approvedUsers, verificationRequests } from '../../shared/schema';
+
 import { sendVerificationEmail, sendWelcomeEmail } from '../services/email';
 import { eq, and, or, gt } from 'drizzle-orm';
 import { validateName } from '../utils/validation';
@@ -43,7 +44,9 @@ router.post('/login', async (req, res) => {
       if (userRecord.length > 0) {
         userId = userRecord[0].id;
       } else {
-        userId = 'temp_' + Date.now();
+        return res.status(404).json({
+          error: { message: 'Email not found. Please register first.' }
+        });
       }
     } else {
       // Look up user by student ID
@@ -109,7 +112,8 @@ router.post('/verify-login-code', async (req, res) => {
     }
 
     // Find the code in our demo storage
-    let validCode = null;
+    type LoginCode = { code: string; userId: string; email: string; role: string; expiresAt: number };
+    let validCode: LoginCode | null = null;
     for (const [email, data] of demoLoginCodes.entries()) {
       if (data.userId === user_id && data.code === code && data.expiresAt > Date.now()) {
         validCode = data;
@@ -124,8 +128,24 @@ router.post('/verify-login-code', async (req, res) => {
       });
     }
 
-    let userDetails = null;
-    let actualUserId = validCode.userId;
+    type DBUser = {
+      id: string;
+      email: string;
+      name: string | null;
+      passwordHash: string;
+      role: string;
+      studentId: string | null;
+      isVerified: boolean | null;
+      isEmailVerified: boolean | null;
+      verificationMethod: string | null;
+      verifiedBy: string | null;
+      verifiedAt: Date | null;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+
+    let userDetails: DBUser | null = null;
+    let actualUserId: string = validCode.userId;
 
     // Check if this is a temporary user ID (user doesn't exist yet)
     if (validCode.userId.startsWith('temp_')) {
@@ -134,7 +154,7 @@ router.post('/verify-login-code', async (req, res) => {
 
       if (existingUser.length > 0) {
         // User exists, use their actual ID
-        userDetails = existingUser[0];
+        userDetails = existingUser[0] as unknown as DBUser;
         actualUserId = userDetails.id;
       } else {
         // Extract name from email if not provided
@@ -158,7 +178,7 @@ router.post('/verify-login-code', async (req, res) => {
 
         console.log(`✅ New user created with role: ${newUsers[0].role}`);
 
-        userDetails = newUsers[0];
+        userDetails = newUsers[0] as unknown as DBUser;
         actualUserId = userDetails.id;
 
         // Create verification request for admin review with name
@@ -174,7 +194,7 @@ router.post('/verify-login-code', async (req, res) => {
     } else {
       // Get existing user details
       const userRecord = await db.select().from(users).where(eq(users.id, validCode.userId)).limit(1);
-      userDetails = userRecord.length > 0 ? userRecord[0] : null;
+      userDetails = userRecord.length > 0 ? (userRecord[0] as unknown as DBUser) : null;
       actualUserId = validCode.userId;
 
       console.log(`📋 Existing user found:`, {
@@ -229,15 +249,15 @@ router.post('/verify-login-code', async (req, res) => {
           console.log(`   - Created at: ${newRequest[0].createdAt}`);
           console.log(`\n🎯 Admin should now see this request in the admin panel!`);
         } else {
-          console.log(`ℹ️ Verification request already exists for user: ${userDetails.email}`);
+          console.log(`ℹ️ Verification request already exists for user: ${userDetails?.email || 'N/A'}`);
           console.log(`   - Request ID: ${existingRequest[0].id}`);
           console.log(`   - Status: ${existingRequest[0].status}`);
           console.log(`   - Created at: ${existingRequest[0].createdAt}`);
         }
       } else {
-        console.log(`✓ User ${userDetails.email} is already verified`);
-        console.log(`   - Verification method: ${userDetails.verificationMethod}`);
-        console.log(`   - Verified at: ${userDetails.verifiedAt}`);
+        console.log(`✓ User ${userDetails?.email || 'N/A'} is already verified`);
+        console.log(`   - Verification method: ${userDetails?.verificationMethod || 'unknown'}`);
+        console.log(`   - Verified at: ${userDetails?.verifiedAt || 'unknown'}`);
       }
     }
 

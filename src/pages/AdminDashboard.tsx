@@ -222,10 +222,13 @@ const AdminDashboard = () => {
 
   const fetchProfiles = async () => {
     try {
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/admin/users', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
       });
 
       if (!response.ok) {
@@ -439,557 +442,115 @@ const AdminDashboard = () => {
 
     setProfiles(mockProfiles);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching donations:', error);
+  }
 
-  const fetchDonations = async () => {
-    try {
-      const response = await fetch('/api/admin/donations', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+  // Fallback to mock data
+  const mockDonations: Donation[] = [
+    // ... (rest of the code remains the same)
+  ];
+
+  setDonations(mockDonations);
+};
+
+
+const handleCSVUpload = async (formData: FormData) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch('/api/admin/csv-upload', {
+      method: 'POST',
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+      body: formData,
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      setCSVUploadResult(result);
+      toast({
+        title: "CSV Upload Complete",
+        description: `Processed ${result.processed} users successfully. ${result.errors?.length || 0} errors.`,
       });
+      fetchVerificationRequests();
+      fetchProfiles();
+    } else {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'CSV upload failed');
+    }
+  } catch (error) {
+    console.error('Error uploading CSV:', error);
+    toast({
+      title: "Error",
+      description: error instanceof Error ? error.message : "Failed to upload CSV file",
+      variant: "destructive",
+    });
+  }
+};
 
-      if (response.ok) {
-        const data = await response.json();
-        setDonations(data);
-        return;
-      }
-    } catch (error) {
-      console.error('Error fetching donations:', error);
+// Fetch verification requests
+const fetchVerificationRequests = async () => {
+  try {
+    const token = localStorage.getItem('authToken');
+
+    if (!token) {
+      console.error(' No authentication token found');
+      toast({
+        title: "Authentication Required",
+        description: "Please log in as admin first",
+        variant: "destructive",
+      });
+      return;
     }
 
-    // Fallback to mock data
-    const mockDonations: Donation[] = [
-      {
-        id: '1',
-        donor_name: 'Dr. Sarah Chen',
-        donor_email: 'sarah.chen@gmail.com',
-        amount: 25000,
-        message: 'Happy to support the next generation of computer scientists. This university shaped my career at Google.',
-        is_anonymous: false,
-        created_at: '2024-02-15T10:30:00Z'
-      },
-      {
-        id: '2',
-        donor_name: 'Anonymous',
-        donor_email: 'donor@anonymous.com',
-        amount: 50000,
-        message: 'For the scholarship fund. Education should be accessible to all deserving students.',
-        is_anonymous: true,
-        created_at: '2024-02-10T14:20:00Z'
-      },
-      {
-        id: '3',
-        donor_name: 'Prof. Raj Sharma',
-        donor_email: 'raj.sharma@business.com',
-        amount: 15000,
-        message: 'Supporting the business school library expansion project.',
-        is_anonymous: false,
-        created_at: '2024-02-08T11:45:00Z'
-      },
-      {
-        id: '4',
-        donor_name: 'Maya Singh',
-        donor_email: 'maya.singh@ogilvy.com',
-        amount: 8000,
-        message: 'For the arts department creative studio renovation.',
-        is_anonymous: false,
-        created_at: '2024-02-05T16:30:00Z'
-      },
-      {
-        id: '5',
-        donor_name: 'Arjun Kumar',
-        donor_email: 'arjun.kumar@microsoft.com',
-        amount: 12000,
-        message: 'Contribution to the tech innovation lab. Keep building amazing things!',
-        is_anonymous: false,
-        created_at: '2024-02-01T09:15:00Z'
-      },
-      {
-        id: '6',
-        donor_name: 'Anonymous',
-        donor_email: 'donor2@anonymous.com',
-        amount: 30000,
-        message: 'Emergency student support fund.',
-        is_anonymous: true,
-        created_at: '2024-01-28T13:20:00Z'
-      },
-      {
-        id: '7',
-        donor_name: 'Dr. Priya Patel',
-        donor_email: 'priya.patel@lawfirm.com',
-        amount: 20000,
-        message: 'Moot court competition sponsorship. Legal education excellence!',
-        is_anonymous: false,
-        created_at: '2024-01-25T12:10:00Z'
-      },
-      {
-        id: '8',
-        donor_name: 'Vikram Agarwal',
-        donor_email: 'vikram.agarwal@netflix.com',
-        amount: 18000,
-        message: 'Data science workshop series funding.',
-        is_anonymous: false,
-        created_at: '2024-01-20T15:45:00Z'
-      },
-      {
-        id: '9',
-        donor_name: 'Neha Gupta',
-        donor_email: 'neha.gupta@mckinsey.com',
-        amount: 22000,
-        message: 'Entrepreneurship incubator support. Build the future!',
-        is_anonymous: false,
-        created_at: '2024-01-18T08:30:00Z'
-      },
-      {
-        id: '10',
-        donor_name: 'Kiran Verma',
-        donor_email: 'kiran.verma@highcourt.gov.in',
-        amount: 16000,
-        message: 'Legal aid clinic establishment fund.',
-        is_anonymous: false,
-        created_at: '2024-01-15T10:25:00Z'
-      }
-    ];
+    console.log(' Fetching verification requests with token...');
+    const response = await fetch('/api/admin/verification-requests', {
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        : {
+            'Content-Type': 'application/json',
+          },
+    });
 
-    setDonations(mockDonations);
-  };
-
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch('/api/admin/events', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+    if (response.ok) {
+      const data = await response.json();
+      setVerificationRequests(data);
+      console.log(' Loaded verification requests:', data);
+    } else if (response.status === 401) {
+      console.error(' Unauthorized - invalid or expired token');
+      toast({
+        title: "Session Expired",
+        description: "Please log in again",
+        variant: "destructive",
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setEvents(data);
-        return;
-      }
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    }
-
-    // Fallback to mock data
-    const mockEvents: Event[] = [
-      {
-        id: '1',
-        title: 'Annual Tech Conference 2024',
-        date_time: '2024-04-15T09:00:00Z',
-        location: 'University Auditorium',
-        department: 'UICET',
-        is_active: true,
-        created_at: '2024-02-01T10:00:00Z'
-      },
-      {
-        id: '2',
-        title: 'Finance Career Fair',
-        date_time: '2024-04-28T10:00:00Z',
-        location: 'Business School Campus',
-        department: 'UBS',
-        is_active: true,
-        created_at: '2024-02-05T14:30:00Z'
-      },
-      {
-        id: '3',
-        title: 'Legal Workshop: Corporate Law Trends',
-        date_time: '2024-04-10T14:00:00Z',
-        location: 'Law Faculty Building',
-        department: 'Law',
-        is_active: true,
-        created_at: '2024-02-08T11:15:00Z'
-      },
-      {
-        id: '4',
-        title: 'Engineering Innovation Summit',
-        date_time: '2024-05-05T11:00:00Z',
-        location: 'Engineering Complex',
-        department: 'UIET',
-        is_active: true,
-        created_at: '2024-02-10T16:45:00Z'
-      },
-      {
-        id: '5',
-        title: 'Arts & Culture Festival',
-        date_time: '2024-04-25T18:00:00Z',
-        location: 'Cultural Center',
-        department: 'Arts',
-        is_active: true,
-        created_at: '2024-02-12T13:20:00Z'
-      },
-      {
-        id: '6',
-        title: 'AI & Machine Learning Workshop',
-        date_time: '2024-05-12T09:00:00Z',
-        location: 'Computer Lab Block A',
-        department: 'UICET',
-        is_active: false,
-        created_at: '2024-02-15T10:30:00Z'
-      },
-      {
-        id: '7',
-        title: 'Startup Pitch Competition',
-        date_time: '2024-04-30T14:00:00Z',
-        location: 'Innovation Hub',
-        department: 'UBS',
-        is_active: true,
-        created_at: '2024-02-18T09:45:00Z'
-      },
-      {
-        id: '8',
-        title: 'Cybersecurity Bootcamp',
-        date_time: '2024-05-18T09:00:00Z',
-        location: 'Security Lab',
-        department: 'UIET',
-        is_active: true,
-        created_at: '2024-02-20T15:15:00Z'
-      },
-      {
-        id: '9',
-        title: 'International Law Symposium',
-        date_time: '2024-05-08T10:00:00Z',
-        location: 'International Relations Center',
-        department: 'Law',
-        is_active: true,
-        created_at: '2024-02-22T12:30:00Z'
-      },
-      {
-        id: '10',
-        title: 'Alumni Networking Night',
-        date_time: '2024-04-18T19:00:00Z',
-        location: 'University Club',
-        department: undefined,
-        is_active: true,
-        created_at: '2024-02-25T14:20:00Z'
-      }
-    ];
-
-    setEvents(mockEvents);
-  };
-
-  const fetchMentorshipRequests = async () => {
-    // Mock comprehensive mentorship requests data
-    const mockMentorshipRequests: MentorshipRequest[] = [
-      {
-        id: '1',
-        student_id: 'user-7',
-        mentor_id: 'user-1',
-        field_of_interest: 'Machine Learning and AI',
-        description: 'I am passionate about AI/ML and want to understand how to transition from academic projects to industry-level ML systems.',
-        status: 'approved',
-        created_at: '2024-02-15T10:30:00Z',
-        student_profile: {
-          name: 'Aarav Mehta',
-          email: 'aarav.mehta@student.edu',
-          department: 'UICET'
-        },
-        mentor_profile: {
-          name: 'Dr. Sarah Chen',
-          email: 'sarah.chen@gmail.com',
-          current_job: 'Senior Software Engineer',
-          company: 'Google'
-        }
-      },
-      {
-        id: '2',
-        student_id: 'user-8',
-        mentor_id: 'user-2',
-        field_of_interest: 'Investment Banking',
-        description: 'Seeking guidance on breaking into investment banking and understanding the skills needed for success in this field.',
-        status: 'pending',
-        created_at: '2024-02-18T14:20:00Z',
-        student_profile: {
-          name: 'Anisha Verma',
-          email: 'anisha.verma@student.edu',
-          department: 'UBS'
-        },
-        mentor_profile: {
-          name: 'Prof. Raj Sharma',
-          email: 'raj.sharma@business.com',
-          current_job: 'Investment Banking Director',
-          company: 'Goldman Sachs'
-        }
-      },
-      {
-        id: '3',
-        student_id: 'user-9',
-        mentor_id: 'user-6',
-        field_of_interest: 'Data Science',
-        description: 'I want to build a career in data science and learn about the practical skills and tools used in the industry.',
-        status: 'pending',
-        created_at: '2024-02-20T16:45:00Z',
-        student_profile: {
-          name: 'Rahul Kumar',
-          email: 'rahul.kumar@student.edu',
-          department: 'UICET'
-        },
-        mentor_profile: {
-          name: 'Vikram Agarwal',
-          email: 'vikram.agarwal@netflix.com',
-          current_job: 'Data Scientist',
-          company: 'Netflix'
-        }
-      },
-      {
-        id: '4',
-        student_id: 'user-12',
-        mentor_id: 'user-5',
-        field_of_interest: 'Creative Direction',
-        description: 'Interested in understanding the creative industry and building a portfolio for brand strategy and digital marketing.',
-        status: 'approved',
-        created_at: '2024-02-22T12:15:00Z',
-        student_profile: {
-          name: 'Preet Kaur',
-          email: 'preet.kaur@student.edu',
-          department: 'Arts'
-        },
-        mentor_profile: {
-          name: 'Maya Singh',
-          email: 'maya.singh@ogilvy.com',
-          current_job: 'Creative Director',
-          company: 'Ogilvy'
-        }
-      },
-      {
-        id: '5',
-        student_id: 'user-7',
-        mentor_id: 'user-4',
-        field_of_interest: 'Product Management',
-        description: 'Want to learn about transitioning from engineering to product management and understanding product strategy.',
-        status: 'completed',
-        created_at: '2024-02-25T09:30:00Z',
-        student_profile: {
-          name: 'Aarav Mehta',
-          email: 'aarav.mehta@student.edu',
-          department: 'UICET'
-        },
-        mentor_profile: {
-          name: 'Arjun Kumar',
-          email: 'arjun.kumar@microsoft.com',
-          current_job: 'Product Manager',
-          company: 'Microsoft'
-        }
-      },
-      {
-        id: '6',
-        student_id: 'user-8',
-        mentor_id: 'user-10',
-        field_of_interest: 'Management Consulting',
-        description: 'Interested in learning about strategy consulting and how to develop analytical and problem-solving skills.',
-        status: 'approved',
-        created_at: '2024-02-28T11:45:00Z',
-        student_profile: {
-          name: 'Anisha Verma',
-          email: 'anisha.verma@student.edu',
-          department: 'UBS'
-        },
-        mentor_profile: {
-          name: 'Neha Gupta',
-          email: 'neha.gupta@mckinsey.com',
-          current_job: 'Management Consultant',
-          company: 'McKinsey & Company'
-        }
-      },
-      {
-        id: '7',
-        student_id: 'user-9',
-        mentor_id: null,
-        field_of_interest: 'Software Engineering',
-        description: 'Looking for guidance on full-stack development and career growth in the tech industry.',
-        status: 'pending',
-        created_at: '2024-03-01T15:20:00Z',
-        student_profile: {
-          name: 'Rahul Kumar',
-          email: 'rahul.kumar@student.edu',
-          department: 'UICET'
-        },
-        mentor_profile: null
-      },
-      {
-        id: '8',
-        student_id: 'user-12',
-        mentor_id: null,
-        field_of_interest: 'Digital Marketing',
-        description: 'Want to understand digital marketing trends and build expertise in social media and content strategy.',
-        status: 'pending',
-        created_at: '2024-03-03T13:10:00Z',
-        student_profile: {
-          name: 'Preet Kaur',
-          email: 'preet.kaur@student.edu',
-          department: 'Arts'
-        },
-        mentor_profile: null
-      }
-    ];
-
-    setMentorshipRequests(mockMentorshipRequests);
-  };
-
-  // Fetch verification requests
-  const fetchVerificationRequests = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('❌ No authentication token found');
-        toast({
-          title: "Authentication Required",
-          description: "Please log in as admin first",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('🔐 Fetching verification requests with token...');
-      const response = await fetch('/api/admin/verification-requests', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setVerificationRequests(data);
-        console.log('✅ Loaded verification requests:', data);
-      } else if (response.status === 401) {
-        console.error('❌ Unauthorized - invalid or expired token');
-        toast({
-          title: "Session Expired",
-          description: "Please log in again",
-          variant: "destructive",
-        });
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/admin-login';
-      } else {
-        console.error('Failed to fetch verification requests:', response.status, response.statusText);
-        toast({
-          title: "Error",
-          description: "Failed to load verification requests",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching verification requests:', error);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      window.location.href = '/admin-login';
+    } else {
+      console.error('Failed to fetch verification requests:', response.status, response.statusText);
       toast({
         title: "Error",
         description: "Failed to load verification requests",
         variant: "destructive",
       });
     }
-  };
+  } catch (error) {
+    console.error('Error fetching verification requests:', error);
+    toast({
+      title: "Error",
+      description: "Failed to load verification requests",
+      variant: "destructive",
+    });
+  }
+};
 
-  // Approve verification request
-  const handleApproveVerification = async (requestId: string) => {
-    try {
-      const response = await fetch(`/api/admin/verification-requests/${requestId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        toast({
-          title: "✅ Verification Approved!",
-          description: "User verified successfully. Confirmation email has been sent.",
-        });
-        console.log('✅ Verification approved and email sent:', result);
-        fetchVerificationRequests(); // Refresh the list
-        fetchProfiles(); // Refresh profiles to reflect verification status
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to approve verification');
-      }
-    } catch (error) {
-      console.error('Error approving verification:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to approve verification",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Reject verification request
-  const handleRejectVerification = async (requestId: string) => {
-    try {
-      const response = await fetch(`/api/admin/verification-requests/${requestId}/reject`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notes: 'Rejected by admin' }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Verification Rejected",
-          description: "Verification request has been rejected",
-        });
-        fetchVerificationRequests(); // Refresh the list
-        fetchProfiles(); // Refresh profiles to reflect verification status
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to reject verification');
-      }
-    } catch (error) {
-      console.error('Error rejecting verification:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to reject verification",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Handle CSV file upload
-  const handleCSVUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('/api/admin/csv-upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setCSVUploadResult(result);
-        toast({
-          title: "CSV Upload Complete",
-          description: `Processed ${result.processed} users successfully. ${result.errors?.length || 0} errors.`,
-        });
-        fetchVerificationRequests(); // Refresh lists after upload
-        fetchProfiles(); // Refresh profiles to reflect verification status
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'CSV upload failed');
-      }
-    } catch (error) {
-      console.error('Error uploading CSV:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to upload CSV file",
-        variant: "destructive",
-      });
-    }
-  };
-
-
-  // Mock Supabase update functions - these should be replaced with actual API calls if not using Supabase directly
+// Mock Supabase update functions - these should be replaced with actual API calls if not using Supabase directly
   const toggleProfileVerification = async (profileId: string, isVerified: boolean) => {
     // This is a placeholder. In a real app, this would call an API endpoint.
     // For now, it simulates the UI update and then fetches fresh data.
@@ -1022,8 +583,8 @@ const AdminDashboard = () => {
   // Initial fetch for all data
   useEffect(() => {
     // Check if admin is authenticated
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
+    const token = localStorage.getItem('authToken');
+    const userStr = localStorage.getItem('authUser');
 
     if (!token || !userStr) {
       console.error('❌ No authentication found, redirecting to admin login');

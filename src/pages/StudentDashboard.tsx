@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navigation from "@/components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -38,6 +38,7 @@ import { useNavigate } from 'react-router-dom';
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
+  const [apiStudentRequests, setApiStudentRequests] = useState<any[]>([]);
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -58,8 +59,66 @@ const StudentDashboard = () => {
     email: currentStudent.email, // Added email for consistency
   };
 
-  // Filter requests for current student
-  const studentRequests = mentorshipRequests.filter(req => req.studentId === currentStudent.id);
+  // Load live mentorship requests for current student
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+        const r = await fetch('/api/mentorship/my-requests-student', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (Array.isArray(j)) setApiStudentRequests(j);
+      } catch {}
+    };
+    load();
+  }, []);
+
+  const displayedStudentRequests = useMemo(() => {
+    if (!Array.isArray(apiStudentRequests) || apiStudentRequests.length === 0) {
+      return [] as any[];
+    }
+
+    const priority: Record<string, number> = {
+      accepted: 3,
+      pending: 2,
+      completed: 1,
+      declined: 0,
+    };
+
+    const bestByMentor = new Map<string, any>();
+
+    for (const request of apiStudentRequests) {
+      const key = String(request?.mentorId ?? request?.mentor_id ?? "");
+      const currentPriority = priority[String(request?.status)] ?? -1;
+      if (!bestByMentor.has(key)) {
+        bestByMentor.set(key, request);
+        continue;
+      }
+
+      const existing = bestByMentor.get(key);
+      const existingPriority = priority[String(existing?.status)] ?? -1;
+
+      if (currentPriority > existingPriority) {
+        bestByMentor.set(key, request);
+      } else if (currentPriority === existingPriority) {
+        const existingTime = new Date(existing?.createdAt ?? existing?.created_at ?? 0).getTime();
+        const currentTime = new Date(request?.createdAt ?? request?.created_at ?? 0).getTime();
+        if (currentTime > existingTime) {
+          bestByMentor.set(key, request);
+        }
+      }
+    }
+
+    return Array.from(bestByMentor.values()).sort((a, b) => {
+      const timeA = new Date(a?.createdAt ?? a?.created_at ?? 0).getTime();
+      const timeB = new Date(b?.createdAt ?? b?.created_at ?? 0).getTime();
+      return timeB - timeA;
+    });
+  }, [apiStudentRequests]);
+
   const studentConnections = connections.filter(conn => conn.studentId === currentStudent.id);
 
   // AI-powered analytics data
@@ -147,7 +206,7 @@ const StudentDashboard = () => {
   const stats = [
     {
       title: "Active Requests",
-      value: studentRequests.filter(r => r.status === "pending").length,
+      value: apiStudentRequests.filter((r: any) => r.status === 'pending').length,
       icon: Clock,
       color: "text-warning"
     },
@@ -160,7 +219,7 @@ const StudentDashboard = () => {
     },
     {
       title: "Completed Sessions",
-      value: studentRequests.filter(r => r.status === "completed").length,
+      value: apiStudentRequests.filter((r: any) => r.status === 'completed').length,
       icon: CheckCircle,
       color: "text-primary"
     },
@@ -816,7 +875,7 @@ const StudentDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {studentRequests.length === 0 ? (
+                  {displayedStudentRequests.length === 0 ? (
                     <div className="text-center py-8">
                       <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground">No mentorship requests yet.</p>
@@ -829,16 +888,16 @@ const StudentDashboard = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {studentRequests.map((request) => (
+                      {displayedStudentRequests.map((request: any) => (
                         <Card key={request.id} className="border border-border">
                           <CardContent className="p-6">
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                  {request.alumniName.split(' ').map(n => n[0]).join('')}
+                                  {(request.mentorName || 'M').split(' ').map((n: string) => n[0]).join('')}
                                 </div>
                                 <div>
-                                  <h3 className="font-semibold">{request.alumniName}</h3>
+                                  <h3 className="font-semibold">{request.mentorName || 'Mentor'}</h3>
                                   <p className="text-sm text-muted-foreground">
                                     Requested on {new Date(request.createdAt).toLocaleDateString()}
                                   </p>
@@ -853,34 +912,24 @@ const StudentDashboard = () => {
                             <div className="space-y-3">
                               <div>
                                 <h4 className="font-medium text-sm mb-1">Purpose:</h4>
-                                <p className="text-sm text-muted-foreground">{request.purpose}</p>
+                                <p className="text-sm text-muted-foreground">{request.subject}</p>
                               </div>
 
                               <div>
                                 <h4 className="font-medium text-sm mb-1">Preferred Time:</h4>
-                                <p className="text-sm text-muted-foreground">{request.preferredSlots}</p>
+                                <p className="text-sm text-muted-foreground">{request.preferredTime || 'Flexible'}</p>
                               </div>
 
-                              {request.question && (
+                              {request.message && (
                                 <div>
                                   <h4 className="font-medium text-sm mb-1">Question:</h4>
-                                  <p className="text-sm text-muted-foreground">{request.question}</p>
+                                  <p className="text-sm text-muted-foreground">{request.message}</p>
                                 </div>
                               )}
-
-                              {request.status === "accepted" && request.meetingLink && (
-                                <div className="bg-success/10 p-3 rounded-lg">
-                                  <h4 className="font-medium text-sm mb-2 text-success">Session Scheduled!</h4>
-                                  <p className="text-sm text-muted-foreground mb-2">
-                                    Scheduled: {new Date(request.scheduledTime!).toLocaleString()}
-                                  </p>
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-success hover:bg-success/90"
-                                    onClick={() => window.open(request.meetingLink, '_blank')}
-                                  >
-                                    <ExternalLink className="w-4 h-4 mr-2" />
-                                    Join Meeting
+                              {request.status === 'accepted' && (
+                                <div className="flex justify-end">
+                                  <Button size="sm" onClick={() => (window.location.href = `/chat/${request.id}`)}>
+                                    Open Chat
                                   </Button>
                                 </div>
                               )}

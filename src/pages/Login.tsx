@@ -8,12 +8,14 @@ import { Badge } from '@/components/ui/badge';
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, User, UserCheck, Shield, Mail, Key, UserPlus } from 'lucide-react';
+import { GraduationCap, User, UserCheck, Mail, Key, UserPlus } from 'lucide-react';
+
 import EmailLoginForm from '@/components/auth/EmailLoginForm';
 import EmailRegistrationForm from '@/components/auth/EmailRegistrationForm';
 
 const Login = () => {
-  const [activeRole, setActiveRole] = useState<'student' | 'alumni' | 'admin'>('student');
+  const [activeRole, setActiveRole] = useState<'student' | 'alumni'>('student');
+
   const [step, setStep] = useState<'login' | 'register'>('login');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -76,7 +78,7 @@ const Login = () => {
           <CardContent>
             <div className="space-y-6">
               {/* Role Selection Tabs */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Button 
                   variant={activeRole === 'student' ? 'default' : 'outline'}
                   onClick={() => setActiveRole('student')}
@@ -92,14 +94,6 @@ const Login = () => {
                 >
                   <UserCheck className="h-5 w-5" />
                   <span className="text-xs">Alumni</span>
-                </Button>
-                <Button 
-                  variant={activeRole === 'admin' ? 'default' : 'outline'}
-                  onClick={() => setActiveRole('admin')}
-                  className="flex flex-col items-center gap-1 h-auto py-3"
-                >
-                  <Shield className="h-5 w-5" />
-                  <span className="text-xs">Admin</span>
                 </Button>
               </div>
 
@@ -181,81 +175,9 @@ const Login = () => {
                 </div>
               )}
 
-              {/* Admin Login */}
-              {activeRole === 'admin' && (
-                <div className="space-y-4">
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-semibold mb-2">🛡️ Admin Sign In</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Authorized personnel only
-                    </p>
-                  </div>
-                  
-                  <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    setIsLoading(true);
-                    
-                    try {
-                      const success = await login(identifier, password);
-                      
-                      if (success) {
-                        toast({
-                          title: "Login successful!",
-                          description: "Welcome to Admin Dashboard",
-                        });
-                        navigate('/dashboard');
-                      } else {
-                        toast({
-                          title: "Login failed",
-                          description: "Invalid credentials",
-                          variant: "destructive",
-                        });
-                      }
-                    } catch (error) {
-                      toast({
-                        title: "Login error",
-                        description: "Something went wrong",
-                        variant: "destructive",
-                      });
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-email">Admin Email</Label>
-                      <Input
-                        id="admin-email"
-                        type="email"
-                        placeholder="admin@example.com"
-                        value={identifier}
-                        onChange={(e) => setIdentifier(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-password">Password</Label>
-                      <Input
-                        id="admin-password"
-                        type="password"
-                        placeholder="Enter admin password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Signing in..." : "Sign In as Admin"}
-                    </Button>
-                  </form>
-                  <div className="text-xs text-center text-muted-foreground">
-                    <p>Test credentials: admin@example.com / admin123</p>
-                  </div>
-                </div>
-              )}
+              <div className="text-center text-sm text-muted-foreground">
+                Admin access? <Link to="/admin/login" className="font-medium text-primary underline">Go to admin login</Link>
+              </div>
             </div>
 
             <div className="mt-6 text-center">

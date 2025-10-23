@@ -1,17 +1,20 @@
-/**
- * API Client service to replace Supabase client
- * Handles communication with Flask backend
- */
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
-interface ApiResponse<T = any> {
+type JsonEnvelope<T> = {
   message?: string;
   data?: T;
   error?: {
-    code: string;
+    code?: string;
     message: string;
-    details?: any;
+    details?: JsonValue;
   };
-}
+};
 
 interface LoginCodeResponse {
   user_id: string;
@@ -24,7 +27,7 @@ interface AuthTokens {
   refresh_token: string;
   token_type: string;
   expires_in: number;
-  user: any;
+  user: JsonValue;
 }
 
 interface RegistrationResponse {
@@ -32,398 +35,323 @@ interface RegistrationResponse {
   code_expires_in: number;
 }
 
-interface UserData {
-  user: any;
-  verification_status: any;
-  profile: any;
-  can_access_platform: boolean;
-  permissions: any;
-}
+const toErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "An unexpected error occurred.";
+  }
+};
+
+const resolveBaseUrl = (): string => {
+  const viteUrl =
+    typeof import.meta !== "undefined" &&
+    typeof (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_API_URL === "string"
+      ? (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_API_URL
+      : undefined;
+
+  if (viteUrl && viteUrl.trim().length > 0) {
+    return viteUrl;
+  }
+
+  const processUrl =
+    typeof process !== "undefined" &&
+    typeof (process as { env?: Record<string, string | undefined> }).env?.VITE_API_URL === "string"
+      ? (process as { env?: Record<string, string | undefined> }).env?.VITE_API_URL
+      : undefined;
+
+  if (processUrl && processUrl.trim().length > 0) {
+    return processUrl;
+  }
+
+  return "/api";
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
 
 class ApiClient {
-  private baseURL: string;
+  private baseURL: string = resolveBaseUrl();
   private token: string | null = null;
 
   constructor() {
-    try {
-      // Use Express backend directly
-      this.baseURL = '/api';
-      console.log('API Client initialized with base URL:', this.baseURL);
-      this.loadTokenFromStorage();
-    } catch (error) {
-      console.error('ApiClient initialization failed:', error);
-      this.baseURL = '/api';
-    }
+    this.loadTokenFromStorage();
   }
 
   private loadTokenFromStorage(): void {
     try {
-      this.token = localStorage.getItem('authToken');
+      this.token = localStorage.getItem("authToken");
     } catch (error) {
-      console.error('Failed to load token from storage:', error);
+      console.error("Failed to load token from storage:", error);
       this.token = null;
     }
   }
 
   private saveTokenToStorage(token: string): void {
     this.token = token;
-    localStorage.setItem('authToken', token);
+    localStorage.setItem("authToken", token);
   }
 
   private removeTokenFromStorage(): void {
     this.token = null;
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('authUser');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("authUser");
   }
 
-  private async makeRequest<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    console.log('Making API request to:', url);
+  private createHeaders(initHeaders?: HeadersInit): Headers {
+    const headers = new Headers(initHeaders);
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
 
-    const headers = new Headers(options.headers);
-    if (!headers.has('Content-Type')) {
-      headers.set('Content-Type', 'application/json');
+    if (!this.token) {
+      const stored = typeof localStorage !== "undefined" ? localStorage.getItem("authToken") : null;
+      if (stored && stored.split(".").length === 3) {
+        this.token = stored;
+      }
     }
 
     if (this.token) {
-      headers.set('Authorization', `Bearer ${this.token}`);
+      headers.set("Authorization", `Bearer ${this.token}`);
     }
 
-    const config: RequestInit = {
-      ...options,
+    return headers;
+  }
+
+  private async makeRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const headers = init.body instanceof FormData ? init.headers : this.createHeaders(init.headers);
+    const requestConfig: RequestInit = {
+      ...init,
       headers,
     };
 
+    const response = await fetch(`${this.baseURL}${path}`, requestConfig);
+
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    let payload: unknown = null;
+    const contentType = response.headers.get("content-type");
+
+    if (contentType && contentType.includes("application/json")) {
+      payload = await response.json();
+    } else {
+      const text = await response.text();
+      payload = text ? ({ message: text } satisfies JsonEnvelope<T>) : null;
+    }
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        this.removeTokenFromStorage();
+      }
+
+      const envelope = isRecord(payload) ? (payload as JsonEnvelope<T>) : undefined;
+      const message = envelope?.error?.message || envelope?.message || `HTTP error ${response.status}`;
+      throw new Error(message);
+    }
+
+    if (isRecord(payload) && "data" in payload) {
+      return (payload as JsonEnvelope<T>).data as T;
+    }
+
+    return payload as T;
+  }
+
+  private async request<T>(method: string, path: string, data?: JsonValue): Promise<T> {
+    const init: RequestInit = { method };
+
+    if (data !== undefined) {
+      init.body = JSON.stringify(data);
+    }
+
     try {
-      const response = await fetch(url, config);
-
-      if (response.status === 204 || response.headers.get('content-length') === '0') {
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-        // Handle cases where there is no content
-        return {} as T;
-      }
-
-      const data: ApiResponse<T> = await response.json();
-
-      if (!response.ok) {
-        // If 401, token is invalid - user needs to login again
-        if (response.status === 401) {
-          this.removeTokenFromStorage();
-        }
-
-        throw new Error(data.error?.message || 'Request failed');
-      }
-
-      return data.data as T;
+      return await this.makeRequest<T>(path, init);
     } catch (error) {
-      console.error('API Request failed for URL:', url);
-      console.error('Error details:', error);
-      console.error('Error type:', error?.constructor?.name);
-      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
-
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error(`Cannot connect to API server. Make sure the server is running on port 3001.`);
-      }
-      if (error instanceof SyntaxError) {
-        // This happens on empty or non-JSON responses
-        throw new Error("Received an invalid response from the server. This might be a server error.");
-      }
-      throw error;
+      const message = toErrorMessage(error);
+      console.error(`API request failed (${method} ${path}):`, message);
+      throw new Error(message);
     }
   }
 
+  setAuthToken(token: string): void {
+    if (!token || token === "null" || token === "undefined") {
+      console.error("Attempted to save invalid token");
+      return;
+    }
 
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      console.error("Token is malformed, not saving");
+      return;
+    }
 
-  // Authentication methods
-  async sendLoginCode(identifier: string, role: string = 'student'): Promise<any> {
-    const response = await this.post('/auth/login', { identifier, role });
-    return response.data;
+    this.saveTokenToStorage(token);
+  }
+
+  clearAuthToken(): void {
+    this.removeTokenFromStorage();
+  }
+
+  isAuthenticated(): boolean {
+    const token = this.token || localStorage.getItem("authToken");
+    if (!token) {
+      return false;
+    }
+
+    return token.split(".").length === 3;
+  }
+
+  async sendLoginCode(identifier: string, role: string = "student"): Promise<LoginCodeResponse> {
+    return this.request<LoginCodeResponse>("POST", "/auth/login", { identifier, role });
   }
 
   async verifyLoginCode(userId: string, code: string): Promise<AuthTokens> {
-    const response = await fetch(`${this.baseURL}/auth/verify-login-code`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id: userId, code }),
+    const tokens = await this.request<AuthTokens>("POST", "/auth/verify-login-code", {
+      user_id: userId,
+      code,
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to verify code');
+    if (isRecord(tokens) && "access_token" in tokens) {
+      this.setAuthToken((tokens as AuthTokens).access_token);
     }
 
-    const data = await response.json();
-    this.setAuthToken(data.data.access_token);
-    return data.data;
+    return tokens;
   }
 
-  async sendRegistrationCode(
-    email: string,
-    name: string,
-    studentId?: string,
-    role: string = 'student'
-  ): Promise<RegistrationResponse> {
-    const response = await fetch(`${this.baseURL}/auth/register/send-code`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, name, studentId, role }),
+  async sendRegistrationCode(email: string, name: string, studentId?: string, role: string = "student"): Promise<RegistrationResponse> {
+    return this.request<RegistrationResponse>("POST", "/auth/register/send-code", {
+      email,
+      name,
+      studentId,
+      role,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to send registration code');
-    }
-
-    return await response.json();
   }
 
   async completeRegistration(email: string, code: string, password: string): Promise<AuthTokens> {
-    const response = await fetch(`${this.baseURL}/auth/register/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, code, password }),
+    const tokens = await this.request<AuthTokens>("POST", "/auth/register/verify", {
+      email,
+      code,
+      password,
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Registration failed');
+    if (tokens.access_token) {
+      this.setAuthToken(tokens.access_token);
     }
 
-    const data = await response.json();
-    this.setAuthToken(data.token);
-    return data;
+    return tokens;
   }
 
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<JsonValue> {
     try {
-      const response = await this.get('/auth/me');
-      // Response from /auth/me is already { data: { id, email, ... } }
-      // So we need to return the data property directly
-      return response.data || response;
-    } catch (error: any) {
-      // Don't log network errors during page refresh/hot reload
-      if (error.message?.includes('Failed to fetch')) {
-        throw error; // Let the caller handle network errors
-      }
-      // If token is invalid, clear it and force re-login
-      if (error.message?.includes('401') || error.message?.includes('Invalid token')) {
-        console.error('❌ Invalid token detected, clearing authentication');
+      return await this.request<JsonValue>("GET", "/auth/me");
+    } catch (error) {
+      const message = toErrorMessage(error);
+      if (message.includes("401") || message.includes("Invalid token")) {
         this.clearAuthToken();
-        throw new Error('Session expired. Please login again.');
       }
-      throw error;
+      throw new Error(message);
     }
   }
 
-  // Admin verification endpoints
-  async getVerificationRequests() {
-    return this.makeRequest('/admin/verification-requests');
+  async getVerificationRequests(): Promise<JsonValue> {
+    return this.request<JsonValue>("GET", "/admin/verification-requests");
   }
 
-  async approveVerification(requestId: string) {
-    return this.makeRequest(`/admin/verification-requests/${requestId}/approve`, {
-      method: 'POST',
-    });
+  async approveVerification(requestId: string): Promise<JsonValue> {
+    return this.request<JsonValue>("POST", `/admin/verification-requests/${requestId}/approve`);
   }
 
-  async rejectVerification(requestId: string, notes?: string) {
-    return this.makeRequest(`/admin/verification-requests/${requestId}/reject`, {
-      method: 'POST',
-      body: JSON.stringify({ notes }),
-    });
+  async rejectVerification(requestId: string, notes?: string): Promise<JsonValue> {
+    return this.request<JsonValue>("POST", `/admin/verification-requests/${requestId}/reject`, { notes });
   }
 
-  async uploadCSV(file: File) {
+  async uploadCSV(file: File): Promise<JsonValue> {
     const formData = new FormData();
-    formData.append('file', file);
-
-    const url = `${this.baseURL}/admin/csv-upload`;
-    const headers = new Headers();
-    if (this.token) {
-      headers.set('Authorization', `Bearer ${this.token}`);
-    }
+    formData.append("file", file);
 
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
+      return await this.makeRequest<JsonValue>("/admin/csv-upload", {
+        method: "POST",
+        headers: this.token ? { Authorization: `Bearer ${this.token}` } : undefined,
         body: formData,
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error?.message || 'CSV upload failed');
-      }
-
-      return await response.json();
     } catch (error) {
-      console.error('CSV upload failed:', error);
-      throw error;
+      throw new Error(toErrorMessage(error));
     }
   }
 
   async logout(): Promise<void> {
     try {
-      await this.makeRequest('/auth/logout', { method: 'POST' });
+      await this.makeRequest<void>("/auth/logout", { method: "POST" });
     } catch (error) {
-      console.error('Logout request failed:', error);
+      console.error("Logout failed:", toErrorMessage(error));
     } finally {
       this.removeTokenFromStorage();
     }
   }
 
-  // Legacy login method (for backward compatibility)
   async loginLegacy(email: string, password: string): Promise<AuthTokens> {
-    // Use direct fetch for admin login to avoid double processing
-    const endpoint = email.includes('admin') ? '/auth/admin-login' : '/auth/login-password';
-    const url = `${this.baseURL}${endpoint}`;
+    const endpoint = email.includes("admin") ? "/auth/admin-login" : "/auth/login-password";
+    const response = await this.request<JsonValue>("POST", endpoint, { email, password });
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Login failed');
+    if (!isRecord(response)) {
+      throw new Error("Unexpected response from server");
     }
 
-    const data = await response.json();
+    const rawToken =
+      typeof response.access_token === "string"
+        ? response.access_token
+        : typeof response.token === "string"
+        ? response.token
+        : null;
 
-    this.saveTokenToStorage(data.token);
-    localStorage.setItem('authUser', JSON.stringify(data.user));
+    if (!rawToken || rawToken.split(".").length !== 3) {
+      throw new Error("Invalid token returned by server");
+    }
 
-    return {
-      access_token: data.token,
-      refresh_token: data.token + '_refresh',
-      token_type: 'Bearer',
-      expires_in: 604800,
-      user: data.user
+    this.saveTokenToStorage(rawToken);
+
+    const userData = isRecord(response.user) ? response.user : null;
+    if (userData) {
+      localStorage.setItem("authUser", JSON.stringify(userData));
+    }
+
+    const tokens: AuthTokens = {
+      access_token: rawToken,
+      refresh_token: typeof response.refresh_token === "string" ? response.refresh_token : "",
+      token_type: typeof response.token_type === "string" ? response.token_type : "bearer",
+      expires_in: typeof response.expires_in === "number" ? response.expires_in : 0,
+      user: userData,
     };
+
+    return tokens;
   }
 
-  // Utility methods
-  setAuthToken(token: string) {
-    // Validate token format before storing
-    if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
-      console.error('❌ Attempted to save invalid token');
-      return;
-    }
-
-    // Validate JWT format (3 parts separated by dots)
-    const tokenParts = token.split('.');
-    if (tokenParts.length !== 3) {
-      console.error('❌ Token is malformed, not saving');
-      return;
-    }
-
-    this.saveTokenToStorage(token);
-    console.log('✅ Auth token saved to localStorage');
-  }
-
-  clearAuthToken() {
-    this.removeTokenFromStorage();
-    console.log('🗑️ Auth token cleared from localStorage');
-  }
-
-  isAuthenticated(): boolean {
-    const token = this.token || localStorage.getItem('authToken');
-    if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
-      return false;
-    }
-    // Validate JWT format
-    const tokenParts = token.split('.');
-    return tokenParts.length === 3;
-  }
-
-  // Generic HTTP methods for other API calls
   async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>('GET', endpoint);
+    return this.request<T>("GET", endpoint);
   }
 
-  async post<T>(endpoint: string, data: any): Promise<T> {
-    return this.request<T>('POST', endpoint, data);
+  async post<T>(endpoint: string, data: JsonValue): Promise<T> {
+    return this.request<T>("POST", endpoint, data);
   }
 
-  async put<T>(endpoint: string, data: any): Promise<T> {
-    return this.request<T>('PUT', endpoint, data);
+  async put<T>(endpoint: string, data: JsonValue): Promise<T> {
+    return this.request<T>("PUT", endpoint, data);
   }
 
   async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>('DELETE', endpoint);
-  }
-
-  // Helper to get authorization headers, used by getCurrentUser
-  private getAuthHeaders(): HeadersInit {
-    const headers = new Headers();
-    if (this.token) {
-      headers.set('Authorization', `Bearer ${this.token}`);
-    }
-    headers.set('Content-Type', 'application/json');
-    return headers;
-  }
-
-  private async request<T>(method: string, url: string, data?: any): Promise<T> {
-    const token = this.token || localStorage.getItem('authToken');
-
-    console.log(`🌐 Making ${method} request to: ${url}`);
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token && token !== 'null' && token !== 'undefined') {
-      // Validate token format before using it
-      const tokenParts = token.split('.');
-      if (tokenParts.length === 3) {
-        headers['Authorization'] = `Bearer ${token}`;
-        console.log('🔑 Request includes authorization token');
-      } else {
-        console.error('❌ Token is malformed, clearing it');
-        this.clearAuthToken();
-        throw new Error('Session expired. Please login again.');
-      }
-    }
-
-    const response = await fetch(`${this.baseURL}${url}`, {
-      method,
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: { message: 'Request failed' } }));
-      console.error(`❌ Request failed with status ${response.status}:`, errorData);
-
-      if (response.status === 401) {
-        console.error('❌ Token is invalid or expired during fetch');
-        this.clearAuthToken();
-        throw new Error('Session expired. Please login again.');
-      }
-
-      throw new Error(errorData.error?.message || errorData.message || `HTTP error ${response.status}`);
-    }
-
-    return await response.json();
+    return this.request<T>("DELETE", endpoint);
   }
 }
 
-// Create and export a singleton instance
 export const apiClient = new ApiClient();
 export default apiClient;

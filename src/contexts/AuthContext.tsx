@@ -192,6 +192,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const tokens = await apiClient.loginLegacy(email, password);
+      if (!tokens.access_token || typeof tokens.access_token !== 'string') {
+        console.error('❌ Received invalid token from legacy login');
+        return false;
+      }
+
+      const tokenParts = tokens.access_token.split('.');
+      if (tokenParts.length !== 3) {
+        console.error('❌ Legacy login returned malformed token');
+        return false;
+      }
+
+      apiClient.setAuthToken(tokens.access_token);
+
+      if (tokens.user && typeof tokens.user === 'object') {
+        localStorage.setItem('authUser', JSON.stringify(tokens.user));
+      }
+
       setUser({
         ...tokens.user,
         isVerified: tokens.user.isVerified || false,
