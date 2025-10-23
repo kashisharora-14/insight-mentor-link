@@ -841,15 +841,14 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
         console.log('🔄 Transforming event:', event.title, event);
         return {
           id: event.id,
-          title: event.title,
-          description: event.description,
-          date_time: event.start_date || event.date_time,
+          title: event.title || 'Untitled Event',
+          date_time: event.start_date || event.date_time || new Date().toISOString(),
           end_date: event.end_date,
           location: event.venue || event.location,
           department: event.department,
-          is_active: event.status === 'approved',
+          is_active: event.status === 'approved' || event.is_active === true,
           status: event.status,
-          created_at: event.created_at,
+          created_at: event.created_at || new Date().toISOString(),
           created_by_role: event.created_by_role,
           organizer: event.organizer,
           max_participants: event.max_participants,
@@ -864,14 +863,17 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       console.error('❌ Error details:', {
         name: error instanceof Error ? error.name : 'Unknown',
         message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
+        errorObject: error
       });
       toast({
-        title: "Error",
+        title: "Error Loading Events",
         description: error instanceof Error ? error.message : "Failed to load events. Please try again.",
         variant: "destructive",
       });
       setEvents([]);
+    } finally {
+      console.log('✅ fetchEvents completed');
     }
   };
 
