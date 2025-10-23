@@ -1750,7 +1750,8 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                         </div>
                       );
                     })}
-                </div>
+                  </div>
+                )}
 
                 {/* Participants View with Filtering */}
                 {selectedEventForParticipants && (
