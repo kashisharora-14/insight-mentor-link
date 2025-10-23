@@ -796,11 +796,10 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       console.log('🔍 Admin Dashboard: Starting to fetch events...');
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/dcsa/events?status=all', {
-        headers: token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : {},
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       console.log('📡 Response status:', response.status, response.statusText);
@@ -821,6 +820,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
         return {
           id: event.id,
           title: event.title,
+          description: event.description,
           date_time: event.start_date || event.date_time,
           end_date: event.end_date,
           location: event.venue || event.location,
@@ -839,6 +839,11 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       setEvents(transformedEvents);
     } catch (error) {
       console.error('❌ Error in fetchEvents:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load events. Please try again.",
+        variant: "destructive",
+      });
       setEvents([]);
     }
   };
