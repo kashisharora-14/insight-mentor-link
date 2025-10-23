@@ -24,7 +24,8 @@ import {
   Zap,
   Upload,
   Clock,
-  GraduationCap
+  GraduationCap,
+  MapPin
 } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -1050,12 +1051,13 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
 
         {/* Detailed Management Tabs */}
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-1">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 gap-1">
             <TabsTrigger value="analytics" className="text-xs lg:text-sm px-2 lg:px-3">Analytics</TabsTrigger>
             <TabsTrigger value="student-success" className="text-xs lg:text-sm px-2 lg:px-3">Success</TabsTrigger>
             <TabsTrigger value="verification" className="text-xs lg:text-sm px-2 lg:px-3">Verify</TabsTrigger>
             <TabsTrigger value="profiles" className="text-xs lg:text-sm px-2 lg:px-3 col-span-3 lg:col-span-1">Users</TabsTrigger>
             <TabsTrigger value="events" className="text-xs lg:text-sm px-2 lg:px-3">Events</TabsTrigger>
+            <TabsTrigger value="event-requests" className="text-xs lg:text-sm px-2 lg:px-3">Requests</TabsTrigger>
             <TabsTrigger value="mentorships" className="text-xs lg:text-sm px-2 lg:px-3">Mentorships</TabsTrigger>
           </TabsList>
 
@@ -1653,6 +1655,10 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                           {event.department && (
                             <Badge variant="outline">{event.department}</Badge>
                           )}
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {eventParticipants.filter(p => p.event_id === event.id).length} Participants
+                          </Badge>
                         </div>
                         <div className="mt-1 text-sm text-muted-foreground">
                           <span>{new Date(event.date_time).toLocaleDateString()}</span>
@@ -1704,6 +1710,130 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                     </Button>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Event Requests Tab - Alumni submissions */}
+          <TabsContent value="event-requests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Alumni Event Requests</CardTitle>
+                <CardDescription>Review and approve event submissions from alumni</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {events.filter(event => event.created_by_role === 'alumni' && event.status === 'pending').length === 0 ? (
+                    <div className="text-center py-8">
+                      <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No pending event requests from alumni</p>
+                    </div>
+                  ) : (
+                    events
+                      .filter(event => event.created_by_role === 'alumni' && event.status === 'pending')
+                      .map((event) => (
+                        <div key={event.id} className="p-4 border rounded-lg bg-yellow-50 dark:bg-yellow-900/10">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="font-semibold text-lg">{event.title}</h3>
+                                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                  Pending Review
+                                </Badge>
+                                {event.department && (
+                                  <Badge variant="secondary">{event.department}</Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                Submitted by: {event.organizer?.name || 'Alumni'} ({event.organizer?.email || 'N/A'})
+                              </p>
+                              <p className="text-sm mb-2">{event.description || 'No description provided'}</p>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  {new Date(event.date_time).toLocaleDateString()}
+                                </span>
+                                {event.location && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-4 h-4" />
+                                    {event.location}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-4">
+                            <Button
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('authToken');
+                                  const response = await fetch(`/api/dcsa/events/${event.id}/status`, {
+                                    method: 'PUT',
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`,
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ status: 'approved' }),
+                                  });
+                                  if (response.ok) {
+                                    toast({
+                                      title: "Event Approved",
+                                      description: `"${event.title}" has been approved and is now visible to students.`,
+                                    });
+                                    fetchEvents();
+                                  }
+                                } catch (error) {
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to approve event",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Approve Event
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('authToken');
+                                  const response = await fetch(`/api/dcsa/events/${event.id}/status`, {
+                                    method: 'PUT',
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`,
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ status: 'rejected' }),
+                                  });
+                                  if (response.ok) {
+                                    toast({
+                                      title: "Event Rejected",
+                                      description: `"${event.title}" has been rejected.`,
+                                    });
+                                    fetchEvents();
+                                  }
+                                } catch (error) {
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to reject event",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Reject Event
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
