@@ -793,6 +793,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
   // Fetch events
   const fetchEvents = async () => {
     try {
+      console.log('🔍 Admin Dashboard: Starting to fetch events...');
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/dcsa/events?status=all', {
         headers: token
@@ -802,38 +803,42 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
           : {},
       });
 
+      console.log('📡 Response status:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error('Failed to fetch events');
+        const errorText = await response.text();
+        console.error('❌ Failed to fetch events:', response.status, errorText);
+        throw new Error(`Failed to fetch events: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('📅 Fetched events:', data);
+      console.log('📅 Admin Dashboard - Fetched events raw data:', data);
+      console.log('📊 Number of events:', data?.length || 0);
       
       // Transform the data to match our Event interface
-      const transformedEvents: Event[] = (data || []).map((event: any) => ({
-        id: event.id,
-        title: event.title,
-        date_time: event.start_date || event.date_time,
-        end_date: event.end_date,
-        location: event.venue || event.location,
-        department: event.department,
-        is_active: event.status === 'approved',
-        status: event.status,
-        created_at: event.created_at,
-        created_by_role: event.created_by_role,
-        organizer: event.organizer,
-        max_participants: event.max_participants,
-        participant_summary: event.participant_summary
-      }));
+      const transformedEvents: Event[] = (data || []).map((event: any) => {
+        console.log('🔄 Transforming event:', event.title, event);
+        return {
+          id: event.id,
+          title: event.title,
+          date_time: event.start_date || event.date_time,
+          end_date: event.end_date,
+          location: event.venue || event.location,
+          department: event.department,
+          is_active: event.status === 'approved',
+          status: event.status,
+          created_at: event.created_at,
+          created_by_role: event.created_by_role,
+          organizer: event.organizer,
+          max_participants: event.max_participants,
+          participant_summary: event.participant_summary
+        };
+      });
       
+      console.log('✅ Admin Dashboard - Transformed events:', transformedEvents);
       setEvents(transformedEvents);
     } catch (error) {
-      console.error('Error fetching events:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load events. Please try again.",
-        variant: "destructive",
-      });
+      console.error('❌ Error in fetchEvents:', error);
       setEvents([]);
     }
   };
