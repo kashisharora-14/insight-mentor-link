@@ -117,6 +117,11 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Debug: Log events state changes
+  useEffect(() => {
+    console.log('📊 Events state updated:', events.length, 'events', events);
+  }, [events]);
+
   // Real data will be fetched from APIs
   const [eventParticipants, setEventParticipants] = useState<any[]>([]);
   const [selectedEventForParticipants, setSelectedEventForParticipants] = useState<string | null>(null);
@@ -880,7 +885,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       });
       setEvents([]);
     } finally {
-      console.log('✅ fetchEvents completed, current events length:', events.length);
+      console.log('✅ fetchEvents completed');
     }
   };
 
