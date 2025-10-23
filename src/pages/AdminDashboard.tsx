@@ -153,7 +153,7 @@ const AdminDashboard = () => {
   const aiInsights = [
     "🎯 UIET department shows highest engagement rate (85%) - consider replicating their strategies",
     "📈 Mentorship requests increased 23% this month - consider scaling mentor onboarding",
-    "🌍 International alumni donations up 40% - focus on global engagement campaigns",
+    "🌍 Alumni donations up 40% internationally - focus on global engagement campaigns",
     "💡 Technology sector alumni most likely to mentor (78% participation rate)",
     "📊 Weekend events show 30% higher attendance - optimize scheduling",
     "🔗 Alumni with 5+ connections donate 3x more - encourage networking"
@@ -444,6 +444,90 @@ const AdminDashboard = () => {
   }
 };
 
+const handleApproveVerification = async (requestId: string) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`/api/admin/verification-requests/${requestId}/approve`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to approve verification request');
+    }
+
+    const responseData = await response.json(); // Assuming the API returns { emailSent: boolean, emailError?: string, userEmail: string }
+
+    const emailStatus = responseData.emailSent
+      ? "✅ Verification email sent successfully"
+      : `⚠️ User verified but email failed: ${responseData.emailError || 'Unknown error'}`;
+
+    toast({
+      title: "Request Approved",
+      description: `User has been verified. ${emailStatus}`,
+    });
+
+    console.log('📧 Email notification status:', {
+      emailSent: responseData.emailSent,
+      emailError: responseData.emailError,
+      userEmail: responseData.userEmail
+    });
+
+    // Refresh data to reflect changes
+    fetchVerificationRequests();
+    fetchProfiles();
+    fetchStats();
+
+  } catch (error) {
+    console.error('Error approving verification request:', error);
+    toast({
+      title: "Error",
+      description: error instanceof Error ? error.message : "Failed to approve verification request",
+      variant: "destructive",
+    });
+  }
+};
+
+const handleRejectVerification = async (requestId: string) => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const response = await fetch(`/api/admin/verification-requests/${requestId}/reject`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to reject verification request');
+    }
+
+    toast({
+      title: "Request Rejected",
+      description: "User verification request has been rejected.",
+    });
+
+    // Refresh data to reflect changes
+    fetchVerificationRequests();
+    fetchProfiles();
+    fetchStats();
+
+  } catch (error) {
+    console.error('Error rejecting verification request:', error);
+    toast({
+      title: "Error",
+      description: error instanceof Error ? error.message : "Failed to reject verification request",
+      variant: "destructive",
+    });
+  }
+};
+
 
 const handleCSVUpload = async (formData: FormData) => {
   try {
@@ -659,6 +743,79 @@ const fetchVerificationRequests = async () => {
     }
   };
 
+  // Mock fetch for donations
+  const fetchDonations = async () => {
+    const mockDonations: Donation[] = [
+      { id: 'd1', donor_name: 'John Doe', donor_email: 'john.doe@example.com', amount: 500, message: 'For student scholarships', created_at: '2024-02-01T10:00:00Z' },
+      { id: 'd2', donor_name: 'Jane Smith', donor_email: 'jane.smith@example.com', amount: 1200, message: 'Support for research projects', created_at: '2024-01-15T14:30:00Z' },
+      { id: 'd3', donor_name: 'Anonymous', donor_email: '', amount: 250, is_anonymous: true, created_at: '2024-01-10T09:15:00Z' },
+      { id: 'd4', donor_name: 'Robert Johnson', donor_email: 'robert.j@example.com', amount: 1000, message: 'Help young entrepreneurs', created_at: '2023-12-20T11:00:00Z' },
+    ];
+    setDonations(mockDonations);
+  };
+
+  // Mock fetch for events
+  const fetchEvents = async () => {
+    const mockEvents: Event[] = [
+      { id: 'e1', title: 'Annual Alumni Meet 2024', date_time: '2024-08-15T18:00:00Z', location: 'University Auditorium', is_active: true, created_at: '2024-01-20T09:00:00Z', department: 'Alumni Relations' },
+      { id: 'e2', title: 'Tech Innovators Conference', date_time: '2024-09-10T09:00:00Z', location: 'UIET Campus', is_active: true, created_at: '2024-02-01T11:00:00Z', department: 'UICET' },
+      { id: 'e3', title: 'Business Leadership Summit', date_time: '2024-07-22T10:00:00Z', location: 'UBS Auditorium', is_active: false, created_at: '2024-01-05T16:00:00Z', department: 'UBS' },
+      { id: 'e4', title: 'Career Fair 2024', date_time: '2024-05-05T09:30:00Z', location: 'Central Ground', is_active: true, created_at: '2024-01-18T14:00:00Z', department: 'Placement Cell' },
+    ];
+    setEvents(mockEvents);
+  };
+
+  // Mock fetch for mentorship requests
+  const fetchMentorshipRequests = async () => {
+    const mockMentorshipRequests: MentorshipRequest[] = [
+      {
+        id: 'm1',
+        student_id: 'user-7',
+        mentor_id: 'user-1',
+        field_of_interest: 'Software Engineering',
+        description: 'Seeking guidance on career paths in AI and ML.',
+        status: 'approved',
+        created_at: '2024-01-20T08:15:00Z',
+        student_profile: { id: 'user-7', name: 'Aarav Mehta', department: 'UICET' },
+        mentor_profile: { id: 'user-1', name: 'Dr. Sarah Chen', current_job: 'Senior Software Engineer', company: 'Google' }
+      },
+      {
+        id: 'm2',
+        student_id: 'user-8',
+        mentor_id: 'user-2',
+        field_of_interest: 'Finance and Investment',
+        description: 'Interested in learning about stock market analysis and portfolio management.',
+        status: 'approved',
+        created_at: '2024-01-22T12:40:00Z',
+        student_profile: { id: 'user-8', name: 'Anisha Verma', department: 'UBS' },
+        mentor_profile: { id: 'user-2', name: 'Prof. Raj Sharma', current_job: 'Investment Banking Director', company: 'Goldman Sachs' }
+      },
+      {
+        id: 'm3',
+        student_id: 'user-9',
+        mentor_id: undefined,
+        field_of_interest: 'Data Science',
+        description: 'Looking for a mentor to guide me through my data science projects.',
+        status: 'pending',
+        created_at: '2024-01-25T15:20:00Z',
+        student_profile: { id: 'user-9', name: 'Rahul Kumar', department: 'UICET' },
+        mentor_profile: undefined
+      },
+      {
+        id: 'm4',
+        student_id: 'user-12',
+        mentor_id: 'user-3',
+        field_of_interest: 'Corporate Law',
+        description: 'Need advice on internship opportunities in law firms.',
+        status: 'approved',
+        created_at: '2024-02-01T09:20:00Z',
+        student_profile: { id: 'user-12', name: 'Preet Kaur', department: 'Arts' },
+        mentor_profile: { id: 'user-3', name: 'Dr. Priya Patel', current_job: 'Corporate Lawyer', company: 'Baker McKenzie' }
+      }
+    ];
+    setMentorshipRequests(mockMentorshipRequests);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -728,7 +885,7 @@ const fetchVerificationRequests = async () => {
             </div>
 
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={() => {
                   const tab = document.querySelector('[value="verification"]');
                   if (tab) (tab as HTMLElement).click();
@@ -738,7 +895,7 @@ const fetchVerificationRequests = async () => {
                 <UserCheck className="w-4 h-4 mr-2" />
                 Manage Verifications
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => {
                   fetchVerificationRequests();
@@ -1000,7 +1157,7 @@ const fetchVerificationRequests = async () => {
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-medium">{industry.name}</span>
-                            <Badge variant="outline" className={industry.growth > 15 ? "text-green-600" : industry.growth > 8 ? "text-blue-600" : "text-muted-foreground"}>
+                            <Badge variant={industry.growth > 15 ? "default" : industry.growth > 8 ? "secondary" : "outline"} className={industry.growth > 15 ? "text-green-600" : industry.growth > 8 ? "text-blue-600" : "text-muted-foreground"}>
                               +{industry.growth}%
                             </Badge>
                           </div>
@@ -1157,8 +1314,8 @@ const fetchVerificationRequests = async () => {
                               )}
                             </div>
                             <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 onClick={() => handleApproveVerification(request.id)}
                               >
                                 <CheckCircle className="w-4 h-4 mr-1" />
@@ -1193,12 +1350,12 @@ const fetchVerificationRequests = async () => {
                       </div>
                     )}
                     {verificationRequests.filter((req: any) => req.status === 'pending').map((request: any) => {
-                      const userName = (request.requestData as any)?.name || 
-                                      request.userName || 
-                                      request.userEmail?.split('@')[0] || 
+                      const userName = (request.requestData as any)?.name ||
+                                      request.userName ||
+                                      request.userEmail?.split('@')[0] ||
                                       'User';
-                      const userEmail = request.userEmail || 
-                                       (request.requestData as any)?.email || 
+                      const userEmail = request.userEmail ||
+                                       (request.requestData as any)?.email ||
                                        'Email not available';
                       const isStudent = request.userRole === 'student';
                       const isAlumni = request.userRole === 'alumni';

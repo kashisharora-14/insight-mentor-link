@@ -129,22 +129,35 @@ router.post('/verification-requests/:id/approve', async (req, res) => {
 
     // Get user details to send email
     const userRecord = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    let emailSent = false;
+    let emailError = null;
+
     if (userRecord.length > 0) {
       const user = userRecord[0];
-      const name = (request[0].requestData as any)?.name || 'User';
+      const name = (request[0].requestData as any)?.name || user.name || 'User';
 
       try {
+        console.log(`📧 Sending verification approval email to ${user.email}...`);
         await sendVerificationApprovedEmail(user.email, name);
-        console.log(`✅ Verification approval email sent to ${user.email}`);
-      } catch (emailError) {
-        console.error('❌ Failed to send verification approval email:', emailError);
+        console.log(`✅ Verification approval email sent successfully to ${user.email}`);
+        emailSent = true;
+      } catch (error: any) {
+        console.error('❌ Failed to send verification approval email:', error);
+        console.error('   Email error details:', {
+          message: error.message,
+          code: error.code,
+          email: user.email
+        });
+        emailError = error.message;
         // Continue anyway - user is verified even if email fails
       }
     }
 
     res.json({ 
       message: 'Verification request approved',
-      emailSent: true 
+      emailSent,
+      emailError: emailError || undefined,
+      userEmail: userRecord[0]?.email
     });
   } catch (error) {
     console.error('Error approving verification request:', error);
