@@ -795,7 +795,15 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
     try {
       console.log('🔍 Admin Dashboard: Starting to fetch events...');
       const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        console.error('❌ No auth token found');
+        setEvents([]);
+        return;
+      }
+
       const response = await fetch('/api/dcsa/events?status=all', {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -805,17 +813,31 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       console.log('📡 Response status:', response.status, response.statusText);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Failed to fetch events:', response.status, errorText);
-        throw new Error(`Failed to fetch events: ${response.status}`);
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error('❌ API Error:', errorData);
+        } catch {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+          console.error('❌ Error text:', errorText);
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       console.log('📅 Admin Dashboard - Fetched events raw data:', data);
-      console.log('📊 Number of events:', data?.length || 0);
+      console.log('📊 Number of events:', Array.isArray(data) ? data.length : 0);
+
+      if (!Array.isArray(data)) {
+        console.error('❌ Invalid data format received:', typeof data, data);
+        setEvents([]);
+        return;
+      }
 
       // Transform the data to match our Event interface
-      const transformedEvents: Event[] = (data || []).map((event: any) => {
+      const transformedEvents: Event[] = data.map((event: any) => {
         console.log('🔄 Transforming event:', event.title, event);
         return {
           id: event.id,
@@ -839,9 +861,14 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
       setEvents(transformedEvents);
     } catch (error) {
       console.error('❌ Error in fetchEvents:', error);
+      console.error('❌ Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       toast({
         title: "Error",
-        description: "Failed to load events. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to load events. Please try again.",
         variant: "destructive",
       });
       setEvents([]);
