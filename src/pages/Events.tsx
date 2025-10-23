@@ -624,6 +624,22 @@ const Events = () => {
     });
   };
 
+  const getEventStatus = (startDate?: string, endDate?: string) => {
+    const now = new Date();
+    if (!startDate) return { label: "TBD", variant: "secondary" as const };
+    
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : start;
+    
+    if (now < start) {
+      return { label: "Upcoming", variant: "default" as const };
+    } else if (now >= start && now <= end) {
+      return { label: "Ongoing", variant: "destructive" as const };
+    } else {
+      return { label: "Ended", variant: "secondary" as const };
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -1213,7 +1229,9 @@ const Events = () => {
 
         {/* Events Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
+          {filteredEvents.map((event) => {
+            const eventStatus = getEventStatus(event.start_date, event.end_date);
+            return (
             <Card key={event.id} className="shadow-elegant hover:shadow-glow transition-all duration-300 group overflow-hidden">
               <div className="aspect-video relative">
                 {event.banner_url ? (
@@ -1229,7 +1247,16 @@ const Events = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Calendar className="w-12 h-12 text-white drop-shadow" />
                 </div>
-                <div className="absolute top-4 left-4 flex gap-2">
+                <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
+                  <Badge className={`${
+                    eventStatus.variant === "destructive" 
+                      ? "bg-red-500/90" 
+                      : eventStatus.variant === "default"
+                      ? "bg-green-500/90"
+                      : "bg-gray-500/90"
+                  } text-white border-white/30 font-semibold`}>
+                    {eventStatus.label}
+                  </Badge>
                   {event.department && (
                     <Badge className="bg-white/20 text-white border-white/30">
                       {event.department}
@@ -1306,12 +1333,14 @@ const Events = () => {
                   </div>
                   {event.participant_summary?.by_department?.length ? (
                     <div className="text-xs text-muted-foreground space-y-1 pl-1">
-                      <p className="font-semibold">Department breakdown:</p>
-                      {event.participant_summary.by_department.map((item, index) => (
-                        <p key={`${event.id}-dept-${index}`}>
-                          {(item.department && item.department.trim()) || "General"}: {item.count}
-                        </p>
-                      ))}
+                      <p className="font-semibold">Departments:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {event.participant_summary.by_department.map((item, index) => (
+                          <Badge key={`${event.id}-dept-${index}`} variant="outline" className="text-xs">
+                            {(item.department && item.department.trim()) || "General"}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   ) : null}
                   <div className="flex flex-wrap gap-2">
@@ -1407,7 +1436,8 @@ const Events = () => {
                 </div>
               </CardContent>
             </Card>
-          ))}
+          );
+          })}
         </div>
 
         {filteredEvents.length === 0 && (

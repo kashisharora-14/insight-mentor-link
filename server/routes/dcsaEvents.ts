@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { events, eventRegistrations, profiles } from '../../shared/schema';
+import { events, eventRegistrations, profiles, users } from '../../shared/schema';
 import { authMiddleware, AuthRequest, adminMiddleware } from '../middleware/auth';
 import { and, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
 
@@ -722,6 +722,80 @@ router.post('/events/:eventId/participation', authMiddleware, async (req, res) =
 
     console.error('Error creating participation:', error);
     res.status(500).json({ error: 'Failed to submit participation request' });
+  }
+});
+
+// Admin endpoint to view all participants for an event
+router.get('/events/:eventId/participants', authMiddleware, async (req, res) => {
+  try {
+    const user = (req as AuthRequest).user;
+    const { eventId } = req.params;
+
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!eventId) {
+      return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    // Check if event exists
+    const [eventRecord] = await db.select().from(events).where(eq(events.id, eventId)).limit(1);
+    
+    if (!eventRecord) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Check authorization: admins can view all, alumni can only view their own events
+    const isAdmin = user.role === 'admin' || user.role === 'super_admin';
+    const isEventOrganizer = user.role === 'alumni' && eventRecord.organizerId === user.userId;
+    
+    if (!isAdmin && !isEventOrganizer) {
+      return res.status(403).json({ error: 'You can only view participants for your own events' });
+    }
+
+    // Get all participants with user details
+    const participants = await db
+      .select({
+        id: eventRegistrations.id,
+        userId: eventRegistrations.userId,
+        registeredAt: eventRegistrations.registeredAt,
+        participantStatus: eventRegistrations.participantStatus,
+        attendanceStatus: eventRegistrations.attendanceStatus,
+        department: eventRegistrations.department,
+        program: eventRegistrations.program,
+        club: eventRegistrations.club,
+        notes: eventRegistrations.notes,
+        checkedInAt: eventRegistrations.checkedInAt,
+        userName: users.name,
+        userEmail: users.email,
+        userRole: users.role,
+      })
+      .from(eventRegistrations)
+      .leftJoin(users, eq(users.id, eventRegistrations.userId))
+      .where(eq(eventRegistrations.eventId, eventId))
+      .orderBy(eventRegistrations.registeredAt);
+
+    const response = participants.map((p) => ({
+      id: p.id,
+      user_id: p.userId,
+      user_name: p.userName ?? 'Unknown',
+      user_email: p.userEmail ?? '',
+      user_role: p.userRole ?? '',
+      registered_at: p.registeredAt ? p.registeredAt.toISOString() : null,
+      participant_status: p.participantStatus ?? 'pending',
+      attendance_status: p.attendanceStatus ?? null,
+      department: p.department,
+      program: p.program,
+      club: p.club,
+      notes: p.notes,
+      checked_in_at: p.checkedInAt ? p.checkedInAt.toISOString() : null,
+    }));
+
+    res.json(response);
+  } catch (error) {
+    console.error('Error fetching event participants:', error);
+    res.status(500).json({ error: 'Failed to fetch participants' });
   }
 });
 
