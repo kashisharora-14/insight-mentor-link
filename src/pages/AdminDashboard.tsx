@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 // import {supabase } from '@/integrations/supabase/client'; // Replaced with API client
 import {
   Users,
-  DollarSign,
   Calendar,
   ShoppingBag,
   TrendingUp,
@@ -24,8 +23,8 @@ import {
   Globe,
   Zap,
   Upload,
-  Clock, // Added Clock icon
-  GraduationCap // Added GraduationCap icon
+  Clock,
+  GraduationCap
 } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -57,16 +56,6 @@ interface Profile {
   is_verified: boolean;
   verification_status?: 'pending' | 'approved' | 'rejected' | 'csv_verified'; // Added for verification status
   is_mentor_available: boolean;
-  created_at: string;
-}
-
-interface Donation {
-  id: string;
-  donor_name: string;
-  donor_email: string;
-  amount: number;
-  message?: string;
-  is_anonymous: boolean;
   created_at: string;
 }
 
@@ -106,7 +95,6 @@ const AdminDashboard = () => {
     aiInsights: []
   });
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [donations, setDonations] = useState<Donation[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequest[]>([]);
   const [verificationRequests, setVerificationRequests] = useState<any[]>([]); // Added state for verification requests
@@ -128,7 +116,6 @@ const AdminDashboard = () => {
       await Promise.all([
         fetchStats(),
         fetchProfiles(),
-        fetchDonations(),
         fetchEvents(),
         fetchMentorshipRequests()
       ]);
@@ -725,60 +712,30 @@ const fetchVerificationRequests = async () => {
 
   // Function to determine the verification badge appearance
   const getVerificationBadge = (profile: Profile) => {
+    // Check if user is verified first (this is the source of truth)
+    if (profile.is_verified) {
+      return (
+        <Badge variant="outline" className="text-green-600">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Verified
+        </Badge>
+      );
+    }
+
+    // If not verified, check verification status for students
     if (profile.role === 'student') {
       switch (profile.verification_status) {
-        case 'csv_verified':
-          return <Badge variant="default" className="text-green-600">Verified (CSV)</Badge>;
-        case 'approved':
-          return <Badge variant="outline" className="text-blue-600">Approved by Admin</Badge>;
         case 'pending':
           return <Badge variant="secondary">Pending Verification</Badge>;
         case 'rejected':
           return <Badge variant="destructive">Rejected</Badge>;
         default:
-          return <Badge variant="secondary">Pending</Badge>;
+          return <Badge variant="secondary">Not Verified</Badge>;
       }
-    } else { // Alumni or other roles
-      return profile.is_verified ? (
-        <Badge variant="outline" className="text-green-600">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Verified
-        </Badge>
-      ) : (
-        <Badge variant="secondary">Not Verified</Badge>
-      );
     }
-  };
 
-  // Fetch donations
-  const fetchDonations = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('/api/admin/donations', {
-        headers: token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : {},
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch donations');
-      }
-
-      const data = await response.json();
-      setDonations(data);
-    } catch (error) {
-      console.error('Error fetching donations:', error);
-      // Fallback to mock data if API fails
-      const mockDonations: Donation[] = [
-        { id: 'd1', donor_name: 'John Doe', donor_email: 'john.doe@example.com', amount: 500, message: 'For student scholarships', created_at: '2024-02-01T10:00:00Z' },
-        { id: 'd2', donor_name: 'Jane Smith', donor_email: 'jane.smith@example.com', amount: 1200, message: 'Support for research projects', created_at: '2024-01-15T14:30:00Z' },
-        { id: 'd3', donor_name: 'Anonymous', donor_email: '', amount: 250, is_anonymous: true, created_at: '2024-01-10T09:15:00Z' },
-        { id: 'd4', donor_name: 'Robert Johnson', donor_email: 'robert.j@example.com', amount: 1000, message: 'Help young entrepreneurs', created_at: '2023-12-20T11:00:00Z' },
-      ];
-      setDonations(mockDonations);
-    }
+    // For alumni who are not verified
+    return <Badge variant="secondary">Not Verified</Badge>;
   };
 
   // Fetch events
@@ -977,7 +934,7 @@ const fetchVerificationRequests = async () => {
         </Card>
 
         {/* Enhanced Stats Overview */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card className="lg:col-span-2">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -1003,22 +960,6 @@ const fetchVerificationRequests = async () => {
                   <p className="text-sm text-muted-foreground">Platform activity</p>
                 </div>
                 <Zap className="w-8 h-8 text-warning" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Donations</p>
-                  <p className="text-3xl font-bold">${stats.totalDonations.toLocaleString()}</p>
-                  <p className="text-sm text-green-600 flex items-center">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Growing
-                  </p>
-                </div>
-                <DollarSign className="w-8 h-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -1076,12 +1017,11 @@ const fetchVerificationRequests = async () => {
 
         {/* Detailed Management Tabs */}
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 gap-1">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-1">
             <TabsTrigger value="analytics" className="text-xs lg:text-sm px-2 lg:px-3">Analytics</TabsTrigger>
             <TabsTrigger value="student-success" className="text-xs lg:text-sm px-2 lg:px-3">Success</TabsTrigger>
             <TabsTrigger value="verification" className="text-xs lg:text-sm px-2 lg:px-3">Verify</TabsTrigger>
             <TabsTrigger value="profiles" className="text-xs lg:text-sm px-2 lg:px-3 col-span-3 lg:col-span-1">Users</TabsTrigger>
-            <TabsTrigger value="donations" className="text-xs lg:text-sm px-2 lg:px-3">Donations</TabsTrigger>
             <TabsTrigger value="events" className="text-xs lg:text-sm px-2 lg:px-3">Events</TabsTrigger>
             <TabsTrigger value="mentorships" className="text-xs lg:text-sm px-2 lg:px-3">Mentorships</TabsTrigger>
           </TabsList>
@@ -1666,42 +1606,6 @@ const fetchVerificationRequests = async () => {
                             <Badge variant="secondary">No pending request</Badge>
                           );
                         })()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Donations Tab */}
-          <TabsContent value="donations">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Donations</CardTitle>
-                <CardDescription>Track and manage donation contributions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {donations.map((donation) => (
-                    <div key={donation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-medium">
-                            {donation.is_anonymous ? 'Anonymous' : donation.donor_name}
-                          </h3>
-                          <Badge variant="secondary">
-                            ${donation.amount.toLocaleString()}
-                          </Badge>
-                        </div>
-                        {donation.message && (
-                          <p className="text-sm text-muted-foreground mt-1 italic">
-                            "{donation.message}"
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(donation.created_at).toLocaleDateString()} • {donation.donor_email}
-                        </p>
                       </div>
                     </div>
                   ))}
