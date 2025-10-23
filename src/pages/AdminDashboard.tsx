@@ -1356,11 +1356,6 @@ const fetchVerificationRequests = async () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {verificationRequests.length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">Loading verification requests...</p>
-                        </div>
-                      )}
                       {verificationRequests
                         .filter((req: any) => req.status === 'pending' && req.userRole === 'alumni')
                         .map((request: any) => {
@@ -1424,11 +1419,6 @@ const fetchVerificationRequests = async () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {verificationRequests.length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">Loading verification requests...</p>
-                        </div>
-                      )}
                       {verificationRequests
                         .filter((req: any) => req.status === 'pending' && req.userRole === 'student')
                         .map((request: any) => {
