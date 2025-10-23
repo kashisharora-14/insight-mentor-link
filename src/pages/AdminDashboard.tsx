@@ -1549,7 +1549,9 @@ const fetchVerificationRequests = async () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {profiles.map((profile) => (
+                  {profiles
+                    .filter(profile => profile.role !== 'admin') // Filter out admin users
+                    .map((profile) => (
                     <div key={profile.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
@@ -1574,27 +1576,21 @@ const fetchVerificationRequests = async () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {profile.role !== 'student' && ( // Only show verify/unverify for non-students here
+                        {/* Show Unverify button for verified users (both alumni and students) */}
+                        {profile.is_verified && (
                           <Button
                             size="sm"
-                            variant={profile.is_verified ? "destructive" : "default"}
+                            variant="destructive"
                             onClick={() => toggleProfileVerification(profile.id, profile.is_verified)}
                           >
-                            {profile.is_verified ? (
-                              <>
-                                <XCircle className="w-4 h-4 mr-1" />
-                                Unverify
-                              </>
-                            ) : (
-                              <>
-                                <UserCheck className="w-4 h-4 mr-1" />
-                                Verify
-                              </>
-                            )}
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Unverify
                           </Button>
                         )}
-                        {profile.role === 'student' && profile.verification_status === 'pending' && (() => {
-                          const request = verificationRequests.find((req: any) => req.user_id === profile.id && req.status === 'pending');
+                        
+                        {/* Show verification actions for unverified users */}
+                        {!profile.is_verified && profile.verification_status === 'pending' && (() => {
+                          const request = verificationRequests.find((req: any) => req.userId === profile.id && req.status === 'pending');
                           return request ? (
                             <>
                               <Button size="sm" onClick={() => handleApproveVerification(request.id)}>
