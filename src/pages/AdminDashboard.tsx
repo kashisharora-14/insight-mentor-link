@@ -120,6 +120,10 @@ const AdminDashboard = () => {
   // Real data will be fetched from APIs
   const [eventParticipants, setEventParticipants] = useState<any[]>([]);
   const [selectedEventForParticipants, setSelectedEventForParticipants] = useState<string | null>(null);
+  
+  // Participant filter states
+  const [programFilter, setProgramFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchAllData();
@@ -1749,11 +1753,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                 </div>
 
                 {/* Participants View with Filtering */}
-                {selectedEventForParticipants && (() => {
-                  const [programFilter, setProgramFilter] = React.useState<string>('all');
-                  const [statusFilter, setStatusFilter] = React.useState<string>('all');
-                  
-                  const filteredParticipants = eventParticipants.filter(p => {
+                {selectedEventForParticipants && (
+                  (() => {
+                    const filteredParticipants = eventParticipants.filter(p => {
                     if (programFilter !== 'all' && p.program !== programFilter) return false;
                     if (statusFilter !== 'all' && p.participant_status !== statusFilter) return false;
                     return true;
@@ -1951,7 +1953,8 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                       )}
                     </div>
                   );
-                })()}
+                  })()
+                )}
               </CardContent>
             </Card>
           </TabsContent>
