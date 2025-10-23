@@ -163,25 +163,25 @@ router.post('/verify-login-code', async (req, res) => {
         // Use the role that was stored when the login code was sent
         const userRole = validCode.role || 'student';
 
-        console.log(`📝 Creating new user with role: ${userRole}`);
+        console.log(`📝 Creating new ${userRole} user - will require admin verification`);
 
-        // Create new user with minimal info
+        // Create new user with minimal info - both students and alumni need verification
         const newUsers = await db.insert(users).values({
           email: validCode.email,
           name: defaultName,
           passwordHash: '', // No password for passwordless login
           role: userRole,
           isEmailVerified: true,
-          isVerified: false,
+          isVerified: false, // All users (students & alumni) start unverified
           verificationMethod: 'pending',
         }).returning();
 
-        console.log(`✅ New user created with role: ${newUsers[0].role}`);
+        console.log(`✅ New ${userRole} created - awaiting admin verification`);
 
         userDetails = newUsers[0] as unknown as DBUser;
         actualUserId = userDetails.id;
 
-        // Create verification request for admin review with name
+        // Create verification request for admin review (both students & alumni)
         await db.insert(verificationRequests).values({
           userId: actualUserId,
           requestData: {
@@ -189,7 +189,10 @@ router.post('/verify-login-code', async (req, res) => {
             name: defaultName,
             role: userRole
           },
+          status: 'pending',
         });
+
+        console.log(`📋 Verification request created for ${userRole}: ${validCode.email}`);
       }
     } else {
       // Get existing user details
@@ -434,7 +437,7 @@ router.post('/register/verify', async (req, res) => {
       return res.status(400).json({ error: 'Invalid or expired verification code' });
     }
 
-    // Check if email is in approved list
+    // Check if email is in approved list (only for students with pre-approved list)
     const approvedRecord = await db.select()
       .from(approvedUsers)
       .where(
@@ -454,7 +457,9 @@ router.post('/register/verify', async (req, res) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user with name
+    console.log(`📝 Registering ${role}: ${email} (Auto-approved: ${isAutoApproved})`);
+
+    // Create user - alumni always need verification, students may be auto-approved
     const newUser = await db.insert(users).values({
       email,
       name,
@@ -480,11 +485,13 @@ router.post('/register/verify', async (req, res) => {
         .set({ isUsed: true, usedBy: userId, usedAt: new Date() })
         .where(eq(approvedUsers.id, approvedRecord[0].id));
     } else {
-      // Create verification request for admin review
+      // Create verification request for admin review (both students & alumni)
       await db.insert(verificationRequests).values({
         userId,
-        requestData: { email, name },
+        requestData: { email, name, role, studentId: studentId || null },
+        status: 'pending',
       });
+      console.log(`📋 Verification request created for ${role}: ${email}`);
     }
 
     // Clear registration data
