@@ -319,6 +319,43 @@ router.get('/csv-uploads', async (req, res) => {
   }
 });
 
+// Unverify a user
+router.post('/users/:userId/unverify', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const adminId = req.user!.userId;
+
+    // Update user verification status
+    await db.update(users)
+      .set({
+        isVerified: false,
+        verificationMethod: null,
+        verifiedBy: null,
+        verifiedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    // Also update any associated verification requests to rejected
+    await db.update(verificationRequests)
+      .set({
+        status: 'rejected',
+        reviewedBy: adminId,
+        reviewNotes: 'Verification revoked by admin',
+        reviewedAt: new Date(),
+      })
+      .where(and(
+        eq(verificationRequests.userId, userId),
+        eq(verificationRequests.status, 'approved')
+      ));
+
+    res.json({ message: 'User unverified successfully' });
+  } catch (error) {
+    console.error('Error unverifying user:', error);
+    res.status(500).json({ error: 'Failed to unverify user' });
+  }
+});
+
 // Get all users with verification status
 router.get('/users', async (req, res) => {
   try {

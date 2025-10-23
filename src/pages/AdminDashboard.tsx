@@ -632,20 +632,39 @@ const fetchVerificationRequests = async () => {
   }
 };
 
-// Mock Supabase update functions - these should be replaced with actual API calls if not using Supabase directly
-  const toggleProfileVerification = async (profileId: string, isVerified: boolean) => {
-    // This is a placeholder. In a real app, this would call an API endpoint.
-    // For now, it simulates the UI update and then fetches fresh data.
-    console.log(`Toggling verification for profile ${profileId} to ${!isVerified}`);
-    toast({
-      title: "Simulated Action",
-      description: `Profile ${profileId} verification status would be updated.`,
-    });
-    // Simulate API call to update profile
-    setTimeout(() => {
-      fetchProfiles(); // Re-fetch profiles to show the updated status
-      fetchStats(); // Re-fetch stats as verified count might change
-    }, 500);
+const handleUnverifyUser = async (userId: string, userEmail: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/users/${userId}/unverify`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to unverify user');
+      }
+
+      toast({
+        title: "User Unverified",
+        description: `${userEmail} has been unverified successfully.`,
+      });
+
+      // Refresh data to reflect changes
+      fetchProfiles();
+      fetchStats();
+      fetchVerificationRequests();
+    } catch (error) {
+      console.error('Error unverifying user:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to unverify user",
+        variant: "destructive",
+      });
+    }
   };
 
 
@@ -1581,7 +1600,7 @@ const fetchVerificationRequests = async () => {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => toggleProfileVerification(profile.id, profile.is_verified)}
+                            onClick={() => handleUnverifyUser(profile.id, profile.email)}
                           >
                             <XCircle className="w-4 h-4 mr-1" />
                             Unverify
