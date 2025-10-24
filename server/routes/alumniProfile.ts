@@ -15,7 +15,7 @@ const authenticate = (req: any, res: any, next: any) => {
       console.error('❌ No token provided');
       return res.status(401).json({ error: 'No token provided' });
     }
-    
+
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     req.user = decoded;
     console.log('✅ Token verified for user:', req.user.userId);
@@ -31,18 +31,29 @@ router.get('/profile', authenticate, async (req: any, res) => {
   try {
     const userId = req.user.userId;
 
-    const profile = await db.select()
-      .from(alumniProfiles)
-      .where(eq(alumniProfiles.userId, userId))
-      .limit(1);
+    // Check if profile exists
+    const result = await db.select({
+      profile: alumniProfiles,
+      user: users,
+    })
+    .from(alumniProfiles)
+    .leftJoin(users, eq(alumniProfiles.userId, users.id))
+    .where(eq(alumniProfiles.userId, userId))
+    .limit(1);
 
-    if (profile.length === 0) {
+    if (result.length === 0) {
       console.log('ℹ️ Alumni profile not found for user:', userId);
       return res.json({ profile: null });
     }
 
+    const profileData = {
+      ...result[0].profile,
+      email: result[0].user?.email,
+      name: result[0].user?.name, // Added to return user's name
+    };
+
     console.log('✅ Alumni profile found for user:', userId);
-    res.json({ profile: profile[0] });
+    res.json({ profile: profileData });
   } catch (error) {
     console.error('❌ Error fetching alumni profile:', error);
     res.status(500).json({ error: 'Failed to fetch profile' });
@@ -109,7 +120,7 @@ router.post('/profile', authenticate, async (req: any, res) => {
       .limit(1);
 
     let savedProfile;
-    
+
     if (existingProfile.length > 0) {
       // Update existing profile
       console.log('Updating existing alumni profile');
@@ -189,7 +200,7 @@ router.post('/profile', authenticate, async (req: any, res) => {
 router.get('/directory', async (req, res) => {
   try {
     console.log('📖 Fetching alumni directory');
-    
+
     // Get all verified alumni with public profiles
     const alumni = await db.select({
       profile: alumniProfiles,

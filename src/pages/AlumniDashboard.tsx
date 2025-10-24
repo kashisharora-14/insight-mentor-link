@@ -138,7 +138,7 @@ const AlumniDashboard = () => {
   const loadPublicProfile = async () => {
     try {
       if (!user?.id) return;
-      const resp = await fetch(`/api/alumni-profile/profile/${user.id}`, {
+      const resp = await fetch(`/api/alumni-profile/profile`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
       });
       if (!resp.ok) return;
@@ -755,12 +755,12 @@ const AlumniDashboard = () => {
                           <img src={publicProfile.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-3xl font-bold">
-                            {(publicProfile.name || user?.name || 'A').charAt(0).toUpperCase()}
+                            {(publicProfile.name || 'A').charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="flex-1">
-                        <CardTitle className="text-2xl">{publicProfile.name || user?.name || 'Your Name'}</CardTitle>
+                        <CardTitle className="text-2xl">{publicProfile.name || 'Your Name'}</CardTitle>
                         <CardDescription className="text-base mt-1">
                           {publicProfile.currentPosition || 'Position'} {publicProfile.currentCompany && `at ${publicProfile.currentCompany}`}
                         </CardDescription>
