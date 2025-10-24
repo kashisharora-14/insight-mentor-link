@@ -481,6 +481,7 @@ const AdminDashboard = () => {
       const data = await response.json();
       console.log('✅ Fetched participants raw data:', data);
       console.log('✅ Number of participants:', Array.isArray(data) ? data.length : 0);
+      console.log('✅ Raw data structure:', JSON.stringify(data, null, 2));
       
       if (!Array.isArray(data)) {
         console.error('❌ Invalid data format:', typeof data);
@@ -490,9 +491,9 @@ const AdminDashboard = () => {
       }
       
       // Map the API response to include eventId for filtering
-      const mappedData = data.map((p: any) => {
-        console.log('🔄 Mapping participant:', p);
-        return {
+      const mappedData = data.map((p: any, index: number) => {
+        console.log(`🔄 Mapping participant ${index + 1}:`, p);
+        const mapped = {
           id: p.id,
           eventId: eventId,
           userId: p.user_id,
@@ -506,12 +507,15 @@ const AdminDashboard = () => {
           student_id: p.student_id || null,
           user_role: p.user_role || null,
         };
+        console.log(`✅ Mapped participant ${index + 1}:`, mapped);
+        return mapped;
       });
       
-      console.log('✅ Mapped participants:', mappedData);
+      console.log('✅ All mapped participants:', mappedData);
       console.log('✅ Setting eventParticipants state with', mappedData.length, 'participants');
       setEventParticipants(mappedData);
       setSelectedEventForParticipants(eventId);
+      console.log('✅ State should now be updated');
       
       toast({
         title: "Participants Loaded",
@@ -2051,7 +2055,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                         </div>
                       </div>
 
-                      {/* Participants List */}
+                      {/* Participants List - Simplified to show Name, Email, and Batch */}
                       {filteredParticipants.length > 0 ? (
                         <div className="space-y-3 max-h-96 overflow-y-auto">
                           {filteredParticipants.map((participant) => {
@@ -2059,71 +2063,18 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                             return (
                               <div key={participant.id} className="flex items-center justify-between p-4 bg-background rounded-lg border hover:border-primary transition-colors">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-3 flex-wrap">
-                                    <div>
-                                      <p className="font-medium">{participant.name || participant.email?.split('@')[0] || 'Unknown'}</p>
-                                      <p className="text-sm text-muted-foreground">{participant.email || 'No email'}</p>
-                                      {participant.department && (
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                          Department: {participant.department}
-                                        </p>
+                                  <div className="space-y-1">
+                                    <p className="font-medium text-base">{participant.name || participant.email?.split('@')[0] || 'Unknown'}</p>
+                                    <p className="text-sm text-muted-foreground">{participant.email || 'No email'}</p>
+                                    <div className="flex items-center gap-2">
+                                      {participant.program && participant.program !== 'N/A' && (
+                                        <Badge variant="outline" className="flex items-center gap-1">
+                                          <GraduationCap className="w-3 h-3" />
+                                          {participant.program}
+                                        </Badge>
                                       )}
                                     </div>
-                                    {participant.program && participant.program !== 'N/A' && (
-                                      <Badge variant="outline" className="flex items-center gap-1">
-                                        <GraduationCap className="w-3 h-3" />
-                                        {participant.program}
-                                      </Badge>
-                                    )}
-                                    {participant.participant_status && (
-                                      <Badge variant={participant.participant_status === 'approved' ? 'default' : 'secondary'}>
-                                        {participant.participant_status}
-                                      </Badge>
-                                    )}
                                   </div>
-                                </div>
-                                <div className="flex gap-2 items-center">
-                                  {(() => {
-                                    const selectedEvent = events.find(e => e.id === selectedEventForParticipants);
-                                    const eventEndDate = selectedEvent?.end_date ? new Date(selectedEvent.end_date) : new Date(selectedEvent?.date_time || '');
-                                    const isEventCompleted = eventEndDate < new Date();
-                                    const isAttended = participant.attendance_status === 'attended';
-
-                                    return (
-                                      <Button
-                                        size="sm"
-                                        variant={isAttended ? 'outline' : 'default'}
-                                        className={isAttended ? 'bg-green-600 text-white hover:bg-green-600 cursor-not-allowed' : ''}
-                                        disabled={!isEventCompleted || isAttended}
-                                        onClick={() => {
-                                          if (!isAttended && isEventCompleted) {
-                                            handleMarkAttendance(
-                                              selectedEventForParticipants!,
-                                              participant.id,
-                                              participant.attendance_status
-                                            );
-                                          }
-                                        }}
-                                      >
-                                        {isAttended ? (
-                                          <>
-                                            <CheckCircle className="w-4 h-4 mr-1" />
-                                            Attended
-                                          </>
-                                        ) : !isEventCompleted ? (
-                                          <>
-                                            <Clock className="w-4 h-4 mr-1" />
-                                            Event Not Yet Completed
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Clock className="w-4 h-4 mr-1" />
-                                            Mark Attendance
-                                          </>
-                                        )}
-                                      </Button>
-                                    );
-                                  })()}
                                 </div>
                               </div>
                             );
@@ -2140,6 +2091,19 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                           <p className="text-xs text-muted-foreground mt-2">
                             Total participants in database: {currentEventParticipants.length}
                           </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-4"
+                            onClick={() => {
+                              console.log('🔄 Debug - Current participants:', currentEventParticipants);
+                              console.log('🔄 Debug - Filtered participants:', filteredParticipants);
+                              console.log('🔄 Debug - Program filter:', programFilter);
+                              console.log('🔄 Debug - Status filter:', statusFilter);
+                            }}
+                          >
+                            Debug Participants Data
+                          </Button>
                         </div>
                       )}
                     </div>
