@@ -134,7 +134,7 @@ export default function AlumniProfileEdit() {
 
         setProfile(prev => ({
           ...prev,
-          name: data.name || prev.name,
+          name: data.name || user?.name || prev.name,
           email: user?.email || prev.email,
           graduationYear: String(data.graduationYear || ''),
           degree: data.degree || prev.degree,

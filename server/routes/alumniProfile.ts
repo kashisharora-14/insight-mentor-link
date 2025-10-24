@@ -49,7 +49,7 @@ router.get('/profile', authenticate, async (req: any, res) => {
     const profileData = {
       ...result[0].profile,
       email: result[0].user?.email,
-      name: result[0].user?.name, // Added to return user's name
+      name: result[0].user?.name || result[0].profile.name, // Use user.name first, fallback to profile.name
     };
 
     console.log('✅ Alumni profile found for user:', userId);
@@ -118,6 +118,14 @@ router.post('/profile', authenticate, async (req: any, res) => {
       .from(alumniProfiles)
       .where(eq(alumniProfiles.userId, userId))
       .limit(1);
+
+    // Update user's name in users table if provided
+    if (data.name) {
+      await db.update(users)
+        .set({ name: data.name, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+      console.log('✅ User name updated in users table');
+    }
 
     let savedProfile;
 

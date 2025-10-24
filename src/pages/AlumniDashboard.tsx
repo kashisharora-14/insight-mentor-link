@@ -760,7 +760,7 @@ const AlumniDashboard = () => {
                         )}
                       </div>
                       <div className="flex-1">
-                        <CardTitle className="text-2xl">{publicProfile.name || 'Your Name'}</CardTitle>
+                        <CardTitle className="text-2xl">{publicProfile.name || user?.name || 'Your Name'}</CardTitle>
                         <CardDescription className="text-base mt-1">
                           {publicProfile.currentPosition || 'Position'} {publicProfile.currentCompany && `at ${publicProfile.currentCompany}`}
                         </CardDescription>
