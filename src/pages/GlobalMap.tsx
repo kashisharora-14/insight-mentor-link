@@ -65,6 +65,17 @@ const GlobalMap = () => {
           const data = await response.json();
           console.log('📥 Fetched alumni data:', data.alumni.length, 'profiles');
           
+          // Debug: Log each alumni's location data
+          data.alumni.forEach((person: AlumniProfile) => {
+            console.log(`👤 ${person.name}:`, {
+              city: person.city,
+              state: person.state,
+              country: person.country,
+              companyLocation: person.companyLocation,
+              hasCoords: !!(person.latitude && person.longitude)
+            });
+          });
+          
           // Add geocoding for alumni without coordinates
           const alumniWithCoords = await Promise.all(
             data.alumni.map(async (person: AlumniProfile) => {
@@ -78,7 +89,7 @@ const GlobalMap = () => {
                   location = person.companyLocation;
                 }
                 
-                console.log(`🗺️ Geocoding for ${person.name}: "${location}"`);
+                console.log(`🗺️ Geocoding for ${person.name}: "${location}" (city: ${person.city}, state: ${person.state}, country: ${person.country})`);
                 
                 if (location && location.trim()) {
                   try {
@@ -93,6 +104,8 @@ const GlobalMap = () => {
                 } else {
                   console.warn(`⚠️ No location data for ${person.name}`);
                 }
+              } else {
+                console.log(`✅ ${person.name} already has coordinates:`, person.latitude, person.longitude);
               }
               return person;
             })
