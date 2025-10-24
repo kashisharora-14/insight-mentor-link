@@ -2,9 +2,13 @@
 -- Migration: Add missing jobs columns and job_referral_requests table
 -- Up
 
--- Add missing column to jobs table
+-- Add missing columns to jobs table
 ALTER TABLE jobs 
-ADD COLUMN IF NOT EXISTS posted_by_role TEXT;
+ADD COLUMN IF NOT EXISTS posted_by_role TEXT,
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending',
+ADD COLUMN IF NOT EXISTS approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
 
 -- Create job_referral_requests table if it doesn't exist
 CREATE TABLE IF NOT EXISTS job_referral_requests (
