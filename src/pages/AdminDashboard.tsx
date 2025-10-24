@@ -2500,12 +2500,6 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                       ))}
                   </div>
                 )}
-
-                <div className="mt-6 pt-6 border-t">
-                  <Button onClick={() => window.location.href = '/job-board'} variant="outline" className="w-full">
-                    View All Jobs on Job Board
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
