@@ -2356,9 +2356,13 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 </div>
                                 <p className="text-sm font-medium text-foreground mb-1">{job.company}</p>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <span>Posted by: {job.postedByName || 'Alumni'}</span>
-                                  <span>•</span>
-                                  <span>{job.postedByEmail}</span>
+                                  <span>Posted by Alumni: <strong className="text-foreground">{job.postedByName || job.postedByEmail || 'Unknown Alumni'}</strong></span>
+                                  {job.postedByEmail && job.postedByName && (
+                                    <>
+                                      <span>•</span>
+                                      <span>{job.postedByEmail}</span>
+                                    </>
+                                  )}
                                   <span>•</span>
                                   <span>{new Date(job.createdAt).toLocaleDateString()}</span>
                                 </div>
