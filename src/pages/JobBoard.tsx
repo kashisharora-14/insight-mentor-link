@@ -48,6 +48,8 @@ interface ReferralRequest {
   studentName?: string;
   studentEmail?: string;
   studentProfile?: any;
+  alumniName?: string;
+  alumniEmail?: string;
 }
 
 const JobBoard = () => {
@@ -153,7 +155,7 @@ const JobBoard = () => {
       });
 
       toast({
-        title: response.message || "Job posted successfully!",
+        title: "Job posted successfully!",
         description: user.role === 'admin' 
           ? "Job is now live." 
           : "Job submitted for admin approval.",
