@@ -40,7 +40,6 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin-login" element={<Navigate to="/admin/login" replace />} />
-            <Route path="/admin" element={<Navigate to="/admin-dashboard" replace />} />
 
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/student-dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
