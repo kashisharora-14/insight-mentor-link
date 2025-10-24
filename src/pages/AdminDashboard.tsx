@@ -2453,7 +2453,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                       'Content-Type': 'application/json',
                                       'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
                                     },
-                                    body: JSON.JSON.stringify({}),
+                                    body: JSON.stringify({}),
                                   });
                                   if (!resp.ok) throw new Error('Failed to approve');
                                   toast({ title: 'Job approved successfully' });
