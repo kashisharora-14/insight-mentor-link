@@ -82,7 +82,11 @@ The application uses the following environment variables:
 ### Email Service (configured in Replit Secrets - PERMANENT):
 - `MAIL_USERNAME` - Gmail address for sending emails
 - `MAIL_PASSWORD` - Gmail app-specific password
+- `RESEND_API_KEY` - (Optional) Resend API key for transactional emails
 These credentials are stored securely in Replit Secrets and persist across all deployments
+
+### Authentication:
+- `JWT_SECRET` - Secret key for JWT token signing
 
 ## Database Commands
 - `npm run db:generate` - Generate Drizzle migrations
@@ -180,7 +184,8 @@ For testing purposes, the application includes mock authentication:
   - Uninstalled lovable-tagger package dependency
 
 ## User Preferences
-- No specific preferences documented yet
+- **Secret Management**: User prefers managing API keys and secrets manually through Replit Secrets tab rather than using automated integration connectors
+- Manually configured secrets: RESEND_API_KEY (if email sending via Resend is needed), JWT_SECRET
 
 ## Project Architecture
 - Single-page application with client-side routing
