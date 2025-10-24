@@ -208,6 +208,20 @@ const JobBoard = () => {
     }
   };
 
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await apiClient.delete(`/jobs/${jobId}`);
+      toast({ title: "Job deleted successfully" });
+      fetchJobs();
+    } catch (error) {
+      toast({ title: "Error deleting job", variant: "destructive" });
+    }
+  };
+
   const handleRequestReferral = async (jobId: string) => {
     try {
       await apiClient.post(`/jobs/${jobId}/referral-request`, {
@@ -680,6 +694,15 @@ const JobBoard = () => {
                         Reject
                       </Button>
                     </>
+                  )}
+
+                  {user?.role === 'admin' && (
+                    <Button 
+                      variant="destructive"
+                      onClick={() => handleDeleteJob(job.id)}
+                    >
+                      Delete Job
+                    </Button>
                   )}
                 </div>
               </CardContent>
