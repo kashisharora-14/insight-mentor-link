@@ -9,8 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, X, Briefcase, GraduationCap, Award, MapPin, Linkedin, Github, Twitter, Users, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, X, Briefcase, GraduationCap, Award, MapPin, Linkedin, Github, Twitter, Users, Sparkles, Upload, Building2, Calendar, TrendingUp } from 'lucide-react';
 import apiClient from '@/services/apiClient';
+
+interface WorkExperience {
+  company: string;
+  position: string;
+  startDate: string;
+  endDate: string;
+  isCurrent: boolean;
+  description: string;
+}
 
 interface AlumniProfile {
   id?: string;
@@ -21,17 +30,17 @@ interface AlumniProfile {
   major: string;
   currentCompany: string;
   currentPosition: string;
-  location: string; // maps to companyLocation
+  location: string;
   bio: string;
-  skills: string[]; // maps to technicalSkills
-  expertise: string[]; // maps to expertiseAreas
+  skills: string[];
+  expertise: string[];
   achievements: string[];
+  workExperience: WorkExperience[];
   linkedinUrl?: string;
   githubUrl?: string;
   twitterUrl?: string;
-  profileImage?: string; // maps to profilePictureUrl
-  // mentorship and visibility
-  availableForMentorship: boolean; // maps to isMentorAvailable
+  profileImage?: string;
+  availableForMentorship: boolean;
   mentorshipAreas: string[];
   preferredCommunication?: string;
   maxMentees?: number;
@@ -50,6 +59,7 @@ export default function AlumniProfileEdit() {
   const [newExpertise, setNewExpertise] = useState('');
   const [newAchievement, setNewAchievement] = useState('');
   const [newMentorshipArea, setNewMentorshipArea] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   
   const [profile, setProfile] = useState<AlumniProfile>({
     name: '',
@@ -63,12 +73,13 @@ export default function AlumniProfileEdit() {
     bio: '',
     skills: [],
     expertise: [],
+    achievements: [],
+    workExperience: [],
     availableForMentorship: true,
     mentorshipAreas: [],
     linkedinUrl: '',
     githubUrl: '',
     twitterUrl: '',
-    achievements: [],
     profileImage: '',
     preferredCommunication: 'email',
     maxMentees: 3,
@@ -79,7 +90,6 @@ export default function AlumniProfileEdit() {
     showContactInfo: true,
   });
 
-  // normalization helpers
   const titleCase = (s: string) => s.toLowerCase().split(' ').filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
   const normalizeTag = (raw: string) => {
     const v = raw.trim().toLowerCase();
@@ -124,6 +134,7 @@ export default function AlumniProfileEdit() {
           skills: data.technicalSkills || [],
           expertise: data.expertiseAreas || [],
           achievements: data.achievements || [],
+          workExperience: data.previousCompanies || [],
           linkedinUrl: data.linkedinUrl || '',
           githubUrl: data.githubUrl || '',
           twitterUrl: data.twitterUrl || '',
@@ -149,6 +160,35 @@ export default function AlumniProfileEdit() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProfile(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProfile(prev => ({ ...prev, profileImage: event.target?.result as string }));
+        toast.success('Profile picture uploaded!');
+      };
+      reader.readAsDataURL(file);
+    } else {
+      toast.error('Please upload an image file');
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProfile(prev => ({ ...prev, profileImage: event.target?.result as string }));
+        toast.success('Profile picture uploaded!');
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const addSkill = () => {
@@ -198,12 +238,35 @@ export default function AlumniProfileEdit() {
     setProfile(prev => ({ ...prev, mentorshipAreas: prev.mentorshipAreas.filter(a => a !== area) }));
   };
 
+  const addWorkExperience = () => {
+    const newExp: WorkExperience = {
+      company: '',
+      position: '',
+      startDate: '',
+      endDate: '',
+      isCurrent: false,
+      description: ''
+    };
+    setProfile(prev => ({ ...prev, workExperience: [...prev.workExperience, newExp] }));
+  };
+
+  const updateWorkExperience = (index: number, field: keyof WorkExperience, value: any) => {
+    setProfile(prev => {
+      const updated = [...prev.workExperience];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, workExperience: updated };
+    });
+  };
+
+  const removeWorkExperience = (index: number) => {
+    setProfile(prev => ({ ...prev, workExperience: prev.workExperience.filter((_, i) => i !== index) }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Map UI state to backend payload
       const payload: any = {
         currentCompany: profile.currentCompany,
         currentPosition: profile.currentPosition,
@@ -212,6 +275,7 @@ export default function AlumniProfileEdit() {
         technicalSkills: profile.skills,
         expertiseAreas: profile.expertise,
         achievements: profile.achievements,
+        previousCompanies: profile.workExperience,
         linkedinUrl: profile.linkedinUrl,
         githubUrl: profile.githubUrl,
         twitterUrl: profile.twitterUrl,
@@ -228,10 +292,6 @@ export default function AlumniProfileEdit() {
         graduationYear: profile.graduationYear ? Number(profile.graduationYear) : undefined,
         degree: profile.degree || undefined,
         program: profile.degree || undefined,
-        batchType: undefined,
-        industry: undefined,
-        workType: undefined,
-        yearsOfExperience: undefined,
       };
 
       await apiClient.post('/alumni-profile/profile', payload);
@@ -247,7 +307,7 @@ export default function AlumniProfileEdit() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <Button
           variant="ghost"
           onClick={() => navigate('/alumni-dashboard')}
@@ -257,157 +317,258 @@ export default function AlumniProfileEdit() {
           Back to Dashboard
         </Button>
 
-        <Card className="shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-            <CardTitle className="text-2xl">Edit Your Profile</CardTitle>
-            <CardDescription className="text-purple-100">
-              Complete your profile to appear in the alumni directory and offer mentorship
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Personal Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-purple-600" />
-                  Personal Information
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={profile.name}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="John Doe"
-                    />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Profile Header Card */}
+          <Card className="shadow-xl">
+            <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+              <CardTitle className="text-2xl">Alumni Profile</CardTitle>
+              <CardDescription className="text-purple-100">
+                Complete your professional profile to connect with students and alumni
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Profile Picture Upload */}
+                <div className="lg:col-span-1">
+                  <Label>Profile Picture</Label>
+                  <div
+                    className={`mt-2 border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                      isDragging ? 'border-purple-500 bg-purple-50' : 'border-gray-300 hover:border-purple-400'
+                    }`}
+                    onDrop={handleImageDrop}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onClick={() => document.getElementById('profile-image-input')?.click()}
+                  >
+                    {profile.profileImage ? (
+                      <div className="relative">
+                        <img src={profile.profileImage} alt="Profile" className="w-32 h-32 rounded-full mx-auto object-cover" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-0 right-1/4 rounded-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProfile(prev => ({ ...prev, profileImage: '' }));
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="py-8">
+                        <Upload className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600">Drag & drop or click to upload</p>
+                        <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                      </div>
+                    )}
                   </div>
-
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      value={profile.email}
-                      disabled
-                      className="bg-gray-50"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="graduationYear">Graduation Year (Optional)</Label>
-                    <Input
-                      id="graduationYear"
-                      name="graduationYear"
-                      type="number"
-                      value={profile.graduationYear}
-                      onChange={handleInputChange}
-                      placeholder="2020"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">If you don't remember, you can skip this</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="degree">Degree (Optional)</Label>
-                    <Input
-                      id="degree"
-                      name="degree"
-                      value={profile.degree}
-                      onChange={handleInputChange}
-                      placeholder="MCA / MSCIT / Bachelor of Science"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">If you don't remember, you can skip this</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="major">Major (Optional)</Label>
-                    <Input
-                      id="major"
-                      name="major"
-                      value={profile.major}
-                      onChange={handleInputChange}
-                      placeholder="Computer Science"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">If you don't remember, you can skip this</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="location">Current Location</Label>
-                    <Input
-                      id="location"
-                      name="location"
-                      value={profile.location}
-                      onChange={handleInputChange}
-                      placeholder="Chandigarh, India"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    value={profile.bio}
-                    onChange={handleInputChange}
-                    placeholder="Tell us about yourself, your journey, and what you're passionate about..."
-                    rows={4}
+                  <input
+                    id="profile-image-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageSelect}
                   />
                 </div>
-              </div>
 
-              {/* Professional Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-blue-600" />
-                  Professional Information
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="currentCompany">Current Company</Label>
-                    <Input
-                      id="currentCompany"
-                      name="currentCompany"
-                      value={profile.currentCompany}
-                      onChange={handleInputChange}
-                      placeholder="Google"
-                    />
+                {/* Basic Info */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        name="name"
+                        value={profile.name}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        value={profile.email}
+                        disabled
+                        className="bg-gray-50"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="graduationYear">Graduation Year</Label>
+                      <Input
+                        id="graduationYear"
+                        name="graduationYear"
+                        type="number"
+                        value={profile.graduationYear}
+                        onChange={handleInputChange}
+                        placeholder="2020"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="degree">Degree</Label>
+                      <Input
+                        id="degree"
+                        name="degree"
+                        value={profile.degree}
+                        onChange={handleInputChange}
+                        placeholder="MCA / MSCIT"
+                      />
+                    </div>
                   </div>
-
                   <div>
-                    <Label htmlFor="currentPosition">Current Position</Label>
-                    <Input
-                      id="currentPosition"
-                      name="currentPosition"
-                      value={profile.currentPosition}
+                    <Label htmlFor="bio">Professional Bio</Label>
+                    <Textarea
+                      id="bio"
+                      name="bio"
+                      value={profile.bio}
                       onChange={handleInputChange}
-                      placeholder="Software Engineer"
+                      placeholder="Tell us about yourself, your journey, and what you're passionate about..."
+                      rows={3}
                     />
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Skills */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Skills</h3>
-                <div className="flex gap-2">
+          {/* Work Experience Timeline */}
+          <Card className="shadow-xl">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-blue-600" />
+                    Work Experience Timeline
+                  </CardTitle>
+                  <CardDescription>Add your professional journey</CardDescription>
+                </div>
+                <Button type="button" onClick={addWorkExperience} variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Experience
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {profile.workExperience.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Building2 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                    <p>No work experience added yet</p>
+                  </div>
+                ) : (
+                  <div className="relative border-l-2 border-blue-200 pl-8 space-y-8">
+                    {profile.workExperience.map((exp, index) => (
+                      <div key={index} className="relative">
+                        <div className="absolute -left-10 mt-1.5 w-4 h-4 rounded-full bg-blue-500 border-4 border-white"></div>
+                        <Card className="shadow-sm">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {exp.isCurrent ? 'Current Position' : 'Past Experience'}
+                                </span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeWorkExperience(index)}
+                              >
+                                <X className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <Label>Company *</Label>
+                                <Input
+                                  value={exp.company}
+                                  onChange={(e) => updateWorkExperience(index, 'company', e.target.value)}
+                                  placeholder="Google"
+                                />
+                              </div>
+                              <div>
+                                <Label>Position *</Label>
+                                <Input
+                                  value={exp.position}
+                                  onChange={(e) => updateWorkExperience(index, 'position', e.target.value)}
+                                  placeholder="Software Engineer"
+                                />
+                              </div>
+                              <div>
+                                <Label>Start Date</Label>
+                                <Input
+                                  type="month"
+                                  value={exp.startDate}
+                                  onChange={(e) => updateWorkExperience(index, 'startDate', e.target.value)}
+                                />
+                              </div>
+                              <div>
+                                <Label>End Date</Label>
+                                <Input
+                                  type="month"
+                                  value={exp.endDate}
+                                  onChange={(e) => updateWorkExperience(index, 'endDate', e.target.value)}
+                                  disabled={exp.isCurrent}
+                                />
+                              </div>
+                              <div className="md:col-span-2 flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  id={`current-${index}`}
+                                  checked={exp.isCurrent}
+                                  onChange={(e) => updateWorkExperience(index, 'isCurrent', e.target.checked)}
+                                  className="h-4 w-4"
+                                />
+                                <Label htmlFor={`current-${index}`} className="cursor-pointer">Currently working here</Label>
+                              </div>
+                              <div className="md:col-span-2">
+                                <Label>Description</Label>
+                                <Textarea
+                                  value={exp.description}
+                                  onChange={(e) => updateWorkExperience(index, 'description', e.target.value)}
+                                  placeholder="Describe your role and achievements..."
+                                  rows={3}
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Skills & Expertise */}
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Skills & Expertise
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label>Technical Skills</Label>
+                <div className="flex gap-2 mt-2">
                   <Input
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
-                    placeholder="Add a skill (e.g., Python, React)"
+                    placeholder="e.g., Python, React"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                   />
                   <Button type="button" onClick={addSkill}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {profile.skills.map((skill, index) => (
                     <Badge key={index} variant="secondary" className="px-3 py-1">
                       {skill}
@@ -423,21 +584,20 @@ export default function AlumniProfileEdit() {
                 </div>
               </div>
 
-              {/* Expertise */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Areas of Expertise</h3>
-                <div className="flex gap-2">
+              <div>
+                <Label>Areas of Expertise</Label>
+                <div className="flex gap-2 mt-2">
                   <Input
                     value={newExpertise}
                     onChange={(e) => setNewExpertise(e.target.value)}
-                    placeholder="Add expertise (e.g., Machine Learning, UI/UX)"
+                    placeholder="e.g., Machine Learning, UI/UX"
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addExpertise())}
                   />
                   <Button type="button" onClick={addExpertise}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {profile.expertise.map((exp, index) => (
                     <Badge key={index} variant="outline" className="px-3 py-1 border-blue-300">
                       {exp}
@@ -452,107 +612,121 @@ export default function AlumniProfileEdit() {
                   ))}
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Achievements */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Award className="h-5 w-5 text-yellow-600" />
-                  Achievements
-                </h3>
-                <div className="flex gap-2">
-                  <Input
-                    value={newAchievement}
-                    onChange={(e) => setNewAchievement(e.target.value)}
-                    placeholder="Add an achievement"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAchievement())}
-                  />
-                  <Button type="button" onClick={addAchievement}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  {profile.achievements.map((achievement, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-yellow-50 rounded">
-                      <Award className="h-4 w-4 text-yellow-600" />
-                      <span className="flex-1">{achievement}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeAchievement(achievement)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+          {/* Achievements */}
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-yellow-600" />
+                Achievements & Recognition
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2 mb-4">
+                <Input
+                  value={newAchievement}
+                  onChange={(e) => setNewAchievement(e.target.value)}
+                  placeholder="Add an achievement"
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAchievement())}
+                />
+                <Button type="button" onClick={addAchievement}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {profile.achievements.map((achievement, index) => (
+                  <div key={index} className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <Award className="h-4 w-4 text-yellow-600 flex-shrink-0" />
+                    <span className="flex-1 text-sm">{achievement}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAchievement(achievement)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Social Links */}
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle>Professional Links</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Linkedin className="h-5 w-5 text-blue-600" />
+                <Input
+                  name="linkedinUrl"
+                  value={profile.linkedinUrl}
+                  onChange={handleInputChange}
+                  placeholder="https://linkedin.com/in/yourprofile"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Github className="h-5 w-5 text-gray-800" />
+                <Input
+                  name="githubUrl"
+                  value={profile.githubUrl}
+                  onChange={handleInputChange}
+                  placeholder="https://github.com/yourusername"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Twitter className="h-5 w-5 text-blue-400" />
+                <Input
+                  name="twitterUrl"
+                  value={profile.twitterUrl}
+                  onChange={handleInputChange}
+                  placeholder="https://twitter.com/yourusername"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Mentorship Settings */}
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-purple-600" />
+                Mentorship Availability
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="availableForMentorship"
+                  checked={profile.availableForMentorship}
+                  onChange={(e) => setProfile(prev => ({ ...prev, availableForMentorship: e.target.checked }))}
+                  className="h-5 w-5 rounded text-green-600"
+                />
+                <Label htmlFor="availableForMentorship" className="cursor-pointer">
+                  I am available to mentor students
+                </Label>
               </div>
 
-              {/* Social Links */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Social Links</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Linkedin className="h-5 w-5 text-blue-600" />
-                    <Input
-                      name="linkedinUrl"
-                      value={profile.linkedinUrl}
-                      onChange={handleInputChange}
-                      placeholder="https://linkedin.com/in/yourprofile"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Github className="h-5 w-5 text-gray-800" />
-                    <Input
-                      name="githubUrl"
-                      value={profile.githubUrl}
-                      onChange={handleInputChange}
-                      placeholder="https://github.com/yourusername"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Twitter className="h-5 w-5 text-blue-400" />
-                    <Input
-                      name="twitterUrl"
-                      value={profile.twitterUrl}
-                      onChange={handleInputChange}
-                      placeholder="https://twitter.com/yourusername"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Mentorship Availability */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Mentorship</h3>
-                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                  <input
-                    type="checkbox"
-                    id="availableForMentorship"
-                    checked={profile.availableForMentorship}
-                    onChange={(e) => setProfile(prev => ({ ...prev, availableForMentorship: e.target.checked }))}
-                    className="h-5 w-5 rounded text-green-600"
-                  />
-                  <Label htmlFor="availableForMentorship" className="cursor-pointer">
-                    I am available to mentor students
-                  </Label>
-                </div>
-
-                {/* Mentorship Areas */}
-                {profile.availableForMentorship && (
-                  <div className="space-y-3">
+              {profile.availableForMentorship && (
+                <div className="space-y-4 pl-4 border-l-2 border-green-200">
+                  <div>
                     <Label>Mentorship Areas</Label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mt-2">
                       <Input
                         value={newMentorshipArea}
                         onChange={(e) => setNewMentorshipArea(e.target.value)}
-                        placeholder="Add an area (e.g., Career, DSA, Resume)"
+                        placeholder="e.g., Career, DSA, Resume"
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addMentorshipArea())}
                       />
                       <Button type="button" onClick={addMentorshipArea}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mt-3">
                       {profile.mentorshipAreas.map((area, index) => (
                         <Badge key={index} variant="outline" className="px-3 py-1">
                           {area}
@@ -563,36 +737,9 @@ export default function AlumniProfileEdit() {
                       ))}
                     </div>
                   </div>
-                )}
 
-                {/* Preferences */}
-                {profile.availableForMentorship && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="preferredCommunication">Preferred Communication</Label>
-                      <select
-                        id="preferredCommunication"
-                        className="w-full border rounded h-10 px-3"
-                        value={profile.preferredCommunication}
-                        onChange={(e) => setProfile(prev => ({ ...prev, preferredCommunication: e.target.value }))}
-                      >
-                        <option value="email">Email</option>
-                        <option value="phone">Phone</option>
-                        <option value="chat">Chat</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label htmlFor="maxMentees">Max Mentees</Label>
-                      <Input
-                        id="maxMentees"
-                        type="number"
-                        min={1}
-                        value={profile.maxMentees}
-                        onChange={(e) => setProfile(prev => ({ ...prev, maxMentees: Number(e.target.value || 0) }))}
-                        placeholder="3"
-                      />
-                    </div>
-                    <div className="flex items-center gap-3 mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         id="availableForJobReferrals"
@@ -601,11 +748,6 @@ export default function AlumniProfileEdit() {
                       />
                       <Label htmlFor="availableForJobReferrals">Available for Job Referrals</Label>
                     </div>
-                  </div>
-                )}
-
-                {profile.availableForMentorship && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
@@ -615,147 +757,21 @@ export default function AlumniProfileEdit() {
                       />
                       <Label htmlFor="availableForGuestLectures">Available for Guest Lectures</Label>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="availableForNetworking"
-                        checked={!!profile.availableForNetworking}
-                        onChange={(e) => setProfile(prev => ({ ...prev, availableForNetworking: e.target.checked }))}
-                      />
-                      <Label htmlFor="availableForNetworking">Available for Networking</Label>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Visibility & Profile Picture */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Visibility</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded">
-                    <input
-                      type="checkbox"
-                      id="isPublicProfile"
-                      checked={!!profile.isPublicProfile}
-                      onChange={(e) => setProfile(prev => ({ ...prev, isPublicProfile: e.target.checked }))}
-                    />
-                    <div>
-                      <Label htmlFor="isPublicProfile">Public Profile</Label>
-                      <p className="text-xs text-muted-foreground">Show in the Alumni Directory</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded">
-                    <input
-                      type="checkbox"
-                      id="showContactInfo"
-                      checked={!!profile.showContactInfo}
-                      onChange={(e) => setProfile(prev => ({ ...prev, showContactInfo: e.target.checked }))}
-                    />
-                    <div>
-                      <Label htmlFor="showContactInfo">Show Contact Info</Label>
-                      <p className="text-xs text-muted-foreground">Allow students to see your email/phone</p>
-                    </div>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
 
-                <div>
-                  <Label htmlFor="profileImage">Profile Picture (optional)</Label>
-                  <Input
-                    id="profileImage"
-                    name="profileImage"
-                    value={profile.profileImage}
-                    onChange={handleInputChange}
-                    placeholder="https://.../your-photo.jpg"
-                  />
-                </div>
-              </div>
-
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={loading} className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600">
-                    {loading ? 'Saving...' : 'Save Profile'}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => navigate('/alumni-dashboard')}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-
-              {/* Live Preview */}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Preview</h3>
-                <div className="rounded-xl border shadow-elegant p-6 bg-white">
-                  <div className="flex items-start space-x-4 mb-4">
-                    <div className="relative">
-                      {profile.profileImage ? (
-                        <img src={profile.profileImage} alt={profile.name || 'Profile'} className="w-16 h-16 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-16 h-16 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-lg">
-                          {(profile.name || '?').split(' ').map(n => n[0]).join('').toUpperCase() || '?'}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold">{profile.name || 'Your Name'}</h3>
-                      <div className="text-xs text-muted-foreground">
-                        {profile.degree ? `${profile.degree} • ` : ''}{profile.graduationYear || 'Year'}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-3 text-sm text-muted-foreground">
-                    {profile.currentPosition && (
-                      <div className="flex items-center"><Briefcase className="w-4 h-4 mr-2 text-primary" />{profile.currentPosition}</div>
-                    )}
-                    {profile.currentCompany && (
-                      <div className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-primary" />{profile.currentCompany}{profile.location ? ` • ${profile.location}` : ''}</div>
-                    )}
-                  </div>
-
-                  {profile.bio && (
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{profile.bio}</p>
-                  )}
-
-                  {profile.expertise?.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">Expertise:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {profile.expertise.slice(0, 3).map((a, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">{a}</Badge>
-                        ))}
-                        {profile.expertise.length > 3 && (
-                          <Badge variant="outline" className="text-xs">+{profile.expertise.length - 3}</Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-2">
-                    {profile.availableForMentorship && (
-                      <Badge className="bg-green-500 hover:bg-green-600 text-white gap-1">
-                        <Users className="w-3 h-3" /> Mentor
-                      </Badge>
-                    )}
-                    {profile.availableForJobReferrals && (
-                      <Badge className="bg-blue-500 hover:bg-blue-600 text-white gap-1">
-                        <Briefcase className="w-3 h-3" /> Referrals
-                      </Badge>
-                    )}
-                    {profile.availableForGuestLectures && (
-                      <Badge className="bg-purple-500 hover:bg-purple-600 text-white gap-1">
-                        <Award className="w-3 h-3" /> Lectures
-                      </Badge>
-                    )}
-                    {profile.availableForNetworking && (
-                      <Badge className="bg-orange-500 hover:bg-orange-600 text-white gap-1">
-                        <Sparkles className="w-3 h-3" /> Networking
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="flex gap-4">
+            <Button type="submit" disabled={loading} className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600">
+              {loading ? 'Saving...' : 'Save Profile'}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => navigate('/alumni-dashboard')}>
+              Cancel
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );
