@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/services/apiClient';
-import { Briefcase, MapPin, Clock, DollarSign, Plus, ExternalLink, Search, Filter, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Briefcase, MapPin, Clock, DollarSign, Plus, ExternalLink, Search, Filter, CheckCircle, XCircle, AlertCircle, IndianRupee, Award } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 
 interface Job {
@@ -952,20 +952,24 @@ const JobBoard = () => {
 
                 <div className="flex flex-wrap gap-4 mb-4 text-sm">
                   {job.location && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-muted-foreground">
                       <MapPin className="w-4 h-4" />
-                      {job.location}
+                      <span className="font-medium">{job.location}</span>
                     </div>
                   )}
                   {job.salaryRange && (
-                    <div className="flex items-center gap-1">
-                      {job.salaryRange}
+                    <div className="flex items-center gap-1 text-green-600 dark:text-green-500">
+                      <IndianRupee className="w-4 h-4" />
+                      <span className="font-semibold">
+                        {job.salaryRange.includes('₹') ? job.salaryRange : `₹${parseInt(job.salaryRange).toLocaleString('en-IN')}`}
+                        {!job.salaryRange.includes('/') && ' /year'}
+                      </span>
                     </div>
                   )}
                   {job.experienceRequired && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {job.experienceRequired}
+                    <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                      <Award className="w-4 h-4" />
+                      <span className="font-medium">{job.experienceRequired} experience</span>
                     </div>
                   )}
                 </div>
