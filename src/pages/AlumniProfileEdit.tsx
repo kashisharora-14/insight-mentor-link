@@ -31,6 +31,9 @@ interface AlumniProfile {
   currentCompany: string;
   currentPosition: string;
   location: string;
+  city?: string;
+  state?: string;
+  country?: string;
   bio: string;
   skills: string[];
   expertise: string[];
@@ -70,6 +73,9 @@ export default function AlumniProfileEdit() {
     currentCompany: '',
     currentPosition: '',
     location: '',
+    city: '',
+    state: '',
+    country: 'India',
     bio: '',
     skills: [],
     expertise: [],
@@ -142,6 +148,9 @@ export default function AlumniProfileEdit() {
           currentCompany: data.currentCompany || '',
           currentPosition: data.currentPosition || '',
           location: data.companyLocation || '',
+          city: data.city || '',
+          state: data.state || '',
+          country: data.country || 'India',
           bio: data.bio || '',
           skills: Array.isArray(data.technicalSkills) ? data.technicalSkills : [],
           expertise: Array.isArray(data.expertiseAreas) ? data.expertiseAreas : [],
@@ -284,6 +293,9 @@ export default function AlumniProfileEdit() {
         currentCompany: profile.currentCompany,
         currentPosition: profile.currentPosition,
         companyLocation: profile.location,
+        city: profile.city,
+        state: profile.state,
+        country: profile.country,
         bio: profile.bio,
         technicalSkills: profile.skills,
         expertiseAreas: profile.expertise,
@@ -444,6 +456,87 @@ export default function AlumniProfileEdit() {
                       onChange={handleInputChange}
                       placeholder="Tell us about yourself, your journey, and what you're passionate about..."
                       rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Current Position & Location */}
+          <Card className="shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-blue-600" />
+                Current Position & Location
+              </CardTitle>
+              <CardDescription>Your current work and location details</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="currentPosition">Current Position *</Label>
+                  <Input
+                    id="currentPosition"
+                    name="currentPosition"
+                    value={profile.currentPosition}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Software Engineer"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="currentCompany">Current Company *</Label>
+                  <Input
+                    id="currentCompany"
+                    name="currentCompany"
+                    value={profile.currentCompany}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Google"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="location">Company Location</Label>
+                  <Input
+                    id="location"
+                    name="location"
+                    value={profile.location}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Bangalore, India"
+                  />
+                </div>
+              </div>
+              
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-medium mb-3">Your Current Residential Location *</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      name="city"
+                      value={profile.city || ''}
+                      onChange={(e) => setProfile(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="e.g., Bangalore"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      name="state"
+                      value={profile.state || ''}
+                      onChange={(e) => setProfile(prev => ({ ...prev, state: e.target.value }))}
+                      placeholder="e.g., Karnataka"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="country">Country *</Label>
+                    <Input
+                      id="country"
+                      name="country"
+                      value={profile.country || 'India'}
+                      onChange={(e) => setProfile(prev => ({ ...prev, country: e.target.value }))}
+                      placeholder="e.g., India"
                     />
                   </div>
                 </div>
