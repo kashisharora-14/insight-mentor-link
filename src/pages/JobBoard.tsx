@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -147,7 +146,7 @@ const JobBoard = () => {
     e.preventDefault();
     setIsDragging(false);
     setIsEditDragging(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -185,7 +184,7 @@ const JobBoard = () => {
 
   const handlePostJob = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       toast({
         title: "Please log in",
@@ -258,7 +257,7 @@ const JobBoard = () => {
     if (!confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
       return;
     }
-    
+
     try {
       await apiClient.delete(`/jobs/${jobId}`);
       toast({ title: "Job deleted successfully" });
@@ -275,7 +274,7 @@ const JobBoard = () => {
 
   const handleUpdateJob = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!editingJob) return;
 
     try {
@@ -375,7 +374,7 @@ const JobBoard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -424,7 +423,7 @@ const JobBoard = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="description">Description</Label>
                     <Textarea
@@ -636,7 +635,7 @@ const JobBoard = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="edit-description">Description</Label>
                   <Textarea
@@ -950,7 +949,7 @@ const JobBoard = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">{job.description}</p>
-                
+
                 <div className="flex flex-wrap gap-4 mb-4 text-sm">
                   {job.location && (
                     <div className="flex items-center gap-1">
@@ -960,13 +959,12 @@ const JobBoard = () => {
                   )}
                   {job.salaryRange && (
                     <div className="flex items-center gap-1">
-                      <DollarSign className="w-4 h-4" />
-                      ₹{job.salaryRange}
+                      {job.salaryRange}
                     </div>
                   )}
                   {job.experienceRequired && (
                     <div className="flex items-center gap-1">
-                      <Briefcase className="w-4 h-4" />
+                      <Clock className="w-4 h-4" />
                       {job.experienceRequired}
                     </div>
                   )}
