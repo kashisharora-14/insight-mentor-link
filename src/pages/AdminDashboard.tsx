@@ -2368,7 +2368,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                     Refresh Jobs
                   </Button>
                 </div>
-                <CardDescription>Review and approve job postings from alumni</CardDescription>
+                <CardDescription>Review and approve job posting requests from alumni</CardDescription>
               </CardHeader>
               <CardContent>
                 {(() => {
@@ -2455,15 +2455,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 </div>
                                 <p className="text-sm font-medium text-foreground mb-1">{job.company}</p>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <span>Posted by Alumni: <strong className="text-foreground">{job.postedByName || job.postedByEmail || 'Unknown Alumni'}</strong></span>
-                                  {job.postedByEmail && job.postedByName && (
-                                    <>
-                                      <span>•</span>
-                                      <span>{job.postedByEmail}</span>
-                                    </>
-                                  )}
-                                  <span>•</span>
-                                  <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+                                  <span>Submitted: {new Date(job.createdAt).toLocaleDateString()}</span>
                                 </div>
                               </div>
                             </div>
@@ -2619,7 +2611,6 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 </div>
                                 <p className="text-sm text-muted-foreground">{job.company}</p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Posted by: {job.postedByName || job.postedByEmail} •
                                   {new Date(job.createdAt).toLocaleDateString()}
                                 </p>
                               </div>
