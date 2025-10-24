@@ -357,6 +357,7 @@ export const jobs = pgTable('jobs', {
   title: text('title').notNull(),
   description: text('description').notNull(),
   company: text('company').notNull(),
+  companyLogo: text('company_logo'), // Company logo/image URL
   location: text('location'),
   jobType: text('job_type'), // full-time, part-time, internship, contract
   salaryRange: text('salary_range'),

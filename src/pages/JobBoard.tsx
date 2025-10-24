@@ -20,6 +20,7 @@ interface Job {
   title: string;
   description: string;
   company: string;
+  companyLogo: string;
   location: string;
   jobType: string;
   salaryRange: string;
@@ -64,6 +65,7 @@ const JobBoard = () => {
     title: '',
     description: '',
     company: '',
+    companyLogo: '',
     location: '',
     jobType: 'full-time',
     salaryRange: '',
@@ -166,6 +168,7 @@ const JobBoard = () => {
         title: '',
         description: '',
         company: '',
+        companyLogo: '',
         location: '',
         jobType: 'full-time',
         salaryRange: '',
@@ -330,6 +333,17 @@ const JobBoard = () => {
                     />
                   </div>
 
+                  <div>
+                    <Label htmlFor="companyLogo">Company Logo URL (optional)</Label>
+                    <Input
+                      id="companyLogo"
+                      type="url"
+                      value={newJob.companyLogo}
+                      onChange={(e) => setNewJob(prev => ({ ...prev, companyLogo: e.target.value }))}
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="location">Location</Label>
@@ -410,18 +424,20 @@ const JobBoard = () => {
                     />
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="referralAvailable"
-                      checked={newJob.referralAvailable}
-                      onCheckedChange={(checked) => 
-                        setNewJob(prev => ({ ...prev, referralAvailable: checked === true }))
-                      }
-                    />
-                    <Label htmlFor="referralAvailable" className="font-normal">
-                      I can provide referrals for this position
-                    </Label>
-                  </div>
+                  {user?.role === 'alumni' && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="referralAvailable"
+                        checked={newJob.referralAvailable}
+                        onCheckedChange={(checked) => 
+                          setNewJob(prev => ({ ...prev, referralAvailable: checked === true }))
+                        }
+                      />
+                      <Label htmlFor="referralAvailable" className="font-normal">
+                        I can provide referrals for this position
+                      </Label>
+                    </div>
+                  )}
 
                   <Button type="submit" className="w-full">
                     {user?.role === 'admin' ? 'Post Job' : 'Submit for Approval'}
@@ -543,18 +559,28 @@ const JobBoard = () => {
           {filteredJobs.map((job) => (
             <Card key={job.id}>
               <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <CardTitle className="text-xl">{job.title}</CardTitle>
-                      {getStatusBadge(job.status)}
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex gap-4 flex-1">
+                    {job.companyLogo && (
+                      <img 
+                        src={job.companyLogo} 
+                        alt={`${job.company} logo`}
+                        className="w-16 h-16 object-contain rounded border"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CardTitle className="text-xl">{job.title}</CardTitle>
+                        {getStatusBadge(job.status)}
+                      </div>
+                      <CardDescription className="text-lg font-medium text-foreground">
+                        {job.company}
+                      </CardDescription>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Posted by: {job.postedByRole === 'admin' ? 'Admin' : (job.postedByName || 'Alumni')}
+                      </p>
                     </div>
-                    <CardDescription className="text-lg font-medium text-foreground">
-                      {job.company}
-                    </CardDescription>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Posted by: {job.postedByName} ({job.postedByRole})
-                    </p>
                   </div>
                   <Badge className={getJobTypeColor(job.jobType)}>
                     {job.jobType.replace('-', ' ')}
@@ -611,7 +637,7 @@ const JobBoard = () => {
                   </div>
                 )}
 
-                {job.referralAvailable && (
+                {job.referralAvailable && job.postedByRole === 'alumni' && (
                   <div className="mb-4">
                     <Badge className="bg-blue-500">
                       <AlertCircle className="w-3 h-3 mr-1" />
@@ -630,7 +656,7 @@ const JobBoard = () => {
                     </Button>
                   )}
 
-                  {user?.role === 'student' && job.referralAvailable && job.status === 'approved' && (
+                  {user?.role === 'student' && job.referralAvailable && job.postedByRole === 'alumni' && job.status === 'approved' && (
                     <Button 
                       variant="outline"
                       onClick={() => handleRequestReferral(job.id)}
