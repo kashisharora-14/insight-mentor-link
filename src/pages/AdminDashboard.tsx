@@ -2346,12 +2346,60 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                   console.log('🎯 Jobs Tab - Pending jobs:', jobs.filter((job: any) => job.status === 'pending'));
                   return null;
                 })()}
-                {jobs.filter((job: any) => job.status === 'pending').length === 0 ? (
+                
+                {/* Show summary of all jobs */}
+                <div className="mb-6 p-4 bg-muted rounded-lg">
+                  <h3 className="font-semibold mb-2">Job Summary</h3>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Total Jobs:</span>
+                      <span className="ml-2 font-bold">{jobs.length}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Pending:</span>
+                      <span className="ml-2 font-bold text-yellow-600">
+                        {jobs.filter((j: any) => j.status === 'pending').length}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Approved:</span>
+                      <span className="ml-2 font-bold text-green-600">
+                        {jobs.filter((j: any) => j.status === 'approved').length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {jobs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      No jobs in the system yet
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Alumni can post jobs from the Job Board
+                    </p>
+                  </div>
+                ) : jobs.filter((job: any) => job.status === 'pending').length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">
                       No pending job postings to review
                     </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      All jobs have been processed
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => {
+                        // Show all jobs including approved/rejected
+                        console.log('📋 All jobs:', jobs);
+                      }}
+                    >
+                      View All Jobs ({jobs.length})
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -2518,6 +2566,36 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                           </div>
                         </div>
                       ))}
+                  </div>
+                )}
+
+                {/* Show all jobs (approved/rejected) for reference */}
+                {jobs.filter((job: any) => job.status !== 'pending').length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4">Processed Jobs</h3>
+                    <div className="space-y-4">
+                      {jobs
+                        .filter((job: any) => job.status !== 'pending')
+                        .map((job: any) => (
+                          <div key={job.id} className="p-4 border rounded-lg bg-muted/50">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-semibold">{job.title}</h4>
+                                  <Badge variant={job.status === 'approved' ? 'default' : 'destructive'}>
+                                    {job.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">{job.company}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Posted by: {job.postedByName || job.postedByEmail} • 
+                                  {new Date(job.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 )}
               </CardContent>
