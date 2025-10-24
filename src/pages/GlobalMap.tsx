@@ -473,48 +473,63 @@ const GlobalMap = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">Search Results:</h4>
-                  <div className="max-h-48 overflow-y-auto space-y-2">
-                    {filteredAlumni.slice(0, 5).map((person) => (
-                      <div 
-                        key={person.userId} 
-                        className="flex justify-between items-center text-sm p-2 hover:bg-gray-50 rounded cursor-pointer"
-                        onClick={() => {
-                          setSelectedAlumni(person);
-                          if (map && person.latitude && person.longitude) {
-                            map.setView([person.latitude, person.longitude], 12);
-                          }
-                        }}
-                      >
-                        <span className="flex items-center gap-2">
-                          {person.profilePictureUrl ? (
-                            <img 
-                              src={person.profilePictureUrl} 
-                              alt={person.name}
-                              className="w-6 h-6 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                              {person.name.split(' ').map(n => n[0]).join('')}
+                {searchTerm && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Search Results:</h4>
+                    <div className="max-h-48 overflow-y-auto space-y-2">
+                      {filteredAlumni.length > 0 ? (
+                        <>
+                          {filteredAlumni.slice(0, 5).map((person) => (
+                            <div 
+                              key={person.userId} 
+                              className="flex justify-between items-center text-sm p-2 hover:bg-gray-50 rounded cursor-pointer"
+                              onClick={() => {
+                                setSelectedAlumni(person);
+                                if (map && person.latitude && person.longitude) {
+                                  map.setView([person.latitude, person.longitude], 12);
+                                }
+                              }}
+                            >
+                              <span className="flex items-center gap-2">
+                                {person.profilePictureUrl ? (
+                                  <img 
+                                    src={person.profilePictureUrl} 
+                                    alt={person.name}
+                                    className="w-6 h-6 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                    {person.name.split(' ').map(n => n[0]).join('')}
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="font-medium">{person.name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {[person.city, person.state, person.country].filter(Boolean).join(', ') || person.companyLocation || 'N/A'}
+                                  </div>
+                                </div>
+                              </span>
+                            </div>
+                          ))}
+                          {filteredAlumni.length > 5 && (
+                            <div className="text-xs text-muted-foreground text-center py-2">
+                              +{filteredAlumni.length - 5} more results
                             </div>
                           )}
-                          <div>
-                            <div className="font-medium">{person.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {[person.city, person.state, person.country].filter(Boolean).join(', ') || person.companyLocation || 'N/A'}
-                            </div>
-                          </div>
-                        </span>
-                      </div>
-                    ))}
-                    {filteredAlumni.length > 5 && (
-                      <div className="text-xs text-muted-foreground text-center py-2">
-                        +{filteredAlumni.length - 5} more results
-                      </div>
-                    )}
+                        </>
+                      ) : (
+                        <div className="text-sm text-muted-foreground text-center py-4">
+                          No alumni found matching your search
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
+                {!searchTerm && (
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    Search for alumni by name, skills, location, or company to see results
+                  </div>
+                )}
               </CardContent>
             </Card>
 
