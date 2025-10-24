@@ -494,7 +494,7 @@ const Events = () => {
 
   const handlePostEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       toast({
         title: "Please log in",
@@ -570,7 +570,7 @@ const Events = () => {
 
       setIsPostDialogOpen(false);
       resetForm();
-      
+
       // Force reload events to ensure new event appears
       await loadEvents();
     } catch (error) {
@@ -627,10 +627,10 @@ const Events = () => {
   const getEventStatus = (startDate?: string, endDate?: string) => {
     const now = new Date();
     if (!startDate) return { label: "TBD", variant: "secondary" as const };
-    
+
     const start = new Date(startDate);
     const end = endDate ? new Date(endDate) : start;
-    
+
     if (now < start) {
       return { label: "Upcoming", variant: "default" as const };
     } else if (now >= start && now <= end) {
@@ -1121,7 +1121,7 @@ const Events = () => {
               <Filter className="w-5 h-5 text-primary" />
               <h3 className="text-lg font-semibold">Filter & Search Events</h3>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-4 mb-4">
               {/* Search */}
               <div className="space-y-2">
@@ -1247,9 +1247,8 @@ const Events = () => {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Calendar className="w-12 h-12 text-white drop-shadow" />
                 </div>
-                <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
-                  <Badge className={`${
-                    eventStatus.variant === "destructive" 
+                <div className="flex flex-wrap gap-2 mb-2 pr-32">
+                  <Badge className={`${eventStatus.variant === "destructive" 
                       ? "bg-red-500/90" 
                       : eventStatus.variant === "default"
                       ? "bg-green-500/90"
@@ -1268,7 +1267,7 @@ const Events = () => {
                     </Badge>
                   )}
                   {event.club && (
-                    <Badge className="bg-secondary/80 text-white border-white/30">
+                    <Badge className="bg-secondary/80 text-white border-white/30 font-semibold">
                       {event.club}
                     </Badge>
                   )}
@@ -1295,7 +1294,7 @@ const Events = () => {
                     {event.summary}
                   </p>
                 )}
-                
+
                 <p className="text-muted-foreground mb-4 line-clamp-3">
                   {event.description}
                 </p>
@@ -1356,7 +1355,7 @@ const Events = () => {
                   </div>
                   <Badge variant="outline">Status: {event.status}</Badge>
                   {event.approval_notes && (
-                    <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
                       Admin notes: {event.approval_notes}
                     </p>
                   )}
