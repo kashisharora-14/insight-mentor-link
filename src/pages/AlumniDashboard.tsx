@@ -747,7 +747,7 @@ const AlumniDashboard = () => {
                           <img src={publicProfile.profileImage} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-3xl font-bold">
-                            {publicProfile.name?.charAt(0) || user?.name?.charAt(0) || 'A'}
+                            {(publicProfile.name || user?.name || 'A').charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
@@ -773,19 +773,27 @@ const AlumniDashboard = () => {
                       </div>
                     )}
 
-                    {publicProfile.timeline && publicProfile.timeline.length > 0 && (
+                    {publicProfile.previousCompanies && publicProfile.previousCompanies.length > 0 && (
                       <div>
-                        <h3 className="font-semibold mb-2">Timeline</h3>
+                        <h3 className="font-semibold mb-2 flex items-center gap-2">
+                          <Building className="w-4 h-4 text-primary" />
+                          Work Experience
+                        </h3>
                         <div className="space-y-4">
-                          {publicProfile.timeline.map((item: any, index: number) => (
-                            <div key={index} className="flex items-start gap-4">
+                          {publicProfile.previousCompanies.map((exp: any, index: number) => (
+                            <div key={index} className="flex items-start gap-4 pb-4 border-b last:border-0">
                               <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                                <Briefcase className="w-5 h-5" />
+                                <Building className="w-5 h-5" />
                               </div>
-                              <div>
-                                <p className="font-medium text-sm">{item.title}</p>
-                                <p className="text-xs text-muted-foreground">{item.company}</p>
-                                <p className="text-xs text-muted-foreground">{item.duration}</p>
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">{exp.position}</p>
+                                <p className="text-sm text-muted-foreground">{exp.company}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
+                                </p>
+                                {exp.description && (
+                                  <p className="text-xs text-muted-foreground mt-2">{exp.description}</p>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -809,7 +817,7 @@ const AlumniDashboard = () => {
                         <h3 className="font-semibold mb-2">Expertise</h3>
                         <div className="flex flex-wrap gap-2">
                           {publicProfile.expertiseAreas.map((area: string, idx: number) => (
-                            <Badge key={idx} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                            <Badge key={idx} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800">
                               {area}
                             </Badge>
                           ))}
@@ -835,24 +843,54 @@ const AlumniDashboard = () => {
 
                     {(publicProfile.linkedinUrl || publicProfile.githubUrl || publicProfile.twitterUrl) && (
                       <div>
-                        <h3 className="font-semibold mb-2">Connect</h3>
-                        <div className="flex gap-3">
+                        <h3 className="font-semibold mb-3">Connect</h3>
+                        <div className="flex flex-col gap-3">
                           {publicProfile.linkedinUrl && (
-                            <a href={publicProfile.linkedinUrl} target="_blank" rel="noopener noreferrer"
-                               className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
-                              LinkedIn
+                            <a 
+                              href={publicProfile.linkedinUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group"
+                            >
+                              <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                              </svg>
+                              <div className="flex-1">
+                                <p className="font-medium text-sm group-hover:text-blue-600">LinkedIn</p>
+                                <p className="text-xs text-muted-foreground">Connect professionally</p>
+                              </div>
                             </a>
                           )}
                           {publicProfile.githubUrl && (
-                            <a href={publicProfile.githubUrl} target="_blank" rel="noopener noreferrer"
-                               className="text-gray-800 hover:text-gray-900 text-sm flex items-center gap-1">
-                              GitHub
+                            <a 
+                              href={publicProfile.githubUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors group"
+                            >
+                              <svg className="w-6 h-6 text-gray-800 dark:text-gray-200" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                              </svg>
+                              <div className="flex-1">
+                                <p className="font-medium text-sm group-hover:text-gray-800">GitHub</p>
+                                <p className="text-xs text-muted-foreground">View code repositories</p>
+                              </div>
                             </a>
                           )}
                           {publicProfile.twitterUrl && (
-                            <a href={publicProfile.twitterUrl} target="_blank" rel="noopener noreferrer"
-                               className="text-blue-400 hover:text-blue-600 text-sm flex items-center gap-1">
-                              Twitter
+                            <a 
+                              href={publicProfile.twitterUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-3 rounded-lg border hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group"
+                            >
+                              <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                              </svg>
+                              <div className="flex-1">
+                                <p className="font-medium text-sm group-hover:text-blue-400">Twitter / X</p>
+                                <p className="text-xs text-muted-foreground">Follow on social media</p>
+                              </div>
                             </a>
                           )}
                         </div>
