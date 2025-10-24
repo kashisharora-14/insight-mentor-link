@@ -449,6 +449,7 @@ const AdminDashboard = () => {
   // Fetch function for event participants
   const fetchEventParticipants = async (eventId: string) => {
     try {
+      console.log('🔍 Fetching participants for event:', eventId);
       const token = localStorage.getItem('authToken');
       const response = await fetch(`/api/admin/events/${eventId}/participants`, {
         headers: token
@@ -458,10 +459,15 @@ const AdminDashboard = () => {
           : {},
       });
 
+      console.log('📡 Participants response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Failed to fetch participants:', errorText);
         throw new Error('Failed to fetch event participants');
       }
       const data = await response.json();
+      console.log('✅ Fetched participants:', data);
       setEventParticipants(data);
       setSelectedEventForParticipants(eventId);
     } catch (error) {
@@ -1807,7 +1813,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                   <div className="space-y-4">
                     {events.map((event) => {
                       const totalParticipants = event.participant_summary?.total || 0;
-                      const participants = eventParticipants.filter(p => p.event_id === event.id);
+                      // Only use eventParticipants if this is the selected event
+                      const isSelected = selectedEventForParticipants === event.id;
+                      const participants = isSelected ? eventParticipants.filter(p => p.eventId === event.id) : [];
                       const approvedCount = participants.length > 0 
                         ? participants.filter(p => p.participant_status === 'approved').length 
                         : 0;
@@ -1835,13 +1843,13 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 <Users className="w-3 h-3" />
                                 {totalParticipants} {totalParticipants === 1 ? 'Participant' : 'Participants'}
                               </Badge>
-                              {approvedCount > 0 && (
+                              {isSelected && approvedCount > 0 && (
                                 <Badge variant="default" className="flex items-center gap-1 bg-green-600">
                                   <CheckCircle className="w-3 h-3" />
                                   {approvedCount} Approved
                                 </Badge>
                               )}
-                              {pendingCount > 0 && (
+                              {isSelected && pendingCount > 0 && (
                                 <Badge variant="secondary" className="flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   {pendingCount} Pending
@@ -1884,7 +1892,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                 {/* Participants View with Filtering */}
                 {selectedEventForParticipants && (
                   (() => {
-                    const currentEventParticipants = eventParticipants.filter(p => p.event_id === selectedEventForParticipants);
+                    const currentEventParticipants = eventParticipants.filter(p => p.eventId === selectedEventForParticipants);
                     const filteredParticipants = currentEventParticipants.filter(p => {
                     if (programFilter !== 'all' && p.program !== programFilter) return false;
                     if (statusFilter !== 'all' && p.participant_status !== statusFilter) return false;
@@ -2004,8 +2012,8 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                               <div className="flex-1">
                                 <div className="flex items-center gap-3">
                                   <div>
-                                    <p className="font-medium">{participant.user_name || participant.user_email}</p>
-                                    <p className="text-sm text-muted-foreground">{participant.user_email}</p>
+                                    <p className="font-medium">{participant.name || participant.email}</p>
+                                    <p className="text-sm text-muted-foreground">{participant.email}</p>
                                   </div>
                                   {participant.program && (
                                     <Badge variant="outline" className="flex items-center gap-1">
