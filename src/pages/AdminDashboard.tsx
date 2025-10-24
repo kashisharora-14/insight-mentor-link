@@ -25,7 +25,9 @@ import {
   Upload,
   Clock,
   GraduationCap,
-  MapPin
+  MapPin,
+  Briefcase,
+  DollarSign
 } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -115,6 +117,7 @@ const AdminDashboard = () => {
   const [mentorshipRequests, setMentorshipRequests] = useState<MentorshipRequest[]>([]);
   const [verificationRequests, setVerificationRequests] = useState<any[]>([]); // Added state for verification requests
   const [csvUploadResult, setCSVUploadResult] = useState<any>(null); // Added state for CSV upload result
+  const [jobs, setJobs] = useState<any[]>([]); // Added state for jobs
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -142,7 +145,8 @@ const AdminDashboard = () => {
         fetchStats(),
         fetchProfiles(),
         fetchEvents(),
-        fetchMentorshipRequests()
+        fetchMentorshipRequests(),
+        fetchJobs() // Fetch jobs data
       ]);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -803,101 +807,6 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
     }, 500);
   };
 
-  // Initial fetch for all data
-  useEffect(() => {
-    // Check if admin is authenticated
-    const token = localStorage.getItem('authToken');
-    const userStr = localStorage.getItem('authUser');
-
-    if (!token || !userStr) {
-      console.error('❌ No authentication found, redirecting to admin login');
-      window.location.href = '/admin-login';
-      return;
-    }
-
-    try {
-      const user = JSON.parse(userStr);
-      if (user.role !== 'admin') {
-        console.error('❌ User is not an admin, redirecting');
-        window.location.href = '/';
-        return;
-      }
-    } catch (e) {
-      console.error('❌ Invalid user data, redirecting to admin login');
-      window.location.href = '/admin-login';
-      return;
-    }
-
-    fetchAllData();
-    fetchVerificationRequests(); // Also fetch verification requests on mount
-  }, []);
-
-  // Refresh verification requests when switching to verification tab
-  useEffect(() => {
-    const handleTabChange = () => {
-      fetchVerificationRequests();
-    };
-
-    // Listen for tab visibility changes
-    document.addEventListener('visibilitychange', handleTabChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleTabChange);
-    };
-  }, []);
-
-  // Log events state for debugging
-  useEffect(() => {
-    console.log('🎯 Events tab - Current events:', events);
-  }, [events]);
-
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-muted rounded w-64"></div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-32 bg-muted rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Function to determine the verification badge appearance
-  const getVerificationBadge = (profile: Profile) => {
-    // Check if user is verified first (this is the source of truth)
-    if (profile.is_verified) {
-      return (
-        <Badge variant="outline" className="text-green-600">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Verified
-        </Badge>
-      );
-    }
-
-    // If not verified, check verification status for students
-    if (profile.role === 'student') {
-      switch (profile.verification_status) {
-        case 'pending':
-          return <Badge variant="secondary">Pending Verification</Badge>;
-        case 'rejected':
-          return <Badge variant="destructive">Rejected</Badge>;
-        default:
-          return <Badge variant="secondary">Not Verified</Badge>;
-      }
-    }
-
-    // For alumni who are not verified
-    return <Badge variant="secondary">Not Verified</Badge>;
-  };
-
   // Fetch events
   const fetchEvents = async () => {
     try {
@@ -1073,6 +982,132 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
     }
   };
 
+  // Fetch jobs
+  const fetchJobs = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const resp = await fetch('/api/jobs', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setJobs(data || []);
+      } else {
+        console.error('Failed to fetch jobs:', resp.statusText);
+        setJobs([]); // Ensure jobs is an empty array on error
+      }
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      setJobs([]); // Ensure jobs is an empty array on error
+    }
+  };
+
+
+  // Initial fetch for all data
+  useEffect(() => {
+    // Check if admin is authenticated
+    const token = localStorage.getItem('authToken');
+    const userStr = localStorage.getItem('authUser');
+
+    if (!token || !userStr) {
+      console.error('❌ No authentication found, redirecting to admin login');
+      window.location.href = '/admin-login';
+      return;
+    }
+
+    try {
+      const user = JSON.parse(userStr);
+      if (user.role !== 'admin') {
+        console.error('❌ User is not an admin, redirecting');
+        window.location.href = '/';
+        return;
+      }
+    } catch (e) {
+      console.error('❌ Invalid user data, redirecting to admin login');
+      window.location.href = '/admin-login';
+      return;
+    }
+
+    fetchAllData();
+    fetchVerificationRequests(); // Also fetch verification requests on mount
+  }, []);
+
+  // Refresh verification requests when switching to verification tab
+  useEffect(() => {
+    const handleTabChange = () => {
+      fetchVerificationRequests();
+    };
+
+    // Listen for tab visibility changes
+    document.addEventListener('visibilitychange', handleTabChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleTabChange);
+    };
+  }, []);
+
+  // Log events state for debugging
+  useEffect(() => {
+    console.log('🎯 Events tab - Current events:', events);
+  }, [events]);
+
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded w-64"></div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-muted rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Function to determine the verification badge appearance
+  const getVerificationBadge = (profile: Profile) => {
+    // Check if user is verified first (this is the source of truth)
+    if (profile.is_verified) {
+      return (
+        <Badge variant="outline" className="text-green-600">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Verified
+        </Badge>
+      );
+    }
+
+    // If not verified, check verification status for students
+    if (profile.role === 'student') {
+      switch (profile.verification_status) {
+        case 'pending':
+          return <Badge variant="secondary">Pending Verification</Badge>;
+        case 'rejected':
+          return <Badge variant="destructive">Rejected</Badge>;
+        default:
+          return <Badge variant="secondary">Not Verified</Badge>;
+      }
+    }
+
+    // For alumni who are not verified
+    return <Badge variant="secondary">Not Verified</Badge>;
+  };
+
+  // Initial fetch for all data on mount (moved from above to be called only once)
+  useEffect(() => {
+    fetchAllData();
+    fetchVerificationRequests(); // Fetch verification requests on mount
+    // fetchJobs(); // fetchJobs is now called within fetchAllData
+  }, []);
+
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -1157,10 +1192,13 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                 onClick={() => {
                   fetchVerificationRequests();
                   fetchProfiles();
-                  toast({ title: "Refreshed", description: "Verification data updated" });
+                  fetchEvents();
+                  fetchJobs();
+                  fetchStats();
+                  toast({ title: "Refreshed", description: "All dashboard data updated" });
                 }}
               >
-                Refresh Data
+                Refresh All Data
               </Button>
             </div>
           </CardContent>
@@ -1555,11 +1593,15 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
           <TabsContent value="verification">
             <div className="mb-4 flex justify-between items-center">
               <h2 className="text-2xl font-bold">Verification Management</h2>
-              <Button onClick={() => {
-                fetchVerificationRequests();
-                fetchProfiles();
-                toast({ title: "Refreshed", description: "Verification data updated" });
-              }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  fetchVerificationRequests();
+                  fetchProfiles();
+                  fetchStats();
+                  toast({ title: "Refreshed", description: "Verification data updated" });
+                }}
+              >
                 Refresh Data
               </Button>
             </div>
@@ -1850,9 +1892,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                   <div className="text-center py-8">
                     <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">No events found</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="mt-4"
                       onClick={() => {
                         console.log('🔄 Manually refreshing events...');
@@ -1869,8 +1911,8 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                       // Only use eventParticipants if this is the selected event
                       const isSelected = selectedEventForParticipants === event.id;
                       const participants = isSelected ? eventParticipants.filter(p => p.eventId === event.id) : [];
-                      const approvedCount = participants.length > 0 
-                        ? participants.filter(p => p.participant_status === 'approved').length 
+                      const approvedCount = participants.length > 0
+                        ? participants.filter(p => p.participant_status === 'approved').length
                         : 0;
                       const pendingCount = participants.length > 0
                         ? participants.filter(p => p.participant_status === 'pending').length
@@ -1926,7 +1968,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 await fetchEventParticipants(event.id);
                                 // Scroll to participants section
                                 setTimeout(() => {
-                                  document.querySelector('[data-participants-section]')?.scrollIntoView({ 
+                                  document.querySelector('[data-participants-section]')?.scrollIntoView({
                                     behavior: 'smooth',
                                     block: 'start'
                                   });
@@ -2059,21 +2101,21 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                             console.log('🎯 Rendering participant:', participant);
 
                             // Get name with fallback chain
-                            const displayName = participant.name || 
-                                               participant.userName || 
+                            const displayName = participant.name ||
+                                               participant.userName ||
                                                participant.user_name ||
-                                               participant.email?.split('@')[0] || 
+                                               participant.email?.split('@')[0] ||
                                                participant.userEmail?.split('@')[0] ||
                                                'Unknown User';
 
                             // Get email with fallback
-                            const displayEmail = participant.email || 
-                                                participant.userEmail || 
+                            const displayEmail = participant.email ||
+                                                participant.userEmail ||
                                                 participant.user_email ||
                                                 'No email provided';
 
                             // Get program/batch with fallback
-                            const displayProgram = participant.program || 
+                            const displayProgram = participant.program ||
                                                   participant.studentProgram ||
                                                   participant.student_program ||
                                                   'Not specified';
@@ -2122,16 +2164,16 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                         <div className="text-center py-8">
                           <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                           <p className="text-muted-foreground">
-                            {currentEventParticipants.length === 0 
-                              ? 'No participants registered yet' 
+                            {currentEventParticipants.length === 0
+                              ? 'No participants registered yet'
                               : 'No participants match the selected filters'}
                           </p>
                           <p className="text-xs text-muted-foreground mt-2">
                             Total participants in database: {currentEventParticipants.length}
                           </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="mt-4"
                             onClick={() => {
                               console.log('🔄 Debug - Current participants:', currentEventParticipants);
@@ -2280,16 +2322,192 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
           <TabsContent value="jobs">
             <Card>
               <CardHeader>
-                <CardTitle>Job Postings Approval</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Job Postings Approval</span>
+                  <Badge variant="secondary">
+                    {jobs.filter((job: any) => job.status === 'pending').length} pending
+                  </Badge>
+                </CardTitle>
                 <CardDescription>Review and approve job postings from alumni</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    Job approval features will be displayed here. Alumni can post jobs and admins approve them.
-                  </p>
-                  <Button onClick={() => window.location.href = '/job-board'}>
-                    Go to Job Board
+                {jobs.filter((job: any) => job.status === 'pending').length === 0 ? (
+                  <div className="text-center py-12">
+                    <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      No pending job postings to review
+                    </p>
+                    <Button onClick={() => window.location.href = '/job-board'}>
+                      Go to Job Board
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {jobs
+                      .filter((job: any) => job.status === 'pending')
+                      .map((job: any) => (
+                        <div key={job.id} className="p-6 border rounded-lg bg-yellow-50 dark:bg-yellow-900/10 space-y-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex gap-4 flex-1">
+                              {job.companyLogo && (
+                                <img
+                                  src={job.companyLogo}
+                                  alt={`${job.company} logo`}
+                                  className="w-16 h-16 object-contain rounded border bg-white"
+                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                              )}
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="text-lg font-semibold">{job.title}</h4>
+                                  <Badge className="bg-yellow-500">Pending Approval</Badge>
+                                </div>
+                                <p className="text-sm font-medium text-foreground mb-1">{job.company}</p>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <span>Posted by: {job.postedByName || 'Alumni'}</span>
+                                  <span>•</span>
+                                  <span>{job.postedByEmail}</span>
+                                  <span>•</span>
+                                  <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="capitalize">
+                              {job.jobType?.replace('-', ' ') || 'N/A'}
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-sm text-muted-foreground">{job.description}</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                              {job.location && (
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                                  <span>{job.location}</span>
+                                </div>
+                              )}
+                              {job.salaryRange && (
+                                <div className="flex items-center gap-1">
+                                  <DollarSign className="w-4 h-4 text-muted-foreground" />
+                                  <span>{job.salaryRange}</span>
+                                </div>
+                              )}
+                              {job.experienceRequired && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4 text-muted-foreground" />
+                                  <span>{job.experienceRequired}</span>
+                                </div>
+                              )}
+                              {job.referralAvailable && (
+                                <div className="flex items-center gap-1">
+                                  <CheckCircle className="w-4 h-4 text-blue-500" />
+                                  <span>Referral Available</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {job.requirements && job.requirements.length > 0 && (
+                              <div>
+                                <div className="text-sm font-medium mb-2">Requirements:</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {job.requirements.map((req: string, index: number) => (
+                                    <Badge key={index} variant="secondary" className="text-xs">
+                                      {req}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {job.skills && job.skills.length > 0 && (
+                              <div>
+                                <div className="text-sm font-medium mb-2">Skills:</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {job.skills.map((skill: string, index: number) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {job.applicationLink && (
+                              <div className="text-sm">
+                                <span className="font-medium">Application Link: </span>
+                                <a
+                                  href={job.applicationLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline"
+                                >
+                                  {job.applicationLink}
+                                </a>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2 pt-2 border-t">
+                            <Button
+                              onClick={async () => {
+                                try {
+                                  const resp = await fetch(`/api/jobs/${job.id}/approve`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                    },
+                                    body: JSON.JSON.stringify({}),
+                                  });
+                                  if (!resp.ok) throw new Error('Failed to approve');
+                                  toast({ title: 'Job approved successfully' });
+                                  fetchJobs();
+                                } catch (error) {
+                                  toast({ title: 'Error approving job', variant: 'destructive' });
+                                }
+                              }}
+                              className="flex-1"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Approve Job
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={async () => {
+                                const reason = prompt('Reason for rejection (optional):');
+                                try {
+                                  const resp = await fetch(`/api/jobs/${job.id}/reject`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                    },
+                                    body: JSON.stringify({ reason: reason || 'Does not meet requirements' }),
+                                  });
+                                  if (!resp.ok) throw new Error('Failed to reject');
+                                  toast({ title: 'Job rejected' });
+                                  fetchJobs();
+                                } catch (error) {
+                                  toast({ title: 'Error rejecting job', variant: 'destructive' });
+                                }
+                              }}
+                              className="flex-1"
+                            >
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Reject Job
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                <div className="mt-6 pt-6 border-t">
+                  <Button onClick={() => window.location.href = '/job-board'} variant="outline" className="w-full">
+                    View All Jobs on Job Board
                   </Button>
                 </div>
               </CardContent>
