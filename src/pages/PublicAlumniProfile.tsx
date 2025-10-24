@@ -4,7 +4,7 @@ import Navigation from '@/components/ui/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Calendar, MapPin, Linkedin, Star, Briefcase, GraduationCap, Phone, Code } from 'lucide-react';
+import { Mail, Building, Calendar, MapPin, Linkedin, Star, Briefcase, GraduationCap, Phone, Code, Award, Trophy, BookOpen, User } from 'lucide-react';
 
 interface PublicProfile {
   user_id: string;
@@ -42,6 +42,11 @@ interface PublicProfile {
     description?: string;
     isCurrent?: boolean;
   }>;
+  profilePictureUrl?: string;
+  achievements?: string[] | string;
+  certifications?: string[] | string;
+  careerJourney?: string;
+  adviceForStudents?: string;
 }
 
 type MyRequest = {
@@ -218,27 +223,41 @@ export default function PublicAlumniProfile() {
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <h1 className="text-3xl font-semibold tracking-tight text-foreground">{profile.name}</h1>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                    {position && (
-                      <span className="inline-flex items-center gap-1">
-                        <Briefcase className="w-4 h-4" />
-                        {position}
-                      </span>
-                    )}
-                    {company && (
-                      <span className="inline-flex items-center gap-1">
-                        <Building className="w-4 h-4" />
-                        {company}
-                      </span>
-                    )}
-                    {location && (
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {location}
-                      </span>
-                    )}
+                <div className="flex gap-4 items-start flex-1">
+                  {/* Profile Picture */}
+                  {profile.profilePictureUrl ? (
+                    <img 
+                      src={profile.profilePictureUrl} 
+                      alt={profile.name}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-primary/20 shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border-4 border-primary/20 shadow-lg">
+                      <User className="w-12 h-12 text-primary/60" />
+                    </div>
+                  )}
+                  <div className="space-y-1 flex-1">
+                    <h1 className="text-3xl font-semibold tracking-tight text-foreground">{profile.name}</h1>
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                      {position && (
+                        <span className="inline-flex items-center gap-1">
+                          <Briefcase className="w-4 h-4" />
+                          {position}
+                        </span>
+                      )}
+                      {company && (
+                        <span className="inline-flex items-center gap-1">
+                          <Building className="w-4 h-4" />
+                          {company}
+                        </span>
+                      )}
+                      {location && (
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          {location}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -374,6 +393,83 @@ export default function PublicAlumniProfile() {
                 </div>
               </div>
             </div>
+
+            {/* Achievements */}
+            {normalizeList(profile.achievements).length > 0 && (
+              <Card className="shadow-sm border-2 border-amber-200/50 bg-gradient-to-br from-amber-50/30 to-amber-100/20 dark:from-amber-950/20 dark:to-amber-900/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
+                    <Trophy className="w-5 h-5 text-amber-600" />
+                    Achievements & Awards
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {normalizeList(profile.achievements).map((achievement, index) => (
+                      <li key={index} className="flex items-start gap-3 p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-amber-200/50">
+                        <Award className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground leading-relaxed">{achievement}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Certifications */}
+            {normalizeList(profile.certifications).length > 0 && (
+              <Card className="shadow-sm border-2 border-blue-200/50 bg-gradient-to-br from-blue-50/30 to-blue-100/20 dark:from-blue-950/20 dark:to-blue-900/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
+                    <Award className="w-5 h-5 text-blue-600" />
+                    Certifications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {normalizeList(profile.certifications).map((cert, index) => (
+                      <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-3 py-1">
+                        {cert}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Career Journey */}
+            {profile.careerJourney && (
+              <Card className="shadow-sm border-2 border-purple-200/50 bg-gradient-to-br from-purple-50/30 to-purple-100/20 dark:from-purple-950/20 dark:to-purple-900/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-purple-900 dark:text-purple-100">
+                    <BookOpen className="w-5 h-5 text-purple-600" />
+                    Career Journey
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line">
+                    {profile.careerJourney}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Advice for Students */}
+            {profile.adviceForStudents && (
+              <Card className="shadow-sm border-2 border-green-200/50 bg-gradient-to-br from-green-50/30 to-green-100/20 dark:from-green-950/20 dark:to-green-900/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-900 dark:text-green-100">
+                    <GraduationCap className="w-5 h-5 text-green-600" />
+                    Advice for Students
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line italic">
+                    "{profile.adviceForStudents}"
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Work Experience Timeline */}
             {profile.previousCompanies && profile.previousCompanies.length > 0 && (
