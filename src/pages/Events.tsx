@@ -1244,10 +1244,7 @@ const Events = () => {
                   <div className="absolute inset-0 bg-gradient-card" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/40"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Calendar className="w-12 h-12 text-white drop-shadow" />
-                </div>
-                <div className="flex flex-wrap gap-2 mb-2 pr-32">
+                <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                   <Badge className={`${eventStatus.variant === "destructive" 
                       ? "bg-red-500/90" 
                       : eventStatus.variant === "default"
@@ -1271,6 +1268,11 @@ const Events = () => {
                       {event.club}
                     </Badge>
                   )}
+                  {event.tags && event.tags.length > 0 && event.tags.slice(0, 2).map((tag, index) => (
+                    <Badge key={index} className="bg-accent/80 text-white border-white/30">
+                      {tag}
+                    </Badge>
+                  ))}
                 </div>
                 {user?.role === "admin" && (
                   <div className="absolute top-4 right-4 flex gap-2">
