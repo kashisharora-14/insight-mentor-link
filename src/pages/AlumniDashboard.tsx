@@ -671,25 +671,135 @@ const AlumniDashboard = () => {
 
           {activeTab === "profile" && (
             <div className="space-y-4">
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5 text-primary" />
-                    Alumni Profile
-                  </CardTitle>
-                  <CardDescription>
-                    Manage your profile details, mentorship preferences, visibility and profile picture in the dedicated editor.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 rounded bg-muted/50 text-sm text-muted-foreground">
-                    Editing from dashboard has been consolidated to a single page to simplify your experience.
-                  </div>
-                  <Button onClick={() => navigate('/alumni-profile-edit')} className="bg-gradient-to-r from-purple-600 to-blue-600">
-                    Go to Profile Editor
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <User className="w-5 h-5 text-primary" />
+                  How Students See Your Profile
+                </h2>
+                <Button onClick={() => navigate('/alumni-profile-edit')} className="bg-gradient-to-r from-purple-600 to-blue-600">
+                  Edit Profile
+                </Button>
+              </div>
+
+              {publicProfile ? (
+                <Card className="shadow-elegant border-2">
+                  <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+                    <div className="flex items-start gap-4">
+                      <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+                        {publicProfile.name?.charAt(0) || user?.name?.charAt(0) || 'A'}
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-2xl">{publicProfile.name || user?.name || 'Your Name'}</CardTitle>
+                        <CardDescription className="text-base mt-1">
+                          {publicProfile.currentPosition || 'Position'} {publicProfile.currentCompany && `at ${publicProfile.currentCompany}`}
+                        </CardDescription>
+                        {(publicProfile.city || publicProfile.state || publicProfile.country) && (
+                          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                            <Building className="w-4 h-4" />
+                            {[publicProfile.city, publicProfile.state, publicProfile.country].filter(Boolean).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6 mt-6">
+                    {publicProfile.bio && (
+                      <div>
+                        <h3 className="font-semibold mb-2">About</h3>
+                        <p className="text-sm text-muted-foreground">{publicProfile.bio}</p>
+                      </div>
+                    )}
+
+                    {publicProfile.technicalSkills && publicProfile.technicalSkills.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-2">Skills</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {publicProfile.technicalSkills.map((skill: string, idx: number) => (
+                            <Badge key={idx} variant="secondary">{skill}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {publicProfile.expertiseAreas && publicProfile.expertiseAreas.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-2">Expertise</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {publicProfile.expertiseAreas.map((area: string, idx: number) => (
+                            <Badge key={idx} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                              {area}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {publicProfile.isMentorAvailable && (
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <h3 className="font-semibold text-green-900 dark:text-green-100">Available for Mentorship</h3>
+                        </div>
+                        {publicProfile.mentorshipAreas && publicProfile.mentorshipAreas.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {publicProfile.mentorshipAreas.map((area: string, idx: number) => (
+                              <Badge key={idx} className="bg-green-600">{area}</Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {(publicProfile.linkedinUrl || publicProfile.githubUrl || publicProfile.twitterUrl) && (
+                      <div>
+                        <h3 className="font-semibold mb-2">Connect</h3>
+                        <div className="flex gap-3">
+                          {publicProfile.linkedinUrl && (
+                            <a href={publicProfile.linkedinUrl} target="_blank" rel="noopener noreferrer" 
+                               className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
+                              LinkedIn
+                            </a>
+                          )}
+                          {publicProfile.githubUrl && (
+                            <a href={publicProfile.githubUrl} target="_blank" rel="noopener noreferrer"
+                               className="text-gray-800 hover:text-gray-900 text-sm flex items-center gap-1">
+                              GitHub
+                            </a>
+                          )}
+                          {publicProfile.twitterUrl && (
+                            <a href={publicProfile.twitterUrl} target="_blank" rel="noopener noreferrer"
+                               className="text-blue-400 hover:text-blue-600 text-sm flex items-center gap-1">
+                              Twitter
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {publicProfile.showContactInfo && publicProfile.email && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Mail className="w-4 h-4" />
+                          {publicProfile.email}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="shadow-elegant">
+                  <CardContent className="p-8 text-center">
+                    <User className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No Profile Yet</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Create your profile to show students how they'll see your information.
+                    </p>
+                    <Button onClick={() => navigate('/alumni-profile-edit')} className="bg-gradient-to-r from-purple-600 to-blue-600">
+                      Create Profile
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </div>
