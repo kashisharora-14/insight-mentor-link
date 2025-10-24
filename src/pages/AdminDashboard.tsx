@@ -2060,19 +2060,38 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                         <div className="space-y-3 max-h-96 overflow-y-auto">
                           {filteredParticipants.map((participant) => {
                             console.log('🎯 Rendering participant:', participant);
+                            
+                            // Get name with fallback chain
+                            const displayName = participant.name || 
+                                               participant.userName || 
+                                               participant.user_name ||
+                                               participant.email?.split('@')[0] || 
+                                               participant.userEmail?.split('@')[0] ||
+                                               'Unknown User';
+                            
+                            // Get email with fallback
+                            const displayEmail = participant.email || 
+                                                participant.userEmail || 
+                                                participant.user_email ||
+                                                'No email provided';
+                            
+                            // Get program/batch with fallback
+                            const displayProgram = participant.program || 
+                                                  participant.studentProgram ||
+                                                  participant.student_program ||
+                                                  'Not specified';
+                            
                             return (
                               <div key={participant.id} className="flex items-center justify-between p-4 bg-background rounded-lg border hover:border-primary transition-colors">
                                 <div className="flex-1">
                                   <div className="space-y-1">
-                                    <p className="font-medium text-base">{participant.name || participant.email?.split('@')[0] || 'Unknown'}</p>
-                                    <p className="text-sm text-muted-foreground">{participant.email || 'No email'}</p>
+                                    <p className="font-medium text-base">{displayName}</p>
+                                    <p className="text-sm text-muted-foreground">{displayEmail}</p>
                                     <div className="flex items-center gap-2">
-                                      {participant.program && participant.program !== 'N/A' && (
-                                        <Badge variant="outline" className="flex items-center gap-1">
-                                          <GraduationCap className="w-3 h-3" />
-                                          {participant.program}
-                                        </Badge>
-                                      )}
+                                      <Badge variant="outline" className="flex items-center gap-1">
+                                        <GraduationCap className="w-3 h-3" />
+                                        {displayProgram}
+                                      </Badge>
                                     </div>
                                   </div>
                                 </div>
