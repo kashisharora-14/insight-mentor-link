@@ -451,46 +451,81 @@ const AdminDashboard = () => {
     try {
       console.log('🔍 Fetching participants for event:', eventId);
       const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        console.error('❌ No auth token found');
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to view participants.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('📡 Making request to:', `/api/dcsa/events/${eventId}/participants`);
       const response = await fetch(`/api/dcsa/events/${eventId}/participants`, {
-        headers: token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : {},
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
-      console.log('📡 Participants response status:', response.status);
+      console.log('📡 Participants response status:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Failed to fetch participants:', errorText);
         throw new Error('Failed to fetch event participants');
       }
+      
       const data = await response.json();
-      console.log('✅ Fetched participants:', data);
+      console.log('✅ Fetched participants raw data:', data);
+      console.log('✅ Number of participants:', Array.isArray(data) ? data.length : 0);
+      
+      if (!Array.isArray(data)) {
+        console.error('❌ Invalid data format:', typeof data);
+        setEventParticipants([]);
+        setSelectedEventForParticipants(eventId);
+        return;
+      }
       
       // Map the API response to include eventId for filtering
-      const mappedData = data.map((p: any) => ({
-        ...p,
-        eventId: eventId,
-        name: p.user_name || p.name || 'Unknown',
-        email: p.user_email || p.email || '',
-        program: p.program || 'N/A',
-        department: p.department || 'N/A',
-      }));
+      const mappedData = data.map((p: any) => {
+        console.log('🔄 Mapping participant:', p);
+        return {
+          id: p.id,
+          eventId: eventId,
+          userId: p.user_id,
+          name: p.user_name || p.name || p.user_email?.split('@')[0] || 'Unknown',
+          email: p.user_email || p.email || '',
+          program: p.program || p.student_program || 'N/A',
+          department: p.department || p.student_department || 'N/A',
+          participant_status: p.participant_status || 'pending',
+          attendance_status: p.attendance_status || null,
+          registered_at: p.registered_at,
+          student_id: p.student_id || null,
+          user_role: p.user_role || null,
+        };
+      });
       
       console.log('✅ Mapped participants:', mappedData);
+      console.log('✅ Setting eventParticipants state with', mappedData.length, 'participants');
       setEventParticipants(mappedData);
       setSelectedEventForParticipants(eventId);
+      
+      toast({
+        title: "Participants Loaded",
+        description: `Found ${mappedData.length} participant(s) for this event.`,
+      });
     } catch (error) {
-      console.error('Error fetching event participants:', error);
+      console.error('❌ Error fetching event participants:', error);
       toast({
         title: "Error",
         description: "Failed to load participants for this event.",
         variant: "destructive",
       });
-      setEventParticipants([]); // Clear participants if fetch fails
-      setSelectedEventForParticipants(eventId); // Keep event selected for context
+      setEventParticipants([]);
+      setSelectedEventForParticipants(eventId);
     }
   };
 
