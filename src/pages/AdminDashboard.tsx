@@ -1985,10 +1985,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                           const selectedEvent = events.find(e => e.id === selectedEventForParticipants);
                           const eventEndDate = selectedEvent?.end_date ? new Date(selectedEvent.end_date) : new Date(selectedEvent?.date_time || '');
                           const isEventCompleted = eventEndDate < new Date();
+                          
                           const attendedCount = currentEventParticipants.filter(p => p.attendance_status === 'attended').length;
-                          const notAttendedCount = isEventCompleted 
-                            ? currentEventParticipants.filter(p => !p.attendance_status || p.attendance_status !== 'attended').length 
-                            : 0;
+                          const notAttendedCount = currentEventParticipants.filter(p => !p.attendance_status || p.attendance_status !== 'attended').length;
 
                           return (
                             <>
@@ -2003,11 +2002,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 </p>
                               </div>
                               <div className="bg-background p-4 rounded-lg border">
-                                <p className="text-sm text-muted-foreground">
-                                  {isEventCompleted ? 'Not Attended' : 'Pending (Event Not Completed)'}
-                                </p>
+                                <p className="text-sm text-muted-foreground">Not Attended</p>
                                 <p className="text-2xl font-bold text-orange-600">
-                                  {isEventCompleted ? notAttendedCount : currentEventParticipants.length}
+                                  {notAttendedCount}
                                 </p>
                               </div>
                             </>
@@ -2090,8 +2087,30 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                         <GraduationCap className="w-3 h-3" />
                                         {displayProgram}
                                       </Badge>
+                                      {participant.attendance_status === 'attended' && (
+                                        <Badge variant="default" className="bg-green-600">
+                                          <CheckCircle className="w-3 h-3 mr-1" />
+                                          Attended
+                                        </Badge>
+                                      )}
                                     </div>
                                   </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {participant.attendance_status === 'attended' ? (
+                                    <Badge variant="outline" className="text-green-600 border-green-600">
+                                      Marked as Attended
+                                    </Badge>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleMarkAttendance(selectedEventForParticipants!, participant.id, participant.attendance_status)}
+                                      className="bg-blue-600 hover:bg-blue-700"
+                                    >
+                                      <UserCheck className="w-4 h-4 mr-1" />
+                                      Mark Attendance
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
                             );
