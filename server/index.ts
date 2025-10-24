@@ -27,7 +27,7 @@ app.use(cors({
   origin: true, // Allow all origins in development
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increase limit for profile images
 app.use(cookieParser());
 
 // Health check
