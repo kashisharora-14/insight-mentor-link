@@ -130,7 +130,14 @@ export const alumniProfiles = pgTable('alumni_profiles', {
   industry: text('industry'), // IT, Finance, Healthcare, etc.
   workType: text('work_type'), // Remote, Hybrid, On-site
   yearsOfExperience: integer('years_of_experience'),
-  previousCompanies: text('previous_companies').array(),
+  previousCompanies: jsonb('previous_companies').$type<Array<{
+    company: string;
+    position: string;
+    startDate: string;
+    endDate: string;
+    isCurrent: boolean;
+    description: string;
+  }>>(),
   
   // Expertise and Skills
   technicalSkills: text('technical_skills').array(),
