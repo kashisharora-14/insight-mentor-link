@@ -36,15 +36,15 @@ const alumniProfileSchema = z.object({
   admissionYear: z.string().optional().or(z.literal('')),
   cgpa: z.string().optional().or(z.literal('')),
 
-  // Personal Details (optional)
+  // Personal Details (optional except location for map)
   dateOfBirth: z.string().optional().or(z.literal('')),
   gender: z.string().optional().or(z.literal('')),
   phoneNumber: z.string().optional().or(z.literal('')),
   alternateEmail: z.string().email("Invalid email").optional().or(z.literal('')),
   currentAddress: z.string().optional().or(z.literal('')),
-  city: z.string().optional().or(z.literal('')),
-  state: z.string().optional().or(z.literal('')),
-  country: z.string().default("India").optional(),
+  city: z.string().min(1, "City is required for map location"),
+  state: z.string().min(1, "State is required for map location"),
+  country: z.string().min(1, "Country is required for map location").default("India"),
   pincode: z.string().optional().or(z.literal('')),
 
   // Professional Information (optional)
@@ -390,8 +390,9 @@ export function AlumniProfileForm({ onSuccess }: AlumniProfileFormProps) {
                   <FormItem>
                     <FormLabel>City *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Chandigarh" {...field} />
+                      <Input placeholder="Bangalore" {...field} required />
                     </FormControl>
+                    <FormDescription>Required for map location</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -402,10 +403,11 @@ export function AlumniProfileForm({ onSuccess }: AlumniProfileFormProps) {
                 name="state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>State *</FormLabel>
+                    <FormLabel>State/Province *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Punjab" {...field} />
+                      <Input placeholder="Karnataka" {...field} required />
                     </FormControl>
+                    <FormDescription>Required for map location</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -413,18 +415,33 @@ export function AlumniProfileForm({ onSuccess }: AlumniProfileFormProps) {
 
               <FormField
                 control={form.control}
-                name="pincode"
+                name="country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pincode *</FormLabel>
+                    <FormLabel>Country *</FormLabel>
                     <FormControl>
-                      <Input placeholder="160014" {...field} />
+                      <Input placeholder="India" {...field} required />
                     </FormControl>
+                    <FormDescription>Required for map location</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="pincode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pincode (Optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="560001" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 
