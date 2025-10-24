@@ -1097,11 +1097,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
   };
 
   // Initial fetch for all data on mount (moved from above to be called only once)
-  useEffect(() => {
-    fetchAllData();
-    fetchVerificationRequests(); // Fetch verification requests on mount
-    // fetchJobs(); // fetchJobs is now called within fetchAllData
-  }, []);
+  // REMOVED: Duplicate useEffect - already handled above at line 1005
 
 
   return (
