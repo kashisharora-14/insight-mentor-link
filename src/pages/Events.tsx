@@ -1253,26 +1253,11 @@ const Events = () => {
                   } text-white border-white/30 font-semibold`}>
                     {eventStatus.label}
                   </Badge>
-                  {event.department && (
-                    <Badge className="bg-white/20 text-white border-white/30">
-                      {event.department}
-                    </Badge>
-                  )}
-                  {event.event_type && (
-                    <Badge className="bg-primary/80 text-white border-primary/30">
-                      {event.event_type}
-                    </Badge>
-                  )}
                   {event.club && (
                     <Badge className="bg-secondary/80 text-white border-white/30 font-semibold">
                       {event.club}
                     </Badge>
                   )}
-                  {event.tags && event.tags.length > 0 && event.tags.slice(0, 2).map((tag, index) => (
-                    <Badge key={index} className="bg-accent/80 text-white border-white/30">
-                      {tag}
-                    </Badge>
-                  ))}
                 </div>
                 {user?.role === "admin" && (
                   <div className="absolute top-4 right-4 flex gap-2">
