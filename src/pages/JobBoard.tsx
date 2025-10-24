@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,6 +63,10 @@ const JobBoard = () => {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [referralRequests, setReferralRequests] = useState<ReferralRequest[]>([]);
   const [myApplications, setMyApplications] = useState<ReferralRequest[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isEditDragging, setIsEditDragging] = useState(false);
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
+  const editLogoFileInputRef = useRef<HTMLInputElement>(null);
   const [newJob, setNewJob] = useState({
     title: '',
     description: '',
@@ -137,6 +141,46 @@ const JobBoard = () => {
     }
 
     setFilteredJobs(filtered);
+  };
+
+  const handleImageDrop = (e: React.DragEvent, isEdit = false) => {
+    e.preventDefault();
+    setIsDragging(false);
+    setIsEditDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageUrl = event.target?.result as string;
+        if (isEdit && editingJob) {
+          setEditingJob(prev => prev ? ({ ...prev, companyLogo: imageUrl }) : null);
+        } else {
+          setNewJob(prev => ({ ...prev, companyLogo: imageUrl }));
+        }
+        toast({ title: "Company logo uploaded!" });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      toast({ title: "Please upload an image file", variant: "destructive" });
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageUrl = event.target?.result as string;
+        if (isEdit && editingJob) {
+          setEditingJob(prev => prev ? ({ ...prev, companyLogo: imageUrl }) : null);
+        } else {
+          setNewJob(prev => ({ ...prev, companyLogo: imageUrl }));
+        }
+        toast({ title: "Company logo uploaded!" });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handlePostJob = async (e: React.FormEvent) => {
@@ -393,17 +437,71 @@ const JobBoard = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="companyLogo">Company Logo/Image (optional)</Label>
-                    <Input
-                      id="companyLogo"
-                      type="text"
-                      value={newJob.companyLogo}
-                      onChange={(e) => setNewJob(prev => ({ ...prev, companyLogo: e.target.value }))}
-                      placeholder="https://example.com/logo.png or data:image URL"
+                    <Label>Company Logo/Image (optional)</Label>
+                    <div
+                      className={`mt-2 border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                        isDragging ? 'border-primary bg-primary/5' : 'border-border/60 hover:border-primary/50'
+                      }`}
+                      onDrop={(e) => handleImageDrop(e, false)}
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onClick={() => logoFileInputRef.current?.click()}
+                    >
+                      {newJob.companyLogo ? (
+                        <div className="space-y-3">
+                          <img
+                            src={newJob.companyLogo}
+                            alt="Company logo preview"
+                            className="max-h-32 w-auto mx-auto rounded object-contain"
+                          />
+                          <div className="flex items-center justify-center gap-3">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                logoFileInputRef.current?.click();
+                              }}
+                            >
+                              Replace image
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setNewJob(prev => ({ ...prev, companyLogo: '' }));
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="text-muted-foreground">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Drag & drop a company logo here, or click to browse
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            PNG, JPG recommended (max 5MB)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      ref={logoFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleImageSelect(e, false)}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      You can paste an image URL or a data URL (base64 encoded image)
-                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -551,17 +649,71 @@ const JobBoard = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="edit-companyLogo">Company Logo/Image (optional)</Label>
-                  <Input
-                    id="edit-companyLogo"
-                    type="text"
-                    value={editingJob.companyLogo || ''}
-                    onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, companyLogo: e.target.value }) : null)}
-                    placeholder="https://example.com/logo.png or data:image URL"
+                  <Label>Company Logo/Image (optional)</Label>
+                  <div
+                    className={`mt-2 border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                      isEditDragging ? 'border-primary bg-primary/5' : 'border-border/60 hover:border-primary/50'
+                    }`}
+                    onDrop={(e) => handleImageDrop(e, true)}
+                    onDragOver={(e) => { e.preventDefault(); setIsEditDragging(true); }}
+                    onDragLeave={() => setIsEditDragging(false)}
+                    onClick={() => editLogoFileInputRef.current?.click()}
+                  >
+                    {editingJob.companyLogo ? (
+                      <div className="space-y-3">
+                        <img
+                          src={editingJob.companyLogo}
+                          alt="Company logo preview"
+                          className="max-h-32 w-auto mx-auto rounded object-contain"
+                        />
+                        <div className="flex items-center justify-center gap-3">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              editLogoFileInputRef.current?.click();
+                            }}
+                          >
+                            Replace image
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingJob(prev => prev ? ({ ...prev, companyLogo: '' }) : null);
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="text-muted-foreground">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Drag & drop a company logo here, or click to browse
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG recommended (max 5MB)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={editLogoFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleImageSelect(e, true)}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    You can paste an image URL or a data URL (base64 encoded image)
-                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
