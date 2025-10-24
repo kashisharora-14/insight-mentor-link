@@ -35,9 +35,6 @@ const Navigation = () => {
     { name: "Mentorship Requests", path: "/alumni-dashboard", icon: MessageCircle, roles: ['alumni'] },
     { name: "Events", path: "/events", icon: Calendar, roles: ['student', 'alumni', 'admin'] },
     { name: "Jobs", path: "/jobs", icon: Briefcase, roles: ['student', 'alumni', 'admin'] },
-    { name: "Gift Shop", path: "/gift-shop", icon: Shopping, roles: ['student', 'admin'] },
-    { name: "Donations", path: "/donations", icon: Heart, roles: ['student', 'admin'] },
-    { name: "AI Mentor", path: "/ai-chat", icon: MessageCircle, roles: ['student'] },
     { name: "Global Map", path: "/global-map", icon: Map, roles: ['student', 'admin'] },
     { name: "Admin", path: "/admin-dashboard", icon: Settings, roles: ['admin'] },
   ];
