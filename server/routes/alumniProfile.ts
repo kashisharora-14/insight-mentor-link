@@ -67,7 +67,7 @@ router.post('/profile', authenticate, async (req: any, res) => {
 
     // Map all fields from request to profileData
     const fieldMapping = [
-      'rollNumber', 'program', 'batchType', 'graduationYear', 'admissionYear',
+      'name', 'rollNumber', 'program', 'batchType', 'graduationYear', 'admissionYear',
       'cgpa', 'gender', 'bloodGroup', 'nationality', 'phoneNumber',
       'alternateEmail', 'currentAddress', 'city', 'state', 'country', 'pincode',
       'currentPosition', 'currentCompany', 'companyLocation', 'industry',

@@ -135,25 +135,33 @@ const AlumniDashboard = () => {
   }, []);
 
   // Load public profile preview for the logged-in alumni
+  const loadPublicProfile = async () => {
+    try {
+      if (!user?.id) return;
+      const resp = await fetch(`/api/alumni-profile/profile/${user.id}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      setPublicProfile(data.profile || null);
+    } catch (error) {
+      console.error('Error loading public profile:', error);
+      setPublicProfile(null); // Ensure profile is null if fetch fails
+    }
+  };
+
   useEffect(() => {
-    const loadPublicProfile = async () => {
-      try {
-        if (!user?.id) return;
-        const resp = await fetch(`/api/alumni-profile/profile/${user.id}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-        });
-        if (!resp.ok) return;
-        const data = await resp.json();
-        setPublicProfile(data.profile || null);
-      } catch (error) {
-        console.error('Error loading public profile:', error);
-        setPublicProfile(null); // Ensure profile is null if fetch fails
-      }
-    };
     if (user?.id) {
       loadPublicProfile();
     }
   }, [user?.id]);
+
+  // Refresh profile when switching to profile tab
+  useEffect(() => {
+    if (activeTab === 'profile' && user?.id) {
+      loadPublicProfile();
+    }
+  }, [activeTab, user?.id]);
 
   // After requests load, fetch ratings for each mentorship
   useEffect(() => {
@@ -743,8 +751,8 @@ const AlumniDashboard = () => {
                   <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
                     <div className="flex items-start gap-4">
                       <div className="relative w-20 h-20 rounded-full overflow-hidden">
-                        {publicProfile.profileImage ? (
-                          <img src={publicProfile.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                        {publicProfile.profilePictureUrl ? (
+                          <img src={publicProfile.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-3xl font-bold">
                             {(publicProfile.name || user?.name || 'A').charAt(0).toUpperCase()}

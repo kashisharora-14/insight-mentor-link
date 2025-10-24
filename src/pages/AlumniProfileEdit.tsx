@@ -280,6 +280,7 @@ export default function AlumniProfileEdit() {
 
     try {
       const payload: any = {
+        name: profile.name,
         currentCompany: profile.currentCompany,
         currentPosition: profile.currentPosition,
         companyLocation: profile.location,
@@ -308,7 +309,10 @@ export default function AlumniProfileEdit() {
 
       await apiClient.post('/alumni-profile/profile', payload);
       toast.success('Profile saved successfully!');
-      navigate('/alumni-dashboard');
+      // Add a small delay to ensure the profile is saved before navigating
+      setTimeout(() => {
+        navigate('/alumni-dashboard');
+      }, 500);
     } catch (error: any) {
       console.error('Error saving profile:', error);
       toast.error(error.response?.data?.message || 'Failed to save profile');
