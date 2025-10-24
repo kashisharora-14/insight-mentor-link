@@ -1250,13 +1250,14 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
 
         {/* Detailed Management Tabs */}
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 gap-1">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 gap-1">
             <TabsTrigger value="analytics" className="text-xs lg:text-sm px-2 lg:px-3">Analytics</TabsTrigger>
             <TabsTrigger value="student-success" className="text-xs lg:text-sm px-2 lg:px-3">Success</TabsTrigger>
             <TabsTrigger value="verification" className="text-xs lg:text-sm px-2 lg:px-3">Verify</TabsTrigger>
-            <TabsTrigger value="profiles" className="text-xs lg:text-sm px-2 lg:px-3 col-span-3 lg:col-span-1">Users</TabsTrigger>
+            <TabsTrigger value="profiles" className="text-xs lg:text-sm px-2 lg:px-3">Users</TabsTrigger>
             <TabsTrigger value="events" className="text-xs lg:text-sm px-2 lg:px-3">Events</TabsTrigger>
-            <TabsTrigger value="event-requests" className="text-xs lg:text-sm px-2 lg:px-3">Requests</TabsTrigger>
+            <TabsTrigger value="event-requests" className="text-xs lg:text-sm px-2 lg:px-3">Event Req</TabsTrigger>
+            <TabsTrigger value="jobs" className="text-xs lg:text-sm px-2 lg:px-3">Jobs</TabsTrigger>
             <TabsTrigger value="mentorships" className="text-xs lg:text-sm px-2 lg:px-3">Mentorships</TabsTrigger>
           </TabsList>
 
@@ -2270,6 +2271,26 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                         </div>
                       ))
                   )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Jobs Tab */}
+          <TabsContent value="jobs">
+            <Card>
+              <CardHeader>
+                <CardTitle>Job Postings Approval</CardTitle>
+                <CardDescription>Review and approve job postings from alumni</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    Job approval features will be displayed here. Alumni can post jobs and admins approve them.
+                  </p>
+                  <Button onClick={() => window.location.href = '/job-board'}>
+                    Go to Job Board
+                  </Button>
                 </div>
               </CardContent>
             </Card>
