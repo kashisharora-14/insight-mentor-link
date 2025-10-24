@@ -63,29 +63,43 @@ const GlobalMap = () => {
         const response = await fetch('/api/alumni-profile/directory');
         if (response.ok) {
           const data = await response.json();
+          console.log('📥 Fetched alumni data:', data.alumni.length, 'profiles');
+          
           // Add geocoding for alumni without coordinates
           const alumniWithCoords = await Promise.all(
             data.alumni.map(async (person: AlumniProfile) => {
               if (!person.latitude || !person.longitude) {
-                // Use location data to geocode
-                const location = [person.city, person.state, person.country].filter(Boolean).join(', ');
-                console.log(`🗺️ Geocoding for ${person.name}: ${location}`);
-                if (location) {
+                // Try multiple location sources
+                const locationParts = [person.city, person.state, person.country].filter(Boolean);
+                let location = locationParts.join(', ');
+                
+                // If no structured location, try companyLocation
+                if (!location && person.companyLocation) {
+                  location = person.companyLocation;
+                }
+                
+                console.log(`🗺️ Geocoding for ${person.name}: "${location}"`);
+                
+                if (location && location.trim()) {
                   try {
                     const coords = await geocodeLocation(location);
                     console.log(`✅ Geocoded ${person.name} to:`, coords);
                     return { ...person, ...coords };
                   } catch (e) {
                     console.error(`❌ Geocoding failed for ${person.name}:`, e);
-                    // Skip this alumni if geocoding fails
+                    // Return without coords - will be filtered out
                     return person;
                   }
+                } else {
+                  console.warn(`⚠️ No location data for ${person.name}`);
                 }
               }
               return person;
             })
           );
-          console.log('📊 Total alumni with coordinates:', alumniWithCoords.filter(a => a.latitude && a.longitude).length);
+          
+          const withCoords = alumniWithCoords.filter(a => a.latitude && a.longitude);
+          console.log('📊 Total alumni with coordinates:', withCoords.length, '/', data.alumni.length);
           setAlumni(alumniWithCoords);
         }
       } catch (error) {
