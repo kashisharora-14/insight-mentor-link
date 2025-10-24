@@ -73,11 +73,9 @@ router.post('/profile', authMiddleware, async (req: AuthRequest, res: Response) 
 // Get all alumni profiles (for directory)
 router.get('/directory', async (req: Request, res: Response) => {
   try {
-    const profiles = await db.query.alumniProfiles.findMany({
-      where: eq(alumniProfiles.isMentorAvailable, true)
-    });
+    const profiles = await db.query.alumniProfiles.findMany();
 
-    res.json(profiles);
+    res.json({ alumni: profiles });
   } catch (error) {
     console.error('Error fetching alumni directory:', error);
     res.status(500).json({ message: 'Failed to fetch directory' });

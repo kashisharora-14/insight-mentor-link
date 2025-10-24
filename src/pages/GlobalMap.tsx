@@ -50,9 +50,11 @@ const GlobalMap = () => {
   const [loading, setLoading] = useState(true);
   const [selectedAlumni, setSelectedAlumni] = useState<AlumniProfile | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [map, setMap] = useState<L.Map | null>(null);
   const [markers, setMarkers] = useState<L.Marker[]>([]);
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInitialized = useRef(false);
 
   // Fetch alumni data from API
   useEffect(() => {
@@ -110,7 +112,8 @@ const GlobalMap = () => {
 
   // Initialize Leaflet Map
   useEffect(() => {
-    if (mapRef.current && !map && alumni.length > 0) {
+    if (mapRef.current && !map && !mapInitialized.current && alumni.length > 0) {
+      mapInitialized.current = true;
       // Create map centered on India (since many alumni are there)
       const mapInstance = L.map(mapRef.current).setView([20.5937, 78.9629], 5);
 
@@ -273,24 +276,36 @@ const GlobalMap = () => {
     return () => {
       if (map) {
         map.remove();
+        setMap(null);
+        mapInitialized.current = false;
       }
     };
-  }, [alumni, mapRef.current, navigate]);
+  }, [alumni, navigate]);
 
   // Filter functionality
   const filteredAlumni = alumni.filter(person => {
     const searchLower = searchTerm.toLowerCase();
+    const locationFilterLower = locationFilter.toLowerCase();
     const skills = person.technicalSkills || person.expertiseAreas || [];
     const skillsArray = Array.isArray(skills) ? skills : [];
     const location = [person.city, person.state, person.country].filter(Boolean).join(', ').toLowerCase();
     
-    return (
+    const matchesSearch = !searchTerm || (
       person.name.toLowerCase().includes(searchLower) ||
       (person.currentPosition?.toLowerCase() || '').includes(searchLower) ||
       (person.currentCompany?.toLowerCase() || '').includes(searchLower) ||
       location.includes(searchLower) ||
       skillsArray.some(skill => skill.toLowerCase().includes(searchLower))
     );
+
+    const matchesLocation = !locationFilter || (
+      (person.city?.toLowerCase() || '').includes(locationFilterLower) ||
+      (person.state?.toLowerCase() || '').includes(locationFilterLower) ||
+      (person.country?.toLowerCase() || '').includes(locationFilterLower) ||
+      (person.companyLocation?.toLowerCase() || '').includes(locationFilterLower)
+    );
+    
+    return matchesSearch && matchesLocation;
   });
 
   // Update marker visibility based on search
@@ -354,10 +369,20 @@ const GlobalMap = () => {
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        placeholder="Search alumni, skills, or locations..."
+                        placeholder="Search alumni, skills..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64"
+                        className="pl-10 w-48"
+                      />
+                    </div>
+                    {/* Location Filter */}
+                    <div className="relative">
+                      <MapPin className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Filter by location..."
+                        value={locationFilter}
+                        onChange={(e) => setLocationFilter(e.target.value)}
+                        className="pl-10 w-48"
                       />
                     </div>
                   </div>
@@ -473,9 +498,11 @@ const GlobalMap = () => {
                   </div>
                 </div>
 
-                {searchTerm && (
+                {(searchTerm || locationFilter) && (
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-sm">Search Results:</h4>
+                    <h4 className="font-semibold text-sm">
+                      {locationFilter ? 'Location Results:' : 'Search Results:'}
+                    </h4>
                     <div className="max-h-48 overflow-y-auto space-y-2">
                       {filteredAlumni.length > 0 ? (
                         <>
@@ -525,9 +552,9 @@ const GlobalMap = () => {
                     </div>
                   </div>
                 )}
-                {!searchTerm && (
+                {!searchTerm && !locationFilter && (
                   <div className="text-sm text-muted-foreground text-center py-4">
-                    Search for alumni by name, skills, location, or company to see results
+                    Use the search bar or location filter to find specific alumni
                   </div>
                 )}
               </CardContent>
