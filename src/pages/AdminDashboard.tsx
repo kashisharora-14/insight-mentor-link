@@ -1946,7 +1946,8 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                     const currentEventParticipants = eventParticipants.filter(p => p.eventId === selectedEventForParticipants);
                     const filteredParticipants = currentEventParticipants.filter(p => {
                     if (programFilter !== 'all' && p.program !== programFilter) return false;
-                    if (statusFilter !== 'all' && p.participant_status !== statusFilter) return false;
+                    if (statusFilter === 'attended' && p.attendance_status !== 'attended') return false;
+                    if (statusFilter === 'not_attended' && p.attendance_status === 'attended') return false;
                     return true;
                   });
 
@@ -2033,18 +2034,15 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium">Status:</label>
+                          <label className="text-sm font-medium">Attendance:</label>
                           <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="px-3 py-1 border rounded-md bg-background text-sm"
                           >
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="waitlisted">Waitlisted</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="all">All</option>
                             <option value="attended">Attended</option>
+                            <option value="not_attended">Not Attended</option>
                           </select>
                         </div>
 
