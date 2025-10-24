@@ -120,6 +120,18 @@ export default function AlumniProfileEdit() {
       const response = await apiClient.get('/alumni-profile/profile');
       const data = (response as any)?.profile || (response as any);
       if (data) {
+        // Parse work experience properly
+        let workExp = [];
+        try {
+          if (Array.isArray(data.previousCompanies)) {
+            workExp = data.previousCompanies;
+          } else if (typeof data.previousCompanies === 'string') {
+            workExp = JSON.parse(data.previousCompanies);
+          }
+        } catch {
+          workExp = [];
+        }
+
         setProfile(prev => ({
           ...prev,
           name: data.name || prev.name,
@@ -131,16 +143,16 @@ export default function AlumniProfileEdit() {
           currentPosition: data.currentPosition || '',
           location: data.companyLocation || '',
           bio: data.bio || '',
-          skills: data.technicalSkills || [],
-          expertise: data.expertiseAreas || [],
-          achievements: data.achievements || [],
-          workExperience: data.previousCompanies || [],
+          skills: Array.isArray(data.technicalSkills) ? data.technicalSkills : [],
+          expertise: Array.isArray(data.expertiseAreas) ? data.expertiseAreas : [],
+          achievements: Array.isArray(data.achievements) ? data.achievements : [],
+          workExperience: workExp,
           linkedinUrl: data.linkedinUrl || '',
           githubUrl: data.githubUrl || '',
           twitterUrl: data.twitterUrl || '',
           profileImage: data.profilePictureUrl || '',
           availableForMentorship: Boolean(data.isMentorAvailable),
-          mentorshipAreas: data.mentorshipAreas || [],
+          mentorshipAreas: Array.isArray(data.mentorshipAreas) ? data.mentorshipAreas : [],
           preferredCommunication: data.preferredCommunication || 'email',
           maxMentees: data.maxMentees ?? 3,
           availableForGuestLectures: Boolean(data.availableForGuestLectures),

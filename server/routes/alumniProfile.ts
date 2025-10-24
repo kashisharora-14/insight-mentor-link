@@ -71,7 +71,7 @@ router.post('/profile', authenticate, async (req: any, res) => {
       'cgpa', 'gender', 'bloodGroup', 'nationality', 'phoneNumber',
       'alternateEmail', 'currentAddress', 'city', 'state', 'country', 'pincode',
       'currentPosition', 'currentCompany', 'companyLocation', 'industry',
-      'workType', 'yearsOfExperience', 'previousCompanies', 'technicalSkills',
+      'workType', 'yearsOfExperience', 'technicalSkills',
       'softSkills', 'expertiseAreas', 'certifications', 'achievements',
       'isMentorAvailable', 'mentorshipAreas', 'availableForJobReferrals',
       'availableForGuestLectures', 'availableForNetworking', 'preferredCommunication',
@@ -85,6 +85,13 @@ router.post('/profile', authenticate, async (req: any, res) => {
         profileData[field] = data[field];
       }
     });
+
+    // Handle previousCompanies (work experience) specially to ensure it's stored as JSON
+    if (data.previousCompanies !== undefined) {
+      profileData.previousCompanies = Array.isArray(data.previousCompanies) 
+        ? data.previousCompanies 
+        : [];
+    }
 
     // Handle date conversion
     if (data.dateOfBirth) {
@@ -261,6 +268,16 @@ router.get('/profile/:userId', async (req, res) => {
       return res.status(403).json({ error: 'Profile is not public or not verified' });
     }
 
+    // Parse work experience if stored as JSON string
+    let workExp = profile.previousCompanies;
+    if (typeof workExp === 'string') {
+      try {
+        workExp = JSON.parse(workExp);
+      } catch {
+        workExp = [];
+      }
+    }
+
     const publicProfile = {
       id: profile.id,
       userId: profile.userId,
@@ -277,7 +294,7 @@ router.get('/profile/:userId', async (req, res) => {
       industry: profile.industry,
       workType: profile.workType,
       yearsOfExperience: profile.yearsOfExperience,
-      previousCompanies: profile.previousCompanies,
+      previousCompanies: workExp || [],
       technicalSkills: profile.technicalSkills,
       softSkills: profile.softSkills,
       expertiseAreas: profile.expertiseAreas,

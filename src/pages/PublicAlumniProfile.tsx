@@ -4,7 +4,7 @@ import Navigation from '@/components/ui/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Calendar, MapPin, Linkedin, Star, Briefcase, GraduationCap, Phone } from 'lucide-react';
+import { Mail, Building, Calendar, MapPin, Linkedin, Star, Briefcase, GraduationCap, Phone, Code } from 'lucide-react';
 
 interface PublicProfile {
   user_id: string;
@@ -34,6 +34,14 @@ interface PublicProfile {
   state?: string;
   country?: string;
   mentorshipAreas?: string[] | string;
+  previousCompanies?: Array<{
+    company: string;
+    position: string;
+    startDate: string;
+    endDate?: string;
+    description?: string;
+    isCurrent?: boolean;
+  }>;
 }
 
 type MyRequest = {
@@ -366,6 +374,68 @@ export default function PublicAlumniProfile() {
                 </div>
               </div>
             </div>
+
+            {/* Work Experience Timeline */}
+            {profile.previousCompanies && profile.previousCompanies.length > 0 && (
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-blue-600" />
+                    Work Experience
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative border-l-2 border-blue-200 pl-8 space-y-8">
+                    {profile.previousCompanies.map((exp: any, index: number) => (
+                      <div key={index} className="relative">
+                        <div className="absolute -left-10 mt-1.5 w-4 h-4 rounded-full bg-blue-500 border-4 border-white"></div>
+                        <Card className="shadow-sm">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Calendar className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium text-muted-foreground">
+                                {exp.isCurrent ? 'Current Position' : 'Past Experience'}
+                              </span>
+                            </div>
+                            <h3 className="text-lg font-bold text-foreground mb-1">{exp.position}</h3>
+                            <p className="text-primary font-semibold mb-2">{exp.company}</p>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              {exp.startDate && new Date(exp.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                              {' - '}
+                              {exp.isCurrent ? 'Present' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A'}
+                            </p>
+                            {exp.description && (
+                              <p className="text-sm text-muted-foreground">{exp.description}</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Skills Section */}
+            {profile.technicalSkills && profile.technicalSkills.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Code className="w-5 h-5 text-primary" />
+                    Technical Skills
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.technicalSkills.map((skill, index) => (
+                      <Badge key={index} variant="secondary">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </CardContent>
         </Card>
 
