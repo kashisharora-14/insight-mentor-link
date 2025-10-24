@@ -1861,10 +1861,18 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => fetchEventParticipants(event.id)}
-                              disabled={selectedEventForParticipants === event.id}
+                              onClick={async () => {
+                                await fetchEventParticipants(event.id);
+                                // Scroll to participants section
+                                setTimeout(() => {
+                                  document.querySelector('[data-participants-section]')?.scrollIntoView({ 
+                                    behavior: 'smooth',
+                                    block: 'start'
+                                  });
+                                }, 100);
+                              }}
                             >
-                              {selectedEventForParticipants === event.id ? 'Viewing...' : 'View Participants'}
+                              {selectedEventForParticipants === event.id ? 'Viewing Participants' : 'View Participants'}
                             </Button>
                           </div>
                         </div>
@@ -1876,31 +1884,37 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                 {/* Participants View with Filtering */}
                 {selectedEventForParticipants && (
                   (() => {
-                    const filteredParticipants = eventParticipants.filter(p => {
+                    const currentEventParticipants = eventParticipants.filter(p => p.event_id === selectedEventForParticipants);
+                    const filteredParticipants = currentEventParticipants.filter(p => {
                     if (programFilter !== 'all' && p.program !== programFilter) return false;
                     if (statusFilter !== 'all' && p.participant_status !== statusFilter) return false;
                     return true;
                   });
 
-                  const programCounts = eventParticipants.reduce((acc, p) => {
+                  const programCounts = currentEventParticipants.reduce((acc, p) => {
                     const prog = p.program || 'Unknown';
                     acc[prog] = (acc[prog] || 0) + 1;
                     return acc;
                   }, {} as Record<string, number>);
 
-                  const deptCounts = eventParticipants.reduce((acc, p) => {
+                  const deptCounts = currentEventParticipants.reduce((acc, p) => {
                     const dept = p.department || 'Unknown';
                     acc[dept] = (acc[dept] || 0) + 1;
                     return acc;
                   }, {} as Record<string, number>);
 
                   return (
-                    <div className="mt-8 p-6 border rounded-lg bg-muted/30">
+                    <div className="mt-8 p-6 border rounded-lg bg-muted/30" data-participants-section>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xl font-bold">
                           Participants: {events.find(e => e.id === selectedEventForParticipants)?.title}
                         </h3>
-                        <Button variant="outline" size="sm" onClick={() => setSelectedEventForParticipants(null)}>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          setSelectedEventForParticipants(null);
+                          setEventParticipants([]);
+                          setProgramFilter('all');
+                          setStatusFilter('all');
+                        }}>
                           Close
                         </Button>
                       </div>
@@ -1911,16 +1925,16 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                           const selectedEvent = events.find(e => e.id === selectedEventForParticipants);
                           const eventEndDate = selectedEvent?.end_date ? new Date(selectedEvent.end_date) : new Date(selectedEvent?.date_time || '');
                           const isEventCompleted = eventEndDate < new Date();
-                          const attendedCount = eventParticipants.filter(p => p.attendance_status === 'attended').length;
+                          const attendedCount = currentEventParticipants.filter(p => p.attendance_status === 'attended').length;
                           const notAttendedCount = isEventCompleted 
-                            ? eventParticipants.filter(p => !p.attendance_status || p.attendance_status !== 'attended').length 
+                            ? currentEventParticipants.filter(p => !p.attendance_status || p.attendance_status !== 'attended').length 
                             : 0;
 
                           return (
                             <>
                               <div className="bg-background p-4 rounded-lg border">
                                 <p className="text-sm text-muted-foreground">Total Registered</p>
-                                <p className="text-2xl font-bold">{eventParticipants.length}</p>
+                                <p className="text-2xl font-bold">{currentEventParticipants.length}</p>
                               </div>
                               <div className="bg-background p-4 rounded-lg border">
                                 <p className="text-sm text-muted-foreground">Attended</p>
@@ -1933,7 +1947,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                   {isEventCompleted ? 'Not Attended' : 'Pending (Event Not Completed)'}
                                 </p>
                                 <p className="text-2xl font-bold text-orange-600">
-                                  {isEventCompleted ? notAttendedCount : eventParticipants.length}
+                                  {isEventCompleted ? notAttendedCount : currentEventParticipants.length}
                                 </p>
                               </div>
                             </>
@@ -1977,7 +1991,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
 
                         <div className="ml-auto">
                           <Badge variant="outline">
-                            Showing {filteredParticipants.length} of {eventParticipants.length}
+                            Showing {filteredParticipants.length} of {currentEventParticipants.length}
                           </Badge>
                         </div>
                       </div>
@@ -2051,7 +2065,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                         <div className="text-center py-8">
                           <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                           <p className="text-muted-foreground">
-                            {eventParticipants.length === 0 
+                            {currentEventParticipants.length === 0 
                               ? 'No participants registered yet' 
                               : 'No participants match the selected filters'}
                           </p>
