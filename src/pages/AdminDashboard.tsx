@@ -983,25 +983,54 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
     try {
       console.log('🔍 Fetching jobs for admin...');
       const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        console.error('❌ No auth token found for jobs fetch');
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to view jobs.",
+          variant: "destructive",
+        });
+        setJobs([]);
+        return;
+      }
+
+      console.log('📡 Making request to /api/jobs with admin token');
       const resp = await fetch('/api/jobs', {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
+      
       console.log('📡 Jobs API response status:', resp.status);
+      
       if (resp.ok) {
         const data = await resp.json();
         console.log('📋 Fetched jobs:', data);
         console.log('📊 Total jobs:', data?.length || 0);
         console.log('📊 Pending jobs:', data?.filter((j: any) => j.status === 'pending').length || 0);
+        console.log('📊 Approved jobs:', data?.filter((j: any) => j.status === 'approved').length || 0);
         setJobs(data || []);
       } else {
-        console.error('Failed to fetch jobs:', resp.statusText);
-        setJobs([]); // Ensure jobs is an empty array on error
+        const errorText = await resp.text();
+        console.error('Failed to fetch jobs:', resp.status, errorText);
+        toast({
+          title: "Error Loading Jobs",
+          description: "Failed to load job postings.",
+          variant: "destructive",
+        });
+        setJobs([]);
       }
     } catch (error) {
       console.error('Error fetching jobs:', error);
-      setJobs([]); // Ensure jobs is an empty array on error
+      toast({
+        title: "Error",
+        description: "Failed to load jobs. Please try again.",
+        variant: "destructive",
+      });
+      setJobs([]);
     }
   };
 

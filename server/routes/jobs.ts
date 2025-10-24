@@ -8,12 +8,18 @@ import { eq, and, desc, or, sql } from 'drizzle-orm';
 const router = Router();
 
 // Get all jobs (students see approved, alumni/admin see all their own + approved)
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
-    const userRole = (req as AuthRequest).user?.role;
-    const userId = (req as AuthRequest).user?.userId;
+    const user = (req as AuthRequest).user;
+    const userRole = user?.role;
+    const userId = user?.userId;
 
-    console.log('📋 Fetching jobs for role:', userRole);
+    console.log('📋 Fetching jobs - User details:', {
+      userId,
+      userRole,
+      userEmail: user?.email,
+      hasUser: !!user
+    });
 
     let jobsList;
 
