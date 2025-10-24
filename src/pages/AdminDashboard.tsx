@@ -452,7 +452,7 @@ const AdminDashboard = () => {
     try {
       console.log('🔍 Fetching participants for event:', eventId);
       const token = localStorage.getItem('authToken');
-      
+
       if (!token) {
         console.error('❌ No auth token found');
         toast({
@@ -478,19 +478,19 @@ const AdminDashboard = () => {
         console.error('❌ Failed to fetch participants:', errorText);
         throw new Error('Failed to fetch event participants');
       }
-      
+
       const data = await response.json();
       console.log('✅ Fetched participants raw data:', data);
       console.log('✅ Number of participants:', Array.isArray(data) ? data.length : 0);
       console.log('✅ Raw data structure:', JSON.stringify(data, null, 2));
-      
+
       if (!Array.isArray(data)) {
         console.error('❌ Invalid data format:', typeof data);
         setEventParticipants([]);
         setSelectedEventForParticipants(eventId);
         return;
       }
-      
+
       // Map the API response to include eventId for filtering
       const mappedData = data.map((p: any, index: number) => {
         console.log(`🔄 Mapping participant ${index + 1}:`, p);
@@ -511,13 +511,13 @@ const AdminDashboard = () => {
         console.log(`✅ Mapped participant ${index + 1}:`, mapped);
         return mapped;
       });
-      
+
       console.log('✅ All mapped participants:', mappedData);
       console.log('✅ Setting eventParticipants state with', mappedData.length, 'participants');
       setEventParticipants(mappedData);
       setSelectedEventForParticipants(eventId);
       console.log('✅ State should now be updated');
-      
+
       toast({
         title: "Participants Loaded",
         description: `Found ${mappedData.length} participant(s) for this event.`,
@@ -626,7 +626,7 @@ const handleMarkAttendance = async (eventId: string, participantId: string, curr
     }
 
     const token = localStorage.getItem('authToken');
-    
+
     const response = await fetch(`/api/dcsa/events/${eventId}/participants/${participantId}/attendance`, {
       method: 'PATCH',
       headers: {
@@ -1986,7 +1986,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                           const selectedEvent = events.find(e => e.id === selectedEventForParticipants);
                           const eventEndDate = selectedEvent?.end_date ? new Date(selectedEvent.end_date) : new Date(selectedEvent?.date_time || '');
                           const isEventCompleted = eventEndDate < new Date();
-                          
+
                           const attendedCount = currentEventParticipants.filter(p => p.attendance_status === 'attended').length;
                           const notAttendedCount = currentEventParticipants.filter(p => !p.attendance_status || p.attendance_status !== 'attended').length;
 
@@ -2056,7 +2056,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                         <div className="space-y-3 max-h-96 overflow-y-auto">
                           {filteredParticipants.map((participant) => {
                             console.log('🎯 Rendering participant:', participant);
-                            
+
                             // Get name with fallback chain
                             const displayName = participant.name || 
                                                participant.userName || 
@@ -2064,19 +2064,19 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                                participant.email?.split('@')[0] || 
                                                participant.userEmail?.split('@')[0] ||
                                                'Unknown User';
-                            
+
                             // Get email with fallback
                             const displayEmail = participant.email || 
                                                 participant.userEmail || 
                                                 participant.user_email ||
                                                 'No email provided';
-                            
+
                             // Get program/batch with fallback
                             const displayProgram = participant.program || 
                                                   participant.studentProgram ||
                                                   participant.student_program ||
                                                   'Not specified';
-                            
+
                             return (
                               <div key={participant.id} className="flex items-center justify-between p-4 bg-background rounded-lg border hover:border-primary transition-colors">
                                 <div className="flex-1">
