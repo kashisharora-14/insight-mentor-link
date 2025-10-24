@@ -124,6 +124,13 @@ For testing purposes, the application includes mock authentication:
 4. Set up deployment configuration for production
 
 ## Recent Changes
+- **2025-10-24**: Fixed event attendance tracking system
+  - Updated attendance count logic to properly display attended/not attended counts based on actual admin markings
+  - Added "Mark Attendance" button next to each participant in event participants list
+  - When admin hasn't marked attendance yet, button is displayed; when marked, shows "Marked as Attended" badge
+  - Fixed TypeScript interface to include description field for events
+  - Attendance counts now accurately reflect: Total Registered, Attended (marked by admin), and Not Attended (not marked)
+  - Added visual badges showing attendance status for each participant
 - **2025-10-20 (Latest Setup)**: Completed project import and configuration
   - Installed all npm dependencies (632 packages)
   - Fixed backend TypeScript import errors in `server/routes/alumni.ts`
