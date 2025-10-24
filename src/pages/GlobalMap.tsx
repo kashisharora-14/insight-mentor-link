@@ -69,19 +69,23 @@ const GlobalMap = () => {
               if (!person.latitude || !person.longitude) {
                 // Use location data to geocode
                 const location = [person.city, person.state, person.country].filter(Boolean).join(', ');
+                console.log(`🗺️ Geocoding for ${person.name}: ${location}`);
                 if (location) {
                   try {
                     const coords = await geocodeLocation(location);
+                    console.log(`✅ Geocoded ${person.name} to:`, coords);
                     return { ...person, ...coords };
                   } catch (e) {
-                    // Default to India center if geocoding fails
-                    return { ...person, latitude: 20.5937, longitude: 78.9629 };
+                    console.error(`❌ Geocoding failed for ${person.name}:`, e);
+                    // Skip this alumni if geocoding fails
+                    return person;
                   }
                 }
               }
               return person;
             })
           );
+          console.log('📊 Total alumni with coordinates:', alumniWithCoords.filter(a => a.latitude && a.longitude).length);
           setAlumni(alumniWithCoords);
         }
       } catch (error) {
@@ -96,18 +100,27 @@ const GlobalMap = () => {
 
   // Simple geocoding function using Nominatim
   const geocodeLocation = async (location: string): Promise<{ latitude: number; longitude: number }> => {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`
-    );
-    const data = await response.json();
-    if (data && data.length > 0) {
-      return {
-        latitude: parseFloat(data[0].lat),
-        longitude: parseFloat(data[0].lon)
-      };
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`,
+        {
+          headers: {
+            'User-Agent': 'Alumni-Network-Map/1.0'
+          }
+        }
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        return {
+          latitude: parseFloat(data[0].lat),
+          longitude: parseFloat(data[0].lon)
+        };
+      }
+      throw new Error('No results found');
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      throw error;
     }
-    // Default to India center
-    return { latitude: 20.5937, longitude: 78.9629 };
   };
 
   // Initialize Leaflet Map
@@ -130,7 +143,13 @@ const GlobalMap = () => {
       
       alumni.forEach((person) => {
         // Skip if no coordinates
-        if (!person.latitude || !person.longitude) return;
+        if (!person.latitude || !person.longitude) {
+          console.log('⚠️ Skipping alumni without coordinates:', person.name);
+          return;
+        }
+        
+        console.log('📍 Adding marker for:', person.name, 'at', person.latitude, person.longitude);
+        
         // Create custom icon with initials
         const customIcon = L.divIcon({
           html: `
@@ -150,6 +169,7 @@ const GlobalMap = () => {
               cursor: pointer;
               transition: transform 0.2s;
               font-family: system-ui, -apple-system, sans-serif;
+              z-index: 1000;
             ">
               ${person.name.split(' ').map(n => n[0]).join('')}
             </div>
@@ -161,7 +181,8 @@ const GlobalMap = () => {
         });
 
         const marker = L.marker([person.latitude, person.longitude], {
-          icon: customIcon
+          icon: customIcon,
+          zIndexOffset: 1000
         }).addTo(mapInstance);
 
         const location = [person.city, person.state, person.country].filter(Boolean).join(', ') || person.companyLocation || 'Location not specified';
