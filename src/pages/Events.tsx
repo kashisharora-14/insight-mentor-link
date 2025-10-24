@@ -1300,20 +1300,36 @@ const Events = () => {
                 </p>
 
                 <div className="space-y-3 mb-6">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4 mr-2 text-primary" />
-                    <span>{formatDate(event.start_date)}</span>
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4 mr-2 text-primary" />
-                    <span>{formatTime(event.start_date)}</span>
-                  </div>
-                  {event.end_date && (
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="w-4 h-4 mr-2 text-primary" />
-                      <span>Ends {formatTime(event.end_date)} • {formatDate(event.end_date)}</span>
+                  <div className="bg-primary/5 p-3 rounded-md space-y-2">
+                    <div className="flex items-start text-sm">
+                      <Calendar className="w-4 h-4 mr-2 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-foreground">Start Date</p>
+                        <p className="text-muted-foreground">{formatDate(event.start_date)}</p>
+                        <p className="text-muted-foreground">{formatTime(event.start_date)}</p>
+                      </div>
                     </div>
-                  )}
+                    {event.end_date && (
+                      <div className="flex items-start text-sm border-t border-border/50 pt-2">
+                        <Clock className="w-4 h-4 mr-2 text-primary mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-foreground">End Date</p>
+                          <p className="text-muted-foreground">{formatDate(event.end_date)}</p>
+                          <p className="text-muted-foreground">{formatTime(event.end_date)}</p>
+                        </div>
+                      </div>
+                    )}
+                    {event.registration_deadline && (
+                      <div className="flex items-start text-sm border-t border-border/50 pt-2">
+                        <Clock className="w-4 h-4 mr-2 text-destructive mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-foreground">Registration Deadline</p>
+                          <p className="text-muted-foreground">{formatDate(event.registration_deadline)}</p>
+                          <p className="text-muted-foreground">{formatTime(event.registration_deadline)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {event.venue && (
                     <div className="flex items-center text-sm text-muted-foreground">
                       <MapPin className="w-4 h-4 mr-2 text-primary" />
