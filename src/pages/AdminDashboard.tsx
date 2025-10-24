@@ -1993,33 +1993,13 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                     <p className="font-medium">{participant.user_name || participant.user_email}</p>
                                     <p className="text-sm text-muted-foreground">{participant.user_email}</p>
                                   </div>
-                                  <Badge variant="outline">{participant.user_role}</Badge>
-                                </div>
-                                <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
                                   {participant.program && (
-                                    <span className="flex items-center gap-1">
+                                    <Badge variant="outline" className="flex items-center gap-1">
                                       <GraduationCap className="w-3 h-3" />
                                       {participant.program}
-                                    </span>
-                                  )}
-                                  {participant.department && (
-                                    <span className="flex items-center gap-1">
-                                      <Users className="w-3 h-3" />
-                                      {participant.department}
-                                    </span>
-                                  )}
-                                  {participant.registered_at && (
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3" />
-                                      {new Date(participant.registered_at).toLocaleDateString()}
-                                    </span>
+                                    </Badge>
                                   )}
                                 </div>
-                                {participant.notes && (
-                                  <p className="mt-2 text-xs text-muted-foreground italic">
-                                    Note: {participant.notes}
-                                  </p>
-                                )}
                               </div>
                               <div className="flex gap-2 items-center">
                                 {(() => {
