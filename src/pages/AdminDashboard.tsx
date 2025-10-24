@@ -63,6 +63,7 @@ interface Profile {
 interface Event {
   id: string;
   title: string;
+  description?: string;
   date_time: string;
   end_date?: string;
   location?: string;
