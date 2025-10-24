@@ -119,20 +119,16 @@ const AdminDashboard = () => {
   const [csvUploadResult, setCSVUploadResult] = useState<any>(null); // Added state for CSV upload result
   const [jobs, setJobs] = useState<any[]>([]); // Added state for jobs
   const [loading, setLoading] = useState(true);
+  const [eventParticipants, setEventParticipants] = useState<any[]>([]);
+  const [selectedEventForParticipants, setSelectedEventForParticipants] = useState<string | null>(null);
+  const [programFilter, setProgramFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
 
   // Debug: Log events state changes
   useEffect(() => {
     console.log('📊 Events state updated:', events.length, 'events', events);
   }, [events]);
-
-  // Real data will be fetched from APIs
-  const [eventParticipants, setEventParticipants] = useState<any[]>([]);
-  const [selectedEventForParticipants, setSelectedEventForParticipants] = useState<string | null>(null);
-
-  // Participant filter states
-  const [programFilter, setProgramFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchAllData();
