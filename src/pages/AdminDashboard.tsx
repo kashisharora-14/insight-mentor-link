@@ -981,14 +981,19 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
   // Fetch jobs
   const fetchJobs = async () => {
     try {
+      console.log('🔍 Fetching jobs for admin...');
       const token = localStorage.getItem('authToken');
       const resp = await fetch('/api/jobs', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
+      console.log('📡 Jobs API response status:', resp.status);
       if (resp.ok) {
         const data = await resp.json();
+        console.log('📋 Fetched jobs:', data);
+        console.log('📊 Total jobs:', data?.length || 0);
+        console.log('📊 Pending jobs:', data?.filter((j: any) => j.status === 'pending').length || 0);
         setJobs(data || []);
       } else {
         console.error('Failed to fetch jobs:', resp.statusText);
@@ -2314,15 +2319,33 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
           <TabsContent value="jobs">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Job Postings Approval</span>
-                  <Badge variant="secondary">
-                    {jobs.filter((job: any) => job.status === 'pending').length} pending
-                  </Badge>
-                </CardTitle>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <CardTitle>Job Postings Approval</CardTitle>
+                    <Badge variant="secondary">
+                      {jobs.filter((job: any) => job.status === 'pending').length} pending
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      console.log('🔄 Manually refreshing jobs...');
+                      fetchJobs();
+                    }}
+                  >
+                    Refresh Jobs
+                  </Button>
+                </div>
                 <CardDescription>Review and approve job postings from alumni</CardDescription>
               </CardHeader>
               <CardContent>
+                {(() => {
+                  console.log('🎯 Jobs Tab - Total jobs:', jobs.length);
+                  console.log('🎯 Jobs Tab - All jobs:', jobs);
+                  console.log('🎯 Jobs Tab - Pending jobs:', jobs.filter((job: any) => job.status === 'pending'));
+                  return null;
+                })()}
                 {jobs.filter((job: any) => job.status === 'pending').length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
