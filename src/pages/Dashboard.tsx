@@ -15,7 +15,7 @@ const Dashboard = () => {
   const roleRedirect: Record<string, string> = {
     student: '/student-dashboard',
     alumni: '/alumni-dashboard',
-    admin: '/admin'
+    admin: '/admin-dashboard'
   };
 
   const redirectPath = roleRedirect[user.role] || '/student-dashboard';
