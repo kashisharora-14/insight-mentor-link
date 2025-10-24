@@ -34,7 +34,7 @@ const Navigation = () => {
     { name: "Find Mentors", path: "/mentorship", icon: MessageCircle, roles: ['student'] },
     { name: "Mentorship Requests", path: "/alumni-dashboard", icon: MessageCircle, roles: ['alumni'] },
     { name: "Events", path: "/events", icon: Calendar, roles: ['student', 'alumni', 'admin'] },
-    { name: "Jobs", path: "/jobs", icon: Briefcase, roles: ['student', 'alumni'] },
+    { name: "Jobs", path: "/jobs", icon: Briefcase, roles: ['student', 'alumni', 'admin'] },
     { name: "Gift Shop", path: "/gift-shop", icon: Shopping, roles: ['student', 'admin'] },
     { name: "Donations", path: "/donations", icon: Heart, roles: ['student', 'admin'] },
     { name: "AI Mentor", path: "/ai-chat", icon: MessageCircle, roles: ['student'] },
@@ -56,7 +56,7 @@ const Navigation = () => {
     if (user.role === 'admin') {
       // Admin should only see admin-specific items
       return allItems.filter(item => 
-        ['Home', 'Events', 'Global Map', 'Admin'].includes(item.name)
+        ['Home', 'Events', 'Jobs', 'Global Map', 'Admin'].includes(item.name)
       );
     }
 
