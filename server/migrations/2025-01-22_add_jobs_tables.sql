@@ -8,7 +8,10 @@ ADD COLUMN IF NOT EXISTS posted_by_role TEXT,
 ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending',
 ADD COLUMN IF NOT EXISTS approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
 ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+ADD COLUMN IF NOT EXISTS rejection_reason TEXT,
+ADD COLUMN IF NOT EXISTS referral_available BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS experience_required TEXT,
+ADD COLUMN IF NOT EXISTS skills TEXT[];
 
 -- Create job_referral_requests table if it doesn't exist
 CREATE TABLE IF NOT EXISTS job_referral_requests (
