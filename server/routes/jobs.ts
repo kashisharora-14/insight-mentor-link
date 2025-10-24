@@ -13,6 +13,8 @@ router.get('/', async (req, res) => {
     const userRole = (req as AuthRequest).user?.role;
     const userId = (req as AuthRequest).user?.userId;
 
+    console.log('📋 Fetching jobs for role:', userRole);
+
     let jobsList;
 
     if (userRole === 'admin') {
@@ -20,18 +22,20 @@ router.get('/', async (req, res) => {
       jobsList = await db
         .select({
           job: jobs,
-          postedByName: users.name,
+          postedByName: sql<string>`COALESCE(${users.name}, ${users.email})`.as('posted_by_name'),
           postedByEmail: users.email,
         })
         .from(jobs)
         .leftJoin(users, eq(jobs.postedBy, users.id))
         .orderBy(desc(jobs.createdAt));
+      
+      console.log('📊 Admin fetched jobs:', jobsList.length, 'total jobs');
     } else if (userRole === 'alumni' && userId) {
       // Alumni see their own jobs (all statuses) + approved jobs from others
       jobsList = await db
         .select({
           job: jobs,
-          postedByName: users.name,
+          postedByName: sql<string>`COALESCE(${users.name}, ${users.email})`.as('posted_by_name'),
           postedByEmail: users.email,
         })
         .from(jobs)
@@ -43,26 +47,45 @@ router.get('/', async (req, res) => {
           )
         )
         .orderBy(desc(jobs.createdAt));
+      
+      console.log('📊 Alumni fetched jobs:', jobsList.length, 'total jobs');
     } else {
       // Students see only approved jobs
       jobsList = await db
         .select({
           job: jobs,
-          postedByName: users.name,
+          postedByName: sql<string>`COALESCE(${users.name}, ${users.email})`.as('posted_by_name'),
           postedByEmail: users.email,
         })
         .from(jobs)
         .leftJoin(users, eq(jobs.postedBy, users.id))
         .where(eq(jobs.status, 'approved'))
         .orderBy(desc(jobs.createdAt));
+      
+      console.log('📊 Student fetched jobs:', jobsList.length, 'approved jobs');
     }
 
-    const formattedJobs = jobsList.map(({ job, postedByName, postedByEmail }) => ({
-      ...job,
-      postedByName: postedByName || 'Unknown',
-      postedByEmail: postedByEmail || '',
-    }));
+    const formattedJobs = jobsList.map(({ job, postedByName, postedByEmail }) => {
+      const formatted = {
+        ...job,
+        postedByName: postedByName || postedByEmail || 'Unknown Alumni',
+        postedByEmail: postedByEmail || '',
+      };
+      
+      // Log each job for debugging
+      console.log('📝 Job formatted:', {
+        id: job.id,
+        title: job.title,
+        status: job.status,
+        postedByName: formatted.postedByName,
+        postedByEmail: formatted.postedByEmail,
+        postedByRole: job.postedByRole
+      });
+      
+      return formatted;
+    });
 
+    console.log('✅ Returning', formattedJobs.length, 'jobs to client');
     res.json(formattedJobs);
   } catch (error) {
     console.error('Error fetching jobs:', error);
@@ -99,8 +122,20 @@ router.post('/', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Title, description, and company are required' });
     }
 
-    // Admin posts are auto-approved, alumni posts need approval
+    // Admin posts are auto-approved, alumni posts ALWAYS need approval
     const status = user.role === 'admin' ? 'approved' : 'pending';
+
+    console.log('📝 Creating job:', {
+      title,
+      company,
+      postedBy: user.userId,
+      postedByEmail: user.email,
+      postedByRole: user.role,
+      status,
+      message: user.role === 'admin' 
+        ? 'Admin job - auto-approved' 
+        : 'Alumni job - requires admin approval'
+    });
 
     const [newJob] = await db.insert(jobs).values({
       title,
@@ -117,11 +152,18 @@ router.post('/', authMiddleware, async (req, res) => {
       referralAvailable: referralAvailable || false,
       experienceRequired: experienceRequired || null,
       skills: skills || null,
-      status,
+      status, // 'pending' for alumni, 'approved' for admin
       approvedBy: user.role === 'admin' ? user.userId : null,
       approvedAt: user.role === 'admin' ? new Date() : null,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
     }).returning();
+
+    console.log('✅ Job created:', {
+      id: newJob.id,
+      title: newJob.title,
+      status: newJob.status,
+      requiresApproval: newJob.status === 'pending'
+    });
 
     res.status(201).json({
       message: user.role === 'admin' 
