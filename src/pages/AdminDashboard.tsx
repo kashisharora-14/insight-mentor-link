@@ -2054,67 +2054,80 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                       {/* Participants List */}
                       {filteredParticipants.length > 0 ? (
                         <div className="space-y-3 max-h-96 overflow-y-auto">
-                          {filteredParticipants.map((participant) => (
-                            <div key={participant.id} className="flex items-center justify-between p-4 bg-background rounded-lg border hover:border-primary transition-colors">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3">
-                                  <div>
-                                    <p className="font-medium">{participant.name || participant.email}</p>
-                                    <p className="text-sm text-muted-foreground">{participant.email}</p>
+                          {filteredParticipants.map((participant) => {
+                            console.log('🎯 Rendering participant:', participant);
+                            return (
+                              <div key={participant.id} className="flex items-center justify-between p-4 bg-background rounded-lg border hover:border-primary transition-colors">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 flex-wrap">
+                                    <div>
+                                      <p className="font-medium">{participant.name || participant.email?.split('@')[0] || 'Unknown'}</p>
+                                      <p className="text-sm text-muted-foreground">{participant.email || 'No email'}</p>
+                                      {participant.department && (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                          Department: {participant.department}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {participant.program && participant.program !== 'N/A' && (
+                                      <Badge variant="outline" className="flex items-center gap-1">
+                                        <GraduationCap className="w-3 h-3" />
+                                        {participant.program}
+                                      </Badge>
+                                    )}
+                                    {participant.participant_status && (
+                                      <Badge variant={participant.participant_status === 'approved' ? 'default' : 'secondary'}>
+                                        {participant.participant_status}
+                                      </Badge>
+                                    )}
                                   </div>
-                                  {participant.program && (
-                                    <Badge variant="outline" className="flex items-center gap-1">
-                                      <GraduationCap className="w-3 h-3" />
-                                      {participant.program}
-                                    </Badge>
-                                  )}
+                                </div>
+                                <div className="flex gap-2 items-center">
+                                  {(() => {
+                                    const selectedEvent = events.find(e => e.id === selectedEventForParticipants);
+                                    const eventEndDate = selectedEvent?.end_date ? new Date(selectedEvent.end_date) : new Date(selectedEvent?.date_time || '');
+                                    const isEventCompleted = eventEndDate < new Date();
+                                    const isAttended = participant.attendance_status === 'attended';
+
+                                    return (
+                                      <Button
+                                        size="sm"
+                                        variant={isAttended ? 'outline' : 'default'}
+                                        className={isAttended ? 'bg-green-600 text-white hover:bg-green-600 cursor-not-allowed' : ''}
+                                        disabled={!isEventCompleted || isAttended}
+                                        onClick={() => {
+                                          if (!isAttended && isEventCompleted) {
+                                            handleMarkAttendance(
+                                              selectedEventForParticipants!,
+                                              participant.id,
+                                              participant.attendance_status
+                                            );
+                                          }
+                                        }}
+                                      >
+                                        {isAttended ? (
+                                          <>
+                                            <CheckCircle className="w-4 h-4 mr-1" />
+                                            Attended
+                                          </>
+                                        ) : !isEventCompleted ? (
+                                          <>
+                                            <Clock className="w-4 h-4 mr-1" />
+                                            Event Not Yet Completed
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Clock className="w-4 h-4 mr-1" />
+                                            Mark Attendance
+                                          </>
+                                        )}
+                                      </Button>
+                                    );
+                                  })()}
                                 </div>
                               </div>
-                              <div className="flex gap-2 items-center">
-                                {(() => {
-                                  const selectedEvent = events.find(e => e.id === selectedEventForParticipants);
-                                  const eventEndDate = selectedEvent?.end_date ? new Date(selectedEvent.end_date) : new Date(selectedEvent?.date_time || '');
-                                  const isEventCompleted = eventEndDate < new Date();
-                                  const isAttended = participant.attendance_status === 'attended';
-
-                                  return (
-                                    <Button
-                                      size="sm"
-                                      variant={isAttended ? 'outline' : 'default'}
-                                      className={isAttended ? 'bg-green-600 text-white hover:bg-green-600 cursor-not-allowed' : ''}
-                                      disabled={!isEventCompleted || isAttended}
-                                      onClick={() => {
-                                        if (!isAttended && isEventCompleted) {
-                                          handleMarkAttendance(
-                                            selectedEventForParticipants!,
-                                            participant.id,
-                                            participant.attendance_status
-                                          );
-                                        }
-                                      }}
-                                    >
-                                      {isAttended ? (
-                                        <>
-                                          <CheckCircle className="w-4 h-4 mr-1" />
-                                          Attended
-                                        </>
-                                      ) : !isEventCompleted ? (
-                                        <>
-                                          <Clock className="w-4 h-4 mr-1" />
-                                          Event Not Yet Completed
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Clock className="w-4 h-4 mr-1" />
-                                          Mark Attendance
-                                        </>
-                                      )}
-                                    </Button>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="text-center py-8">
@@ -2123,6 +2136,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                             {currentEventParticipants.length === 0 
                               ? 'No participants registered yet' 
                               : 'No participants match the selected filters'}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Total participants in database: {currentEventParticipants.length}
                           </p>
                         </div>
                       )}
