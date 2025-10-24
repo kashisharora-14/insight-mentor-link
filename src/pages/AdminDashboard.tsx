@@ -983,7 +983,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
     try {
       console.log('🔍 Fetching jobs for admin...');
       const token = localStorage.getItem('authToken');
-      
+
       if (!token) {
         console.error('❌ No auth token found for jobs fetch');
         toast({
@@ -1003,9 +1003,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
           'Content-Type': 'application/json',
         },
       });
-      
+
       console.log('📡 Jobs API response status:', resp.status);
-      
+
       if (resp.ok) {
         const data = await resp.json();
         console.log('📋 Fetched jobs:', data);
@@ -1035,7 +1035,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
   };
 
 
-  // Initial fetch for all data
+  // Initial fetch for all data on mount (moved from above to be called only once)
   useEffect(() => {
     // Check if admin is authenticated
     const token = localStorage.getItem('authToken');
@@ -1624,6 +1624,8 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                 onClick={() => {
                   fetchVerificationRequests();
                   fetchProfiles();
+                  fetchEvents();
+                  fetchJobs();
                   fetchStats();
                   toast({ title: "Refreshed", description: "Verification data updated" });
                 }}
@@ -2375,7 +2377,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                   console.log('🎯 Jobs Tab - Pending jobs:', jobs.filter((job: any) => job.status === 'pending'));
                   return null;
                 })()}
-                
+
                 {/* Show summary of all jobs */}
                 <div className="mb-6 p-4 bg-muted rounded-lg">
                   <h3 className="font-semibold mb-2">Job Summary</h3>
@@ -2483,9 +2485,9 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 </div>
                               )}
                               {job.salaryRange && (
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-2">
                                   <DollarSign className="w-4 h-4 text-muted-foreground" />
-                                  <span>{job.salaryRange}</span>
+                                  <span className="text-sm">₹{job.salaryRange}</span>
                                 </div>
                               )}
                               {job.experienceRequired && (
@@ -2617,7 +2619,7 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
                                 </div>
                                 <p className="text-sm text-muted-foreground">{job.company}</p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Posted by: {job.postedByName || job.postedByEmail} • 
+                                  Posted by: {job.postedByName || job.postedByEmail} •
                                   {new Date(job.createdAt).toLocaleDateString()}
                                 </p>
                               </div>

@@ -933,13 +933,13 @@ const JobBoard = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <CardTitle className="text-xl">{job.title}</CardTitle>
-                        {getStatusBadge(job.status)}
+                        {user?.role === 'admin' && getStatusBadge(job.status)}
                       </div>
                       <CardDescription className="text-lg font-medium text-foreground">
                         {job.company}
                       </CardDescription>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Posted by: {job.postedByRole === 'admin' ? 'Admin' : (job.postedByName || 'Alumni')}
+                        Posted by: {job.postedByRole === 'admin' ? 'Admin' : 'Alumni'}
                       </p>
                     </div>
                   </div>
@@ -961,12 +961,12 @@ const JobBoard = () => {
                   {job.salaryRange && (
                     <div className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4" />
-                      {job.salaryRange}
+                      ₹{job.salaryRange}
                     </div>
                   )}
                   {job.experienceRequired && (
                     <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
+                      <Briefcase className="w-4 h-4" />
                       {job.experienceRequired}
                     </div>
                   )}
