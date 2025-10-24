@@ -59,6 +59,8 @@ const JobBoard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJobType, setSelectedJobType] = useState('all');
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [referralRequests, setReferralRequests] = useState<ReferralRequest[]>([]);
   const [myApplications, setMyApplications] = useState<ReferralRequest[]>([]);
   const [newJob, setNewJob] = useState({
@@ -222,6 +224,49 @@ const JobBoard = () => {
     }
   };
 
+  const handleEditJob = (job: Job) => {
+    setEditingJob(job);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingJob) return;
+
+    try {
+      await apiClient.put(`/jobs/${editingJob.id}`, {
+        title: editingJob.title,
+        description: editingJob.description,
+        company: editingJob.company,
+        companyLogo: editingJob.companyLogo,
+        location: editingJob.location,
+        jobType: editingJob.jobType,
+        salaryRange: editingJob.salaryRange,
+        requirements: typeof editingJob.requirements === 'string' 
+          ? editingJob.requirements.split(',').map(req => req.trim()).filter(Boolean)
+          : editingJob.requirements,
+        skills: typeof editingJob.skills === 'string'
+          ? editingJob.skills.split(',').map(skill => skill.trim()).filter(Boolean)
+          : editingJob.skills,
+        applicationLink: editingJob.applicationLink,
+        referralAvailable: editingJob.referralAvailable,
+        experienceRequired: editingJob.experienceRequired,
+      });
+
+      toast({ title: "Job updated successfully!" });
+      setIsEditDialogOpen(false);
+      setEditingJob(null);
+      fetchJobs();
+    } catch (error) {
+      toast({
+        title: "Error updating job",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRequestReferral = async (jobId: string) => {
     try {
       await apiClient.post(`/jobs/${jobId}/referral-request`, {
@@ -348,14 +393,17 @@ const JobBoard = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="companyLogo">Company Logo URL (optional)</Label>
+                    <Label htmlFor="companyLogo">Company Logo/Image (optional)</Label>
                     <Input
                       id="companyLogo"
-                      type="url"
+                      type="text"
                       value={newJob.companyLogo}
                       onChange={(e) => setNewJob(prev => ({ ...prev, companyLogo: e.target.value }))}
-                      placeholder="https://example.com/logo.png"
+                      placeholder="https://example.com/logo.png or data:image URL"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      You can paste an image URL or a data URL (base64 encoded image)
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -461,6 +509,153 @@ const JobBoard = () => {
             </Dialog>
           )}
         </div>
+
+        {/* Edit Job Dialog (Admin) */}
+        {user?.role === 'admin' && editingJob && (
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Job</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleUpdateJob} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-title">Job Title</Label>
+                    <Input
+                      id="edit-title"
+                      value={editingJob.title}
+                      onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, title: e.target.value }) : null)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-company">Company</Label>
+                    <Input
+                      id="edit-company"
+                      value={editingJob.company}
+                      onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, company: e.target.value }) : null)}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={editingJob.description}
+                    onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+                    rows={4}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-companyLogo">Company Logo/Image (optional)</Label>
+                  <Input
+                    id="edit-companyLogo"
+                    type="text"
+                    value={editingJob.companyLogo || ''}
+                    onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, companyLogo: e.target.value }) : null)}
+                    placeholder="https://example.com/logo.png or data:image URL"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can paste an image URL or a data URL (base64 encoded image)
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-location">Location</Label>
+                    <Input
+                      id="edit-location"
+                      value={editingJob.location || ''}
+                      onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, location: e.target.value }) : null)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-jobType">Job Type</Label>
+                    <Select
+                      value={editingJob.jobType || 'full-time'}
+                      onValueChange={(value) => setEditingJob(prev => prev ? ({ ...prev, jobType: value }) : null)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {jobTypes.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-salaryRange">Salary Range</Label>
+                    <Input
+                      id="edit-salaryRange"
+                      value={editingJob.salaryRange || ''}
+                      onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, salaryRange: e.target.value }) : null)}
+                      placeholder="e.g., $50,000 - $70,000"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-experienceRequired">Experience Required</Label>
+                    <Input
+                      id="edit-experienceRequired"
+                      value={editingJob.experienceRequired || ''}
+                      onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, experienceRequired: e.target.value }) : null)}
+                      placeholder="e.g., 2-5 years"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-applicationLink">Application Link</Label>
+                  <Input
+                    id="edit-applicationLink"
+                    type="url"
+                    value={editingJob.applicationLink || ''}
+                    onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, applicationLink: e.target.value }) : null)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-requirements">Requirements (comma-separated)</Label>
+                  <Input
+                    id="edit-requirements"
+                    value={Array.isArray(editingJob.requirements) ? editingJob.requirements.join(', ') : editingJob.requirements || ''}
+                    onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, requirements: e.target.value }) : null)}
+                    placeholder="e.g., Python, React, 2+ years experience"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-skills">Required Skills (comma-separated)</Label>
+                  <Input
+                    id="edit-skills"
+                    value={Array.isArray(editingJob.skills) ? editingJob.skills.join(', ') : editingJob.skills || ''}
+                    onChange={(e) => setEditingJob(prev => prev ? ({ ...prev, skills: e.target.value }) : null)}
+                    placeholder="e.g., JavaScript, Node.js, AWS"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1">
+                    Update Job
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Referral Requests Section (Alumni) */}
         {user?.role === 'alumni' && referralRequests.length > 0 && (
@@ -661,7 +856,8 @@ const JobBoard = () => {
                 )}
 
                 <div className="flex gap-2">
-                  {job.applicationLink && (
+                  {/* Apply Now - Only for Students and Alumni */}
+                  {user?.role !== 'admin' && job.applicationLink && (
                     <Button asChild>
                       <a href={job.applicationLink} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="w-4 h-4 mr-2" />
@@ -670,6 +866,7 @@ const JobBoard = () => {
                     </Button>
                   )}
 
+                  {/* Request Referral - Only for Students */}
                   {user?.role === 'student' && job.referralAvailable && job.postedByRole === 'alumni' && job.status === 'approved' && (
                     <Button 
                       variant="outline"
@@ -683,26 +880,34 @@ const JobBoard = () => {
                     </Button>
                   )}
 
-                  {user?.role === 'admin' && job.status === 'pending' && (
+                  {/* Admin Actions */}
+                  {user?.role === 'admin' && (
                     <>
-                      <Button onClick={() => handleApproveJob(job.id)}>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Approve
+                      {job.status === 'pending' && (
+                        <>
+                          <Button onClick={() => handleApproveJob(job.id)}>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Approve
+                          </Button>
+                          <Button variant="destructive" onClick={() => handleRejectJob(job.id)}>
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleEditJob(job)}
+                      >
+                        Edit
                       </Button>
-                      <Button variant="destructive" onClick={() => handleRejectJob(job.id)}>
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Reject
+                      <Button 
+                        variant="destructive"
+                        onClick={() => handleDeleteJob(job.id)}
+                      >
+                        Delete
                       </Button>
                     </>
-                  )}
-
-                  {user?.role === 'admin' && (
-                    <Button 
-                      variant="destructive"
-                      onClick={() => handleDeleteJob(job.id)}
-                    >
-                      Delete Job
-                    </Button>
                   )}
                 </div>
               </CardContent>
