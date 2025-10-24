@@ -1254,7 +1254,7 @@ const Events = () => {
                     {eventStatus.label}
                   </Badge>
                   {event.club && (
-                    <Badge className="bg-secondary/80 text-white border-white/30 font-semibold">
+                    <Badge className="bg-blue-600 text-white border-white/30 font-semibold">
                       {event.club}
                     </Badge>
                   )}
