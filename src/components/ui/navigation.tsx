@@ -30,16 +30,16 @@ const Navigation = () => {
 
   const getAllNavItems = () => [
     { name: "Home", path: "/", icon: Home, roles: ['student', 'alumni', 'admin'] },
-    { name: "Alumni Directory", path: "/alumni-directory", icon: Users, roles: ['student', 'alumni', 'admin'] },
+    { name: "Alumni Directory", path: "/alumni-directory", icon: Users, roles: ['student', 'admin'] },
     { name: "My Profile", path: "/alumni-profile", icon: User, roles: ['alumni'] },
     { name: "Find Mentors", path: "/mentorship", icon: MessageCircle, roles: ['student'] },
     { name: "Mentorship Requests", path: "/alumni-dashboard", icon: MessageCircle, roles: ['alumni'] },
     { name: "Events", path: "/events", icon: Calendar, roles: ['student', 'alumni', 'admin'] },
     { name: "Jobs", path: "/jobs", icon: Briefcase, roles: ['student', 'alumni'] },
-    { name: "Gift Shop", path: "/gift-shop", icon: Shopping, roles: ['student', 'alumni', 'admin'] },
-    { name: "Donations", path: "/donations", icon: Heart, roles: ['student', 'alumni', 'admin'] },
-    { name: "AI Mentor", path: "/ai-chat", icon: MessageCircle, roles: ['student', 'alumni'] },
-    { name: "Global Map", path: "/global-map", icon: Map, roles: ['student', 'alumni', 'admin'] },
+    { name: "Gift Shop", path: "/gift-shop", icon: Shopping, roles: ['student', 'admin'] },
+    { name: "Donations", path: "/donations", icon: Heart, roles: ['student', 'admin'] },
+    { name: "AI Mentor", path: "/ai-chat", icon: MessageCircle, roles: ['student'] },
+    { name: "Global Map", path: "/global-map", icon: Map, roles: ['student', 'admin'] },
     { name: "Admin", path: "/admin-dashboard", icon: Settings, roles: ['admin'] },
   ];
 
