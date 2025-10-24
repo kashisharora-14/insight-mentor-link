@@ -358,16 +358,40 @@ export const jobs = pgTable('jobs', {
   description: text('description').notNull(),
   company: text('company').notNull(),
   location: text('location'),
-  jobType: text('job_type'),
+  jobType: text('job_type'), // full-time, part-time, internship, contract
   salaryRange: text('salary_range'),
   requirements: text('requirements').array(),
-  postedBy: uuid('posted_by').notNull(),
+  postedBy: uuid('posted_by').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  postedByRole: text('posted_by_role'), // 'alumni' or 'admin'
   applicationLink: text('application_link'),
   isActive: boolean('is_active').default(true),
+  status: text('status').default('pending'), // 'pending', 'approved', 'rejected' for alumni posts
+  approvedBy: uuid('approved_by').references(() => users.id, { onDelete: 'set null' }),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  rejectionReason: text('rejection_reason'),
+  referralAvailable: boolean('referral_available').default(false),
+  experienceRequired: text('experience_required'),
+  skills: text('skills').array(),
   expiresAt: timestamp('expires_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+// Job referral requests table
+export const jobReferralRequests = pgTable('job_referral_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  jobId: uuid('job_id').notNull().references(() => jobs.id, { onDelete: 'cascade' }),
+  studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  alumniId: uuid('alumni_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  status: text('status').default('pending'), // 'pending', 'accepted', 'rejected'
+  message: text('message'),
+  resumeUrl: text('resume_url'),
+  responseMessage: text('response_message'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  uniqueJobStudent: uniqueIndex('job_student_unique').on(table.jobId, table.studentId),
+}));
 
 // Profiles table for alumni and students
 export const profiles = pgTable('profiles', {
