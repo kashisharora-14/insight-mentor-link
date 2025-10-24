@@ -451,7 +451,7 @@ const AdminDashboard = () => {
     try {
       console.log('🔍 Fetching participants for event:', eventId);
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/admin/events/${eventId}/participants`, {
+      const response = await fetch(`/api/dcsa/events/${eventId}/participants`, {
         headers: token
           ? {
               Authorization: `Bearer ${token}`,
@@ -468,7 +468,19 @@ const AdminDashboard = () => {
       }
       const data = await response.json();
       console.log('✅ Fetched participants:', data);
-      setEventParticipants(data);
+      
+      // Map the API response to include eventId for filtering
+      const mappedData = data.map((p: any) => ({
+        ...p,
+        eventId: eventId,
+        name: p.user_name || p.name || 'Unknown',
+        email: p.user_email || p.email || '',
+        program: p.program || 'N/A',
+        department: p.department || 'N/A',
+      }));
+      
+      console.log('✅ Mapped participants:', mappedData);
+      setEventParticipants(mappedData);
       setSelectedEventForParticipants(eventId);
     } catch (error) {
       console.error('Error fetching event participants:', error);
