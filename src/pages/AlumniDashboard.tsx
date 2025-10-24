@@ -11,13 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { AlumniProfileForm } from '@/components/alumni/AlumniProfileForm';
-import { 
-  Users, 
-  MessageCircle, 
-  Calendar, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
+import {
+  Users,
+  MessageCircle,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Clock,
   AlertCircle,
   User,
   GraduationCap,
@@ -25,8 +25,52 @@ import {
   Mail,
   Star,
   TrendingUp,
-  Award
+  Award,
+  MapPin
 } from 'lucide-react';
+
+// Assume apiClient is configured elsewhere, e.g., in a context or separate utility file
+// import apiClient from '@/lib/apiClient'; 
+
+// Mocking apiClient for demonstration purposes if it's not globally available
+const apiClient = {
+  get: async (url: string) => {
+    // This is a placeholder. In a real app, this would make an actual API call.
+    console.log(`Mock GET request to: ${url}`);
+    if (url === '/api/alumni-profile/profile') {
+      // Simulate a successful response for the alumni profile
+      return Promise.resolve({
+        profile: {
+          name: "Punnet",
+          currentPosition: "Software Engineer",
+          currentCompany: "Tech Corp",
+          city: "San Francisco",
+          state: "CA",
+          country: "USA",
+          bio: "Passionate about building scalable solutions and mentoring.",
+          technicalSkills: ["React", "Node.js", "TypeScript", "AWS"],
+          expertiseAreas: ["Web Development", "Cloud Computing", "Mentorship"],
+          isMentorAvailable: true,
+          mentorshipAreas: ["Career Advice", "Technical Guidance"],
+          linkedinUrl: "https://linkedin.com/in/punnet",
+          githubUrl: "https://github.com/punnet",
+          showContactInfo: true,
+          email: "punnet@example.com",
+          // Add other profile fields as needed
+          timeline: [
+            { title: "Software Engineer", company: "Tech Corp", duration: "2020 - Present" },
+            { title: "Junior Developer", company: "Innovate Solutions", duration: "2018 - 2020" }
+          ],
+          profileImage: "https://via.placeholder.com/150/92c952"
+        }
+      });
+    }
+    // Simulate other API responses if necessary
+    return Promise.resolve({});
+  },
+  // Add other methods like post, put, delete if needed
+};
+
 
 interface MentorshipRequest {
   id: string;
@@ -59,6 +103,12 @@ const AlumniDashboard = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Placeholder for fetchStats if it exists in the original context
+  const fetchStats = () => {
+    // This would typically fetch dashboard stats.
+    // For this example, we'll assume it's handled elsewhere or not critical for the profile display.
+  };
 
   // Fetch real mentorship requests from database
   useEffect(() => {
@@ -95,9 +145,14 @@ const AlumniDashboard = () => {
         if (!resp.ok) return;
         const data = await resp.json();
         setPublicProfile(data.profile || null);
-      } catch {}
+      } catch (error) {
+        console.error('Error loading public profile:', error);
+        setPublicProfile(null); // Ensure profile is null if fetch fails
+      }
     };
-    loadPublicProfile();
+    if (user?.id) {
+      loadPublicProfile();
+    }
   }, [user?.id]);
 
   // After requests load, fetch ratings for each mentorship
@@ -118,7 +173,9 @@ const AlumniDashboard = () => {
           }
         }));
         setRatings(Object.fromEntries(entries));
-      } catch {}
+      } catch (error) {
+        console.error('Error loading ratings:', error);
+      }
     };
     if (alumniRequests.length) loadRatings();
   }, [alumniRequests]);
@@ -146,9 +203,9 @@ const AlumniDashboard = () => {
         const e = await resp.json().catch(() => ({}));
         throw new Error(e.error || 'Failed to accept request');
       }
-      setAlumniRequests(prev => 
-        prev.map(req => 
-          req.id === requestId 
+      setAlumniRequests(prev =>
+        prev.map(req =>
+          req.id === requestId
             ? { ...req, status: 'accepted' as const }
             : req
         )
@@ -166,9 +223,9 @@ const AlumniDashboard = () => {
   };
 
   const handleDeclineRequest = (requestId: string) => {
-    setAlumniRequests(prev => 
-      prev.map(req => 
-        req.id === requestId 
+    setAlumniRequests(prev =>
+      prev.map(req =>
+        req.id === requestId
           ? { ...req, status: 'declined' as const }
           : req
       )
@@ -189,15 +246,15 @@ const AlumniDashboard = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         },
-        body: JSON.stringify({ status: 'completed' }),
+        body: JSON.JSONstringify({ status: 'completed' }),
       });
       if (!resp.ok) {
         const e = await resp.json().catch(() => ({}));
         throw new Error(e.error || 'Failed to update status');
       }
-      setAlumniRequests(prev => 
-        prev.map(req => 
-          req.id === requestId 
+      setAlumniRequests(prev =>
+        prev.map(req =>
+          req.id === requestId
             ? { ...req, status: 'completed' as const }
             : req
         )
@@ -224,7 +281,7 @@ const AlumniDashboard = () => {
   const getStatusBadge = (status: string) => {
     const variants = {
       pending: "outline",
-      accepted: "default", 
+      accepted: "default",
       completed: "secondary",
       declined: "destructive"
     } as const;
@@ -281,7 +338,7 @@ const AlumniDashboard = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-foreground mb-2">Alumni Dashboard</h1>
-            <Button 
+            <Button
               onClick={() => navigate('/alumni-profile-edit')}
               className="bg-gradient-to-r from-purple-600 to-blue-600"
             >
@@ -362,8 +419,8 @@ const AlumniDashboard = () => {
                     Your account has been verified. You can now access all mentorship features and appear in the alumni directory.
                   </p>
                   <div className="text-xs text-green-600 dark:text-green-400">
-                    Verification Method: {user?.verificationMethod === 'admin_manual' ? 'Manually approved by admin' : 
-                                         user?.verificationMethod === 'csv_upload' ? 'Verified via CSV upload' : 
+                    Verification Method: {user?.verificationMethod === 'admin_manual' ? 'Manually approved by admin' :
+                                         user?.verificationMethod === 'csv_upload' ? 'Verified via CSV upload' :
                                          'Verified'}
                   </div>
                 </div>
@@ -542,7 +599,7 @@ const AlumniDashboard = () => {
                                   onChange={(e) => setMeetingLink(e.target.value)}
                                 />
                               </div>
-                              <Button 
+                              <Button
                                 onClick={() => handleAcceptRequest(request.id)}
                                 className="w-full"
                               >
@@ -572,7 +629,7 @@ const AlumniDashboard = () => {
                                 value={declineReason}
                                 onChange={(e) => setDeclineReason(e.target.value)}
                               />
-                              <Button 
+                              <Button
                                 onClick={() => handleDeclineRequest(request.id)}
                                 variant="destructive"
                                 className="w-full"
@@ -685,8 +742,14 @@ const AlumniDashboard = () => {
                 <Card className="shadow-elegant border-2">
                   <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
                     <div className="flex items-start gap-4">
-                      <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-                        {publicProfile.name?.charAt(0) || user?.name?.charAt(0) || 'A'}
+                      <div className="relative w-20 h-20 rounded-full overflow-hidden">
+                        {publicProfile.profileImage ? (
+                          <img src={publicProfile.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-3xl font-bold">
+                            {publicProfile.name?.charAt(0) || user?.name?.charAt(0) || 'A'}
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1">
                         <CardTitle className="text-2xl">{publicProfile.name || user?.name || 'Your Name'}</CardTitle>
@@ -695,7 +758,7 @@ const AlumniDashboard = () => {
                         </CardDescription>
                         {(publicProfile.city || publicProfile.state || publicProfile.country) && (
                           <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                            <Building className="w-4 h-4" />
+                            <MapPin className="w-4 h-4" />
                             {[publicProfile.city, publicProfile.state, publicProfile.country].filter(Boolean).join(', ')}
                           </p>
                         )}
@@ -707,6 +770,26 @@ const AlumniDashboard = () => {
                       <div>
                         <h3 className="font-semibold mb-2">About</h3>
                         <p className="text-sm text-muted-foreground">{publicProfile.bio}</p>
+                      </div>
+                    )}
+
+                    {publicProfile.timeline && publicProfile.timeline.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-2">Timeline</h3>
+                        <div className="space-y-4">
+                          {publicProfile.timeline.map((item: any, index: number) => (
+                            <div key={index} className="flex items-start gap-4">
+                              <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                                <Briefcase className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{item.title}</p>
+                                <p className="text-xs text-muted-foreground">{item.company}</p>
+                                <p className="text-xs text-muted-foreground">{item.duration}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
 
@@ -755,7 +838,7 @@ const AlumniDashboard = () => {
                         <h3 className="font-semibold mb-2">Connect</h3>
                         <div className="flex gap-3">
                           {publicProfile.linkedinUrl && (
-                            <a href={publicProfile.linkedinUrl} target="_blank" rel="noopener noreferrer" 
+                            <a href={publicProfile.linkedinUrl} target="_blank" rel="noopener noreferrer"
                                className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
                               LinkedIn
                             </a>
