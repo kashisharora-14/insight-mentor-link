@@ -76,6 +76,7 @@ router.get('/profile', authenticate, async (req: any, res) => {
         linkedinUrl: profile[0].linkedinUrl,
         githubUrl: profile[0].githubUrl,
         portfolioUrl: profile[0].portfolioUrl,
+        profilePictureUrl: profile[0].profilePictureUrl || '',
       }
     });
   } catch (error) {
