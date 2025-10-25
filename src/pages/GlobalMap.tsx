@@ -641,10 +641,6 @@ const GlobalMap = () => {
                   <Search className="w-4 h-4 mr-2" />
                   Focus Selected
                 </Button>
-                <Button variant="outline" className="w-full" size="sm">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Contact All
-                </Button>
               </CardContent>
             </Card>
           </div>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Mail, Building, Calendar, MapPin, Linkedin, Star, Briefcase, GraduationCap, Phone, Code, Award, Trophy, BookOpen, User, Github, Twitter } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PublicProfile {
   user_id: string;
@@ -74,6 +75,7 @@ const normalizeList = (value: unknown): string[] => {
 export default function PublicAlumniProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [avg, setAvg] = useState<number>(0);
@@ -81,6 +83,9 @@ export default function PublicAlumniProfile() {
   const [reviews, setReviews] = useState<Array<{ reviewId: string; rating: number; comment?: string; createdAt: string; studentName: string }>>([]);
   const [capacity, setCapacity] = useState<{ accepted: number; full: boolean } | null>(null);
   const [myRequest, setMyRequest] = useState<MyRequest | null>(null);
+  
+  // Check if current user is admin
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -381,35 +386,38 @@ export default function PublicAlumniProfile() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Next Steps</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Connect with {profile.name.split(' ')[0] || 'this mentor'} to discuss goals, share resources, and collaborate on your mentorship journey.
-                  </p>
-                  <div className="mt-4">
-                    {(() => {
-                      if (myRequest?.status === 'accepted') {
+                {/* Only show Next Steps for non-admin users */}
+                {!isAdmin && (
+                  <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Next Steps</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Connect with {profile.name.split(' ')[0] || 'this mentor'} to discuss goals, share resources, and collaborate on your mentorship journey.
+                    </p>
+                    <div className="mt-4">
+                      {(() => {
+                        if (myRequest?.status === 'accepted') {
+                          return (
+                            <Button className="w-full" onClick={() => navigate(`/chat/${myRequest.id}`)}>
+                              Open Chat
+                            </Button>
+                          );
+                        }
+                        if (myRequest?.status === 'pending') {
+                          return (
+                            <Button className="w-full" variant="outline" disabled>
+                              Request Pending
+                            </Button>
+                          );
+                        }
                         return (
-                          <Button className="w-full" onClick={() => navigate(`/chat/${myRequest.id}`)}>
-                            Open Chat
+                          <Button className="w-full" onClick={() => navigate('/mentorship')} disabled={capacity?.full}>
+                            Request Mentorship
                           </Button>
                         );
-                      }
-                      if (myRequest?.status === 'pending') {
-                        return (
-                          <Button className="w-full" variant="outline" disabled>
-                            Request Pending
-                          </Button>
-                        );
-                      }
-                      return (
-                        <Button className="w-full" onClick={() => navigate('/mentorship')} disabled={capacity?.full}>
-                          Request Mentorship
-                        </Button>
-                      );
-                    })()}
+                      })()}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-2 text-sm text-muted-foreground">
                   <div className="inline-flex items-center gap-2">
