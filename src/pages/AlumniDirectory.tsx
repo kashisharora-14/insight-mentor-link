@@ -388,39 +388,10 @@ const AlumniDirectory = () => {
                   </Button>
                   <Button
                     className="w-1/2 bg-gradient-hero hover:opacity-90 transition-opacity"
-                    disabled={!person.isMentorAvailable}
-                    onClick={async () => {
-                      if (!person.isMentorAvailable) {
-                        return;
-                      }
-                      try {
-                        const token = localStorage.getItem('authToken');
-                        if (!token) {
-                          toast.error('Please log in to request mentorship');
-                          return;
-                        }
-                        const resp = await fetch('/api/mentorship/requests', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`,
-                          },
-                          body: JSON.stringify({ mentorId: person.userId, fieldOfInterest: 'General Mentorship' }),
-                        });
-                        if (resp.ok) {
-                          toast.success('Request sent! The alumni must accept before chat opens.');
-                        } else {
-                          const e = await resp.json().catch(() => ({}));
-                          toast.error(e.error || 'Could not send request');
-                        }
-                      } catch (err) {
-                        console.error('Request mentorship failed', err);
-                        toast.error('Could not send request');
-                      }
-                    }}
+                    disabled
                   >
                     <MessageCircle className="w-4 h-4 mr-2" />
-                    {person.isMentorAvailable ? 'Request Mentorship' : 'Mentor Unavailable'}
+                    Go to Mentorship Page
                   </Button>
                 </div>
               </CardContent>

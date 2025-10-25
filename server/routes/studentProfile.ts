@@ -148,7 +148,7 @@ router.post('/profile', authenticate, async (req: any, res) => {
         }
       } else if (pictureUrl === '' || pictureUrl === null) {
         // Allow clearing the profile picture
-        profileData.profilePictureUrl = '';
+        profileData.profilePictureUrl = null;
         console.log('🖼️ Clearing profile picture');
       }
     }

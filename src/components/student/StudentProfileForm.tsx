@@ -164,6 +164,7 @@ export function StudentProfileForm({ onSuccess }: StudentProfileFormProps) {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
+      console.log('📸 Image uploaded, size:', base64String.length);
       setProfilePicture(base64String);
       setPreviewUrl(base64String);
       toast.success('Profile picture uploaded successfully');

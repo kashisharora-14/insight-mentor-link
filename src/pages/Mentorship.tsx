@@ -440,8 +440,17 @@ const Mentorship = () => {
                   const cap = capacityByMentor[mentorId];
                   const isFull = cap?.full === true;
                   
-                  // Only allow new requests if no existing active request AND student hasn't hit limit
-                  const hasActiveRequest = Boolean(existing && (state === 'pending' || state === 'accepted'));
+                  // Check if ANY request exists (not just active ones)
+                  const hasAnyRequest = Boolean(existing);
+                  
+                  // Don't show request button at all if request already exists
+                  if (hasAnyRequest) {
+                    return (
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" className="w-full" onClick={viewProfile}>View Profile</Button>
+                      </div>
+                    );
+                  }
                   
                   return (
                     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -451,10 +460,10 @@ const Mentorship = () => {
                       <Button 
                         className="w-1/2 bg-gradient-hero hover:opacity-90 transition-opacity"
                         onClick={() => handleRequestMentorship(mentor)}
-                        disabled={isFull || hasActiveRequest || usageActive >= 5}
+                        disabled={isFull || usageActive >= 5}
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
-                        {isFull ? 'Mentor Full' : hasActiveRequest ? 'Already Requested' : usageActive >= 5 ? 'Limit Reached' : 'Request Mentorship'}
+                        {isFull ? 'Mentor Full' : usageActive >= 5 ? 'Limit Reached' : 'Request Mentorship'}
                       </Button>
                     </div>
                   </DialogTrigger>
