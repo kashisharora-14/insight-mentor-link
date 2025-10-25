@@ -38,6 +38,8 @@ import VerifiedBadge from '@/components/VerifiedBadge'; // Assuming VerifiedBadg
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import confetti from "canvas-confetti";
 
 
 const StudentDashboard = () => {
@@ -47,10 +49,7 @@ const StudentDashboard = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  // Refs for popups
-  const celebratePopupRef = useRef<{ open: () => void }>(null);
-  const sharePopupRef = useRef<{ open: () => void }>(null);
+  const { toast } = useToast();
 
 
   // Mock current student and user context (replace with actual auth context)
@@ -738,31 +737,49 @@ const StudentDashboard = () => {
                           
                           {/* Add Celebrate and Share Buttons */}
                           <div className="flex justify-center gap-3 mt-4">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button 
-                                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg"
-                                  size="sm"
-                                >
-                                  <Zap className="w-4 h-4 mr-2" />
-                                  Celebrate
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-purple-600 to-blue-600 text-white border-none">
-                                <DialogHeader>
-                                  <DialogTitle className="text-2xl text-center">🎉 Congratulations! 🎊</DialogTitle>
-                                </DialogHeader>
-                                <div className="flex flex-col items-center py-6 space-y-4">
-                                  <div className="text-6xl animate-bounce">🎉</div>
-                                  <h3 className="text-xl font-bold text-center">{story.name}</h3>
-                                  <p className="text-lg text-center">On your incredible achievement:</p>
-                                  <p className="text-xl font-bold text-center text-yellow-300">{story.achievement}!</p>
-                                  <p className="text-sm opacity-90 text-center mt-4">
-                                    This is truly inspiring! Keep shining! ✨
-                                  </p>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
+                            <Button 
+                              className="bg-gradient-hero text-white hover:opacity-90 shadow-glow"
+                              size="sm"
+                              onClick={() => {
+                                // Trigger confetti animation
+                                const duration = 3 * 1000;
+                                const animationEnd = Date.now() + duration;
+                                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                                function randomInRange(min: number, max: number) {
+                                  return Math.random() * (max - min) + min;
+                                }
+
+                                const interval: any = setInterval(function() {
+                                  const timeLeft = animationEnd - Date.now();
+
+                                  if (timeLeft <= 0) {
+                                    return clearInterval(interval);
+                                  }
+
+                                  const particleCount = 50 * (timeLeft / duration);
+
+                                  confetti({
+                                    ...defaults,
+                                    particleCount,
+                                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                                  });
+                                  confetti({
+                                    ...defaults,
+                                    particleCount,
+                                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                                  });
+                                }, 250);
+
+                                toast({
+                                  title: "🎉 Celebrating Success!",
+                                  description: `Congratulations to ${story.name}!`,
+                                });
+                              }}
+                            >
+                              <Zap className="w-4 h-4 mr-2" />
+                              Celebrate
+                            </Button>
                             
                             <Dialog>
                               <DialogTrigger asChild>

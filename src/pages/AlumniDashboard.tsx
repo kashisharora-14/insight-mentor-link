@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { AlumniProfileForm } from '@/components/alumni/AlumniProfileForm';
+import confetti from "canvas-confetti";
 import {
   Users,
   MessageCircle,
