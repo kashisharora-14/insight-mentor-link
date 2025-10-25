@@ -864,10 +864,49 @@ const AlumniDashboard = () => {
                 <Card key={request.id} className="shadow-elegant">
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <CardTitle className="flex items-center gap-2">
-                        <MessageCircle className="w-5 h-5 text-green-600" />
-                        {request.studentName}
-                      </CardTitle>
+                      <div className="flex items-start gap-4 flex-1">
+                        {request.studentProfilePicture ? (
+                          <img 
+                            src={request.studentProfilePicture} 
+                            alt={request.studentName || 'Student'}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
+                            {request.studentName?.charAt(0) || 'S'}
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <CardTitle className="flex items-center gap-2 mb-2">
+                            <MessageCircle className="w-5 h-5 text-green-600" />
+                            {request.studentName}
+                          </CardTitle>
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                            {request.studentProfile?.program && (
+                              <Badge variant="secondary" className="flex items-center gap-1">
+                                <GraduationCap className="w-3 h-3" />
+                                {request.studentProfile.program}
+                              </Badge>
+                            )}
+                            {request.studentProfile?.batchType && (
+                              <Badge variant="outline">
+                                {request.studentProfile.batchType} Batch
+                              </Badge>
+                            )}
+                            {request.studentProfile?.batchYear && (
+                              <Badge variant="outline">
+                                Class of {request.studentProfile.batchYear}
+                              </Badge>
+                            )}
+                          </div>
+                          {request.studentEmail && (
+                            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
+                              {request.studentEmail}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                       <div className="text-right">
                         {getStatusBadge(request.status)}
                         <Button
