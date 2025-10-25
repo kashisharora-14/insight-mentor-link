@@ -136,7 +136,22 @@ const AdminDashboard = () => {
   const [verificationRequests, setVerificationRequests] = useState<any[]>([]); // Added state for verification requests
   const [csvUploadResult, setCSVUploadResult] = useState<any>(null); // Added state for CSV upload result
   const [jobs, setJobs] = useState<any[]>([]); // Added state for jobs
+  const [successStories, setSuccessStories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddStoryDialog, setShowAddStoryDialog] = useState(false);
+  const [newStory, setNewStory] = useState({
+    name: '',
+    batch: '',
+    program: '',
+    achievement: '',
+    description: '',
+    currentPosition: '',
+    company: '',
+    imageUrl: '',
+  });
+  const [storyImageFile, setStoryImageFile] = useState<File | null>(null);
+  const [isStoryDragActive, setIsStoryDragActive] = useState(false);
+  const storyImageInputRef = React.useRef<HTMLInputElement>(null);
   const [eventParticipants, setEventParticipants] = useState<any[]>([]);
   const [selectedEventForParticipants, setSelectedEventForParticipants] = useState<string | null>(null);
   const [programFilter, setProgramFilter] = useState<string>('all');
@@ -160,7 +175,8 @@ const AdminDashboard = () => {
         fetchProfiles(),
         fetchEvents(),
         fetchMentorshipRequests(),
-        fetchJobs() // Fetch jobs data
+        fetchJobs(),
+        fetchSuccessStories()
       ]);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -772,7 +788,160 @@ const fetchVerificationRequests = async () => {
   }
 };
 
-const handleUnverifyUser = async (userId: string, userEmail: string) => {
+// Image compression function for success story
+  const compressStoryImage = React.useCallback(async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+  const handleStoryImageFile = React.useCallback(async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please upload an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const compressed = await compressStoryImage(file);
+      setNewStory(prev => ({ ...prev, imageUrl: compressed }));
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process image",
+        variant: "destructive",
+      });
+    }
+  }, [compressStoryImage, toast]);
+
+  const handleStoryImageDrop = React.useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsStoryDragActive(false);
+    handleStoryImageFile(e.dataTransfer.files);
+  }, [handleStoryImageFile]);
+
+  const handleAddSuccessStory = async () => {
+    try {
+      if (!newStory.name || !newStory.batch || !newStory.program || !newStory.achievement || 
+          !newStory.description || !newStory.currentPosition || !newStory.company) {
+        toast({
+          title: "Missing fields",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/success-stories', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newStory),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success!",
+          description: "Success story added successfully",
+        });
+        setShowAddStoryDialog(false);
+        setNewStory({
+          name: '',
+          batch: '',
+          program: '',
+          achievement: '',
+          description: '',
+          currentPosition: '',
+          company: '',
+          imageUrl: '',
+        });
+        fetchSuccessStories();
+      } else {
+        throw new Error('Failed to add success story');
+      }
+    } catch (error) {
+      console.error('Error adding success story:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add success story",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteSuccessStory = async (storyId: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/success-stories/${storyId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Deleted",
+          description: "Success story deleted successfully",
+        });
+        fetchSuccessStories();
+      } else {
+        throw new Error('Failed to delete success story');
+      }
+    } catch (error) {
+      console.error('Error deleting success story:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete success story",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUnverifyUser = async (userId: string, userEmail: string) => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`/api/admin/users/${userId}/unverify`, {
@@ -993,6 +1162,34 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
         }
       ];
       setMentorshipRequests(mockMentorshipRequests);
+    }
+  };
+
+  // Fetch success stories
+  const fetchSuccessStories = async () => {
+    try {
+      console.log('🔍 Fetching success stories...');
+      const response = await fetch('/api/success-stories');
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📖 Fetched success stories:', data);
+        setSuccessStories(data);
+      } else {
+        console.error('Failed to fetch success stories');
+        toast({
+          title: "Error",
+          description: "Failed to load success stories",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching success stories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load success stories",
+        variant: "destructive",
+      });
     }
   };
 
@@ -1527,28 +1724,318 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
           <TabsContent value="student-success">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-primary" />
-                  Department Success Stories
-                </CardTitle>
-                <CardDescription>
-                  Inspiring achievements from our Computer Science department alumni and students
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Award className="w-5 h-5 text-primary" />
+                      Department Success Stories
+                    </CardTitle>
+                    <CardDescription>
+                      Inspiring achievements from our alumni and students
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => setShowAddStoryDialog(true)}>
+                    Add Success Story
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-6">
-                  {[
-                    {
-                      id: '1',
-                      name: 'Rajesh Kumar',
-                      batch: 'MCA 2022',
-                      program: 'MCA Morning',
-                      achievement: 'Joined Google as Software Engineer',
-                      description: 'Secured a position at Google after graduating with outstanding performance in competitive programming and machine learning projects. Started with a package of ₹45 LPA.',
-                      currentPosition: 'Software Engineer',
-                      company: 'Google',
-                      date: 'October 2024'
-                    },
+                {successStories.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No success stories yet</p>
+                    <Button className="mt-4" onClick={() => setShowAddStoryDialog(true)}>
+                      Add First Success Story
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {successStories.map((story) => (
+                      <Card key={story.id} className="overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-colors">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="flex gap-4 flex-1">
+                              {story.imageUrl ? (
+                                <img
+                                  src={story.imageUrl}
+                                  alt={story.name}
+                                  className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                                  {story.name.split(' ').map((n: string) => n[0]).join('')}
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="text-lg font-semibold">{story.name}</h3>
+                                </div>
+                                <p className="text-sm text-muted-foreground">{story.batch} • {story.program}</p>
+                                <Badge className="mt-2 bg-gradient-to-r from-amber-500 to-orange-500 border-none">
+                                  <Award className="w-3 h-3 mr-1" />
+                                  {story.achievement}
+                                </Badge>
+                                <p className="text-sm text-foreground/90 mt-3 leading-relaxed">{story.description}</p>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground mt-3">
+                                  <div className="flex items-center gap-1">
+                                    <Briefcase className="w-4 h-4" />
+                                    <span>{story.currentPosition}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Building className="w-4 h-4" />
+                                    <span>{story.company}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{new Date(story.createdAt).toLocaleDateString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteSuccessStory(story.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                          <div className="flex gap-2 pt-4 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                const shareText = `🎉 ${story.achievement}!\n\n${story.name} from ${story.batch} ${story.program} has achieved great success!\n\n${story.description}\n\nCurrently: ${story.currentPosition} at ${story.company}`;
+                                
+                                if (navigator.share) {
+                                  navigator.share({
+                                    title: `Success Story: ${story.name}`,
+                                    text: shareText,
+                                  }).catch(() => {
+                                    navigator.clipboard.writeText(shareText);
+                                    toast({
+                                      title: "Copied to clipboard!",
+                                      description: "Share this success story with others",
+                                    });
+                                  });
+                                } else {
+                                  navigator.clipboard.writeText(shareText);
+                                  toast({
+                                    title: "Copied to clipboard!",
+                                    description: "Share this success story with others",
+                                  });
+                                }
+                              }}
+                            >
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Share
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                              onClick={() => {
+                                const duration = 3 * 1000;
+                                const animationEnd = Date.now() + duration;
+                                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                                function randomInRange(min: number, max: number) {
+                                  return Math.random() * (max - min) + min;
+                                }
+
+                                const interval: any = setInterval(function() {
+                                  const timeLeft = animationEnd - Date.now();
+
+                                  if (timeLeft <= 0) {
+                                    return clearInterval(interval);
+                                  }
+
+                                  const particleCount = 50 * (timeLeft / duration);
+
+                                  confetti({
+                                    ...defaults,
+                                    particleCount,
+                                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                                  });
+                                  confetti({
+                                    ...defaults,
+                                    particleCount,
+                                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                                  });
+                                }, 250);
+
+                                toast({
+                                  title: "🎉 Celebrating Success!",
+                                  description: `Congratulations to ${story.name}!`,
+                                });
+                              }}
+                            >
+                              <PartyPopper className="w-4 h-4 mr-2" />
+                              Celebrate
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Add Success Story Dialog */}
+            {showAddStoryDialog && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <CardHeader>
+                    <CardTitle>Add Success Story</CardTitle>
+                    <CardDescription>Share an inspiring achievement</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Name *</Label>
+                        <Input
+                          id="name"
+                          value={newStory.name}
+                          onChange={(e) => setNewStory(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Full name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="batch">Batch *</Label>
+                        <Input
+                          id="batch"
+                          value={newStory.batch}
+                          onChange={(e) => setNewStory(prev => ({ ...prev, batch: e.target.value }))}
+                          placeholder="e.g., MCA 2022"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="program">Program *</Label>
+                      <Input
+                        id="program"
+                        value={newStory.program}
+                        onChange={(e) => setNewStory(prev => ({ ...prev, program: e.target.value }))}
+                        placeholder="e.g., MCA Morning"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="achievement">Achievement *</Label>
+                      <Input
+                        id="achievement"
+                        value={newStory.achievement}
+                        onChange={(e) => setNewStory(prev => ({ ...prev, achievement: e.target.value }))}
+                        placeholder="e.g., Joined Google as Software Engineer"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="description">Description *</Label>
+                      <textarea
+                        id="description"
+                        value={newStory.description}
+                        onChange={(e) => setNewStory(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Detailed description of the achievement"
+                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="position">Current Position *</Label>
+                        <Input
+                          id="position"
+                          value={newStory.currentPosition}
+                          onChange={(e) => setNewStory(prev => ({ ...prev, currentPosition: e.target.value }))}
+                          placeholder="e.g., Software Engineer"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="company">Company *</Label>
+                        <Input
+                          id="company"
+                          value={newStory.company}
+                          onChange={(e) => setNewStory(prev => ({ ...prev, company: e.target.value }))}
+                          placeholder="e.g., Google"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Profile Image (Optional)</Label>
+                      <div
+                        onDragOver={(e) => { e.preventDefault(); setIsStoryDragActive(true); }}
+                        onDragLeave={() => setIsStoryDragActive(false)}
+                        onDrop={handleStoryImageDrop}
+                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                          isStoryDragActive ? 'border-primary bg-primary/5' : 'border-border'
+                        }`}
+                      >
+                        {newStory.imageUrl ? (
+                          <div className="space-y-3">
+                            <img
+                              src={newStory.imageUrl}
+                              alt="Preview"
+                              className="max-h-40 mx-auto rounded-lg object-cover"
+                            />
+                            <div className="flex justify-center gap-2">
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => storyImageInputRef.current?.click()}
+                              >
+                                Replace
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setNewStory(prev => ({ ...prev, imageUrl: '' }))}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <p className="text-sm text-muted-foreground">
+                              Drag & drop an image here, or
+                            </p>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              onClick={() => storyImageInputRef.current?.click()}
+                            >
+                              Browse files
+                            </Button>
+                          </div>
+                        )}
+                        <input
+                          ref={storyImageInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleStoryImageFile(e.target.files)}
+                          className="hidden"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                  <div className="flex justify-end gap-2 p-6 border-t">
+                    <Button variant="outline" onClick={() => setShowAddStoryDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAddSuccessStory}>
+                      Add Story
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
                     {
                       id: '2',
                       name: 'Priya Sharma',

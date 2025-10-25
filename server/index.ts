@@ -15,6 +15,7 @@ import alumniRoutes from './routes/alumni';
 import chatRoutes from './routes/chat';
 import dcsaEventsRoutes from './routes/dcsaEvents';
 import jobsRoutes from './routes/jobs';
+import successStoriesRoutes from './routes/successStories';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,6 +50,7 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/dcsa', dcsaEventsRoutes);
 app.use('/api/jobs', jobsRoutes);
+app.use('/api/success-stories', successStoriesRoutes);
 
 // Serve static files in production
 if (isProduction) {

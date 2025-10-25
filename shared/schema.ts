@@ -1,4 +1,3 @@
-
 import { pgTable, uuid, text, decimal, boolean, timestamp, integer, jsonb, uniqueIndex, varchar, pgEnum, check, date } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -32,7 +31,7 @@ export const users = pgTable('users', {
 export const studentProfiles = pgTable('student_profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
-  
+
   // Academic Information - Punjab University CS Department
   rollNumber: text('roll_number').unique(),
   department: text('department').notNull().default('Computer Science'), // Fixed for Punjab University CS Dept
@@ -43,7 +42,7 @@ export const studentProfiles = pgTable('student_profiles', {
   currentSemester: integer('current_semester'), // 1-4 for 2-year programs
   cgpa: decimal('cgpa', { precision: 3, scale: 2 }),
   currentBacklog: integer('current_backlog').default(0),
-  
+
   // Personal Details
   dateOfBirth: timestamp('date_of_birth', { withTimezone: true }),
   gender: text('gender'),
@@ -51,7 +50,7 @@ export const studentProfiles = pgTable('student_profiles', {
   category: text('category'),
   nationality: text('nationality').default('Indian'),
   religion: text('religion'),
-  
+
   // Contact Information
   phoneNumber: text('phone_number'),
   alternateEmail: text('alternate_email'),
@@ -60,7 +59,7 @@ export const studentProfiles = pgTable('student_profiles', {
   city: text('city'),
   state: text('state'),
   pincode: text('pincode'),
-  
+
   // Parent/Guardian Information
   fatherName: text('father_name'),
   fatherOccupation: text('father_occupation'),
@@ -71,25 +70,25 @@ export const studentProfiles = pgTable('student_profiles', {
   guardianName: text('guardian_name'),
   guardianRelation: text('guardian_relation'),
   guardianPhone: text('guardian_phone'),
-  
+
   // Additional Information
   admissionType: text('admission_type'),
   scholarshipStatus: text('scholarship_status'),
   hostelResident: boolean('hostel_resident').default(false),
   hostelRoomNumber: text('hostel_room_number'),
   transportMode: text('transport_mode'),
-  
+
   // Skills and Interests
   technicalSkills: text('technical_skills').array(),
   softSkills: text('soft_skills').array(),
   interests: text('interests').array(),
   careerGoals: text('career_goals'),
-  
+
   // Social Links
   linkedinUrl: text('linkedin_url'),
   githubUrl: text('github_url'),
   portfolioUrl: text('portfolio_url'),
-  
+
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -98,7 +97,7 @@ export const studentProfiles = pgTable('student_profiles', {
 export const alumniProfiles = pgTable('alumni_profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
-  
+
   // Academic Background - Punjab University CS Department
   rollNumber: text('roll_number').unique(),
   department: text('department').notNull().default('Computer Science'),
@@ -107,13 +106,13 @@ export const alumniProfiles = pgTable('alumni_profiles', {
   graduationYear: integer('graduation_year'), // Year graduated
   admissionYear: integer('admission_year'), // Year joined
   cgpa: decimal('cgpa', { precision: 3, scale: 2 }),
-  
+
   // Personal Details
   dateOfBirth: timestamp('date_of_birth', { withTimezone: true }),
   gender: text('gender'),
   bloodGroup: text('blood_group'),
   nationality: text('nationality').default('Indian'),
-  
+
   // Contact Information
   phoneNumber: text('phone_number'),
   alternateEmail: text('alternate_email'),
@@ -122,7 +121,7 @@ export const alumniProfiles = pgTable('alumni_profiles', {
   state: text('state'),
   country: text('country').default('India'),
   pincode: text('pincode'),
-  
+
   // Professional Information
   currentPosition: text('current_position'), // Job title
   currentCompany: text('current_company'),
@@ -138,14 +137,14 @@ export const alumniProfiles = pgTable('alumni_profiles', {
     isCurrent: boolean;
     description: string;
   }>>(),
-  
+
   // Expertise and Skills
   technicalSkills: text('technical_skills').array(),
   softSkills: text('soft_skills').array(),
   expertiseAreas: text('expertise_areas').array(), // Web Dev, ML, Cloud, etc.
   certifications: text('certifications').array(),
   achievements: text('achievements').array(),
-  
+
   // Mentorship & Availability
   isMentorAvailable: boolean('is_mentor_available').default(false),
   mentorshipAreas: text('mentorship_areas').array(), // Areas they can mentor in
@@ -154,24 +153,24 @@ export const alumniProfiles = pgTable('alumni_profiles', {
   availableForNetworking: boolean('available_for_networking').default(false),
   preferredCommunication: text('preferred_communication'), // Email, Phone, LinkedIn
   maxMentees: integer('max_mentees').default(3),
-  
+
   // Profile Content
   bio: text('bio'), // Professional summary
   careerJourney: text('career_journey'), // Their story
   adviceForStudents: text('advice_for_students'),
-  
+
   // Social & Professional Links
   linkedinUrl: text('linkedin_url'),
   githubUrl: text('github_url'),
   portfolioUrl: text('portfolio_url'),
   twitterUrl: text('twitter_url'),
   personalWebsite: text('personal_website'),
-  
+
   // Profile Visibility
   profilePictureUrl: text('profile_picture_url'),
   isPublicProfile: boolean('is_public_profile').default(true),
   showContactInfo: boolean('show_contact_info').default(true),
-  
+
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
@@ -519,3 +518,19 @@ export const mentorshipReviews = pgTable('mentorship_reviews', {
   uniqueReviewer: uniqueIndex('review_unique_per_request').on(table.mentorshipRequestId, table.reviewerId),
   ratingCheck: check('rating_between_1_5', sql`${table.rating} >= 1 AND ${table.rating} <= 5`),
 }));
+
+// Success Stories table
+export const successStories = pgTable('success_stories', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  batch: text('batch').notNull(),
+  program: text('program').notNull(),
+  achievement: text('achievement').notNull(),
+  description: text('description').notNull(),
+  currentPosition: text('current_position').notNull(),
+  company: text('company').notNull(),
+  imageUrl: text('image_url'),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
