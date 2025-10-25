@@ -29,7 +29,8 @@ router.get('/my-requests-student', async (req, res) => {
                mr.status,
                mr.created_at as "createdAt",
                p.name as "mentorName",
-               p.email as "mentorEmail"
+               p.email as "mentorEmail",
+               p.profile_picture_url as "mentorProfilePicture"
         from mentorship_requests mr
         left join profiles p on p.user_id = mr.mentor_id
         where mr.student_id = $1
@@ -40,6 +41,7 @@ router.get('/my-requests-student', async (req, res) => {
         mentorId: r.mentorid || r.mentorId,
         mentorName: r.mentorname || r.mentorName || 'Mentor',
         mentorEmail: r.mentoremail || r.mentorEmail || '',
+        mentorProfilePicture: r.mentorprofilepicture || r.mentorProfilePicture || null,
         subject: r.fieldofinterest || r.fieldOfInterest,
         message: r.description || '',
         goals: r.goals || '',
@@ -448,21 +450,21 @@ router.put('/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const userId = (req as any).user!.userId;
-    
+
     // Verify the request belongs to this mentor
     const request = await db.select()
       .from(mentorshipRequests)
       .where(eq(mentorshipRequests.id, id))
       .limit(1);
-    
+
     if (request.length === 0 || request[0].mentorId !== userId) {
       return res.status(404).json({ error: 'Request not found' });
     }
-    
+
     await db.update(mentorshipRequests)
       .set({ status, updatedAt: new Date() })
       .where(eq(mentorshipRequests.id, id));
-    
+
     res.json({ message: 'Status updated successfully' });
   } catch (error) {
     console.error('Error updating mentorship status:', error);
@@ -566,4 +568,3 @@ router.get('/:id/reviews', async (req, res) => {
 });
 
 export default router;
- 

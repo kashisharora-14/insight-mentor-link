@@ -239,7 +239,7 @@ const StudentDashboard = () => {
     const fetchStudentProfile = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        if (!token || token === 'null' || token === 'undefined') {
+        if (!token) {
           console.error('❌ No valid auth token found');
           setProfileLoading(false);
           return;
@@ -862,15 +862,21 @@ const StudentDashboard = () => {
                         <Card key={request.id} className="border border-border">
                           <CardContent className="p-6">
                             <div className="flex items-start justify-between mb-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                  {(request.mentorName || 'M').split(' ').map((n: string) => n[0]).join('')}
-                                </div>
-                                <div>
+                              <div className="flex items-start gap-4">
+                                {request.mentorProfilePicture ? (
+                                  <img 
+                                    src={request.mentorProfilePicture} 
+                                    alt={request.mentorName || 'Mentor'}
+                                    className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                                    {request.mentorName?.charAt(0) || 'M'}
+                                  </div>
+                                )}
+                                <div className="flex-1">
                                   <h3 className="font-semibold">{request.mentorName || 'Mentor'}</h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    Requested on {new Date(request.createdAt).toLocaleDateString()}
-                                  </p>
+                                  <p className="text-sm text-muted-foreground">Requested on {new Date(request.createdAt).toLocaleDateString()}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
