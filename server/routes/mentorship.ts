@@ -30,9 +30,10 @@ router.get('/my-requests-student', async (req, res) => {
                mr.created_at as "createdAt",
                p.name as "mentorName",
                p.email as "mentorEmail",
-               p.profile_picture_url as "mentorProfilePicture"
+               ap.profile_picture_url as "mentorProfilePicture"
         from mentorship_requests mr
         left join profiles p on p.user_id = mr.mentor_id
+        left join alumni_profiles ap on ap.user_id = mr.mentor_id
         where mr.student_id = $1
         order by mr.created_at desc`;
       const { rows } = await client.query(q, [userId]);
