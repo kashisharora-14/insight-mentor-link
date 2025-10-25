@@ -160,6 +160,123 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
 
+  // Real analytics data from database
+  const [departmentStats, setDepartmentStats] = useState<any[]>([]);
+  const [mentorshipTrends, setMentorshipTrends] = useState<any[]>([]);
+  const [realInsights, setRealInsights] = useState<string[]>([]);
+
+  // Calculate real department distribution
+  useEffect(() => {
+    if (profiles.length > 0) {
+      const deptMap = new Map<string, { alumni: number; students: number }>();
+
+      profiles.forEach(profile => {
+        const dept = profile.department || 'Unknown';
+        if (!deptMap.has(dept)) {
+          deptMap.set(dept, { alumni: 0, students: 0 });
+        }
+        const stats = deptMap.get(dept)!;
+        if (profile.role === 'alumni') {
+          stats.alumni++;
+        } else if (profile.role === 'student') {
+          stats.students++;
+        }
+      });
+
+      const deptData = Array.from(deptMap.entries()).map(([name, stats]) => ({
+        name,
+        alumni: stats.alumni,
+        students: stats.students,
+        engagement: stats.alumni > 0 ? Math.round((stats.alumni / (stats.alumni + stats.students)) * 100) : 0
+      }));
+
+      setDepartmentStats(deptData);
+    }
+  }, [profiles]);
+
+  // Calculate mentorship completion trends
+  useEffect(() => {
+    if (mentorshipRequests.length > 0) {
+      const last6Months = new Date();
+      last6Months.setMonth(last6Months.getMonth() - 6);
+
+      const monthlyData: Record<string, { total: number; completed: number; accepted: number }> = {};
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      mentorshipRequests.forEach((req: any) => {
+        const date = new Date(req.created_at);
+        if (date >= last6Months) {
+          const monthKey = monthNames[date.getMonth()];
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = { total: 0, completed: 0, accepted: 0 };
+          }
+          monthlyData[monthKey].total++;
+          if (req.status === 'completed') monthlyData[monthKey].completed++;
+          if (req.status === 'accepted') monthlyData[monthKey].accepted++;
+        }
+      });
+
+      const trends = Object.entries(monthlyData).map(([month, data]) => ({
+        month,
+        completionRate: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0,
+        acceptanceRate: data.total > 0 ? Math.round((data.accepted / data.total) * 100) : 0,
+        total: data.total
+      }));
+
+      setMentorshipTrends(trends);
+    }
+  }, [mentorshipRequests]);
+
+  // Generate real insights
+  useEffect(() => {
+    const insights: string[] = [];
+
+    // Mentorship insights
+    const totalRequests = mentorshipRequests.length;
+    const completedRequests = mentorshipRequests.filter((r: any) => r.status === 'completed').length;
+    const acceptedRequests = mentorshipRequests.filter((r: any) => r.status === 'accepted').length;
+
+    if (totalRequests > 0) {
+      const completionRate = Math.round((completedRequests / totalRequests) * 100);
+      const acceptanceRate = Math.round((acceptedRequests / totalRequests) * 100);
+
+      insights.push(`🎯 ${completionRate}% mentorship completion rate - ${completedRequests} of ${totalRequests} sessions completed`);
+      insights.push(`🤝 ${acceptanceRate}% of mentorship requests are accepted by alumni`);
+    }
+
+    // Alumni engagement
+    const verifiedAlumni = profiles.filter(p => p.role === 'alumni' && p.is_verified).length;
+    const totalAlumni = profiles.filter(p => p.role === 'alumni').length;
+    if (totalAlumni > 0) {
+      const verificationRate = Math.round((verifiedAlumni / totalAlumni) * 100);
+      insights.push(`✅ ${verificationRate}% of alumni are verified (${verifiedAlumni}/${totalAlumni})`);
+    }
+
+    // Student engagement
+    const totalStudents = profiles.filter(p => p.role === 'student').length;
+    const studentsWithRequests = new Set(mentorshipRequests.map((r: any) => r.student_id)).size;
+    if (totalStudents > 0) {
+      const engagementRate = Math.round((studentsWithRequests / totalStudents) * 100);
+      insights.push(`📈 ${engagementRate}% of students have requested mentorship`);
+    }
+
+    // Event participation
+    if (events.length > 0) {
+      const totalParticipants = events.reduce((sum, e) => sum + (e.participant_summary?.total || 0), 0);
+      const avgParticipants = Math.round(totalParticipants / events.length);
+      insights.push(`🎪 Average ${avgParticipants} participants per event (${events.length} events)`);
+    }
+
+    // Job opportunities
+    const approvedJobs = jobs.filter((j: any) => j.status === 'approved').length;
+    if (approvedJobs > 0) {
+      insights.push(`💼 ${approvedJobs} job opportunities currently available for students`);
+    }
+
+    setRealInsights(insights.length > 0 ? insights : ['📊 Gathering analytics data... Check back soon!']);
+  }, [profiles, mentorshipRequests, events, jobs]);
+
+
   // Debug: Log events state changes
   useEffect(() => {
     console.log('📊 Events state updated:', events.length, 'events', events);
@@ -819,7 +936,7 @@ const fetchVerificationRequests = async () => {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          
+
           resolve(canvas.toDataURL('image/jpeg', 0.8));
         };
         img.onerror = reject;
@@ -832,7 +949,7 @@ const fetchVerificationRequests = async () => {
 
   const handleStoryImageFile = React.useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    
+
     const file = files[0];
     if (!file.type.startsWith('image/')) {
       toast({
@@ -1172,7 +1289,7 @@ const fetchVerificationRequests = async () => {
     try {
       console.log('🔍 Fetching success stories...');
       const response = await fetch('/api/success-stories');
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('📖 Fetched success stories:', data);
@@ -1520,7 +1637,7 @@ const fetchVerificationRequests = async () => {
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {stats.aiInsights.map((insight, index) => (
+              {realInsights.map((insight, index) => (
                 <div key={index} className="p-4 bg-background rounded-lg border border-border">
                   <p className="text-sm">{insight}</p>
                 </div>
@@ -1560,14 +1677,7 @@ const fetchVerificationRequests = async () => {
                     }}
                   >
                     <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={[
-                        { name: 'UICET', alumni: 2450, students: 890, engagement: 78 },
-                        { name: 'UBS', alumni: 1890, students: 670, engagement: 72 },
-                        { name: 'UIET', alumni: 1650, students: 580, engagement: 85 },
-                        { name: 'Law', alumni: 980, students: 320, engagement: 68 },
-                        { name: 'Medicine', alumni: 1200, students: 450, engagement: 80 },
-                        { name: 'Arts', alumni: 850, students: 390, engagement: 65 }
-                      ]}>
+                      <BarChart data={departmentStats}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
                         <YAxis />
@@ -1650,35 +1760,26 @@ const fetchVerificationRequests = async () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <LineChart className="w-5 h-5" />
-                    Engagement Trends (6 Months)
+                    Mentorship Trends (6 Months)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ChartContainer
                     config={{
-                      mentorships: { label: "Mentorships", color: "#667eea" },
-                      events: { label: "Events", color: "#764ba2" },
-                      donations: { label: "Donations", color: "#f093fb" },
-                      total: { label: "Total Engagement", color: "#4facfe" }
+                      completionRate: { label: "Completion Rate", color: "#667eea" },
+                      acceptanceRate: { label: "Acceptance Rate", color: "#764ba2" },
+                      total: { label: "Total Requests", color: "#4facfe" }
                     }}
                   >
                     <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={[
-                        { month: 'Jan', mentorships: 45, events: 12, donations: 28, total: 85 },
-                        { month: 'Feb', mentorships: 52, events: 15, donations: 34, total: 101 },
-                        { month: 'Mar', mentorships: 61, events: 18, donations: 41, total: 120 },
-                        { month: 'Apr', mentorships: 58, events: 22, donations: 38, total: 118 },
-                        { month: 'May', mentorships: 67, events: 19, donations: 45, total: 131 },
-                        { month: 'Jun', mentorships: 73, events: 25, donations: 52, total: 150 }
-                      ]}>
+                      <AreaChart data={mentorshipTrends}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="month" />
                         <YAxis />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Area type="monotone" dataKey="total" stroke="#4facfe" fill="#4facfe" fillOpacity={0.3} />
-                        <Line type="monotone" dataKey="mentorships" stroke="#667eea" strokeWidth={2} />
-                        <Line type="monotone" dataKey="events" stroke="#764ba2" strokeWidth={2} />
-                        <Line type="monotone" dataKey="donations" stroke="#f093fb" strokeWidth={2} />
+                        <Line type="monotone" dataKey="completionRate" stroke="#667eea" strokeWidth={2} />
+                        <Line type="monotone" dataKey="acceptanceRate" stroke="#764ba2" strokeWidth={2} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </ChartContainer>
@@ -1809,7 +1910,7 @@ const fetchVerificationRequests = async () => {
                               className="flex-1"
                               onClick={() => {
                                 const shareText = `🎉 ${story.achievement}!\n\n${story.name} from ${story.batch} ${story.program} has achieved great success!\n\n${story.description}\n\nCurrently: ${story.currentPosition} at ${story.company}`;
-                                
+
                                 if (navigator.share) {
                                   navigator.share({
                                     title: `Success Story: ${story.name}`,
@@ -1913,7 +2014,7 @@ const fetchVerificationRequests = async () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="program">Program *</Label>
                       <Input
@@ -2366,9 +2467,7 @@ const fetchVerificationRequests = async () => {
                       const approvedCount = participants.length > 0
                         ? participants.filter(p => p.participant_status === 'approved').length
                         : 0;
-                      const pendingCount = participants.length > 0
-                        ? participants.filter(p => p.participant_status === 'pending').length
-                        : 0;
+                      const pendingCount = participants.filter(p => p.participant_status === 'pending').length;
 
                       return (
                         <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
@@ -2874,7 +2973,7 @@ const fetchVerificationRequests = async () => {
                               )}
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="text-lg font-semibold">{job.title}</h4>
+                                  <h4 className="font-semibold">{job.title}</h4>
                                   <Badge className="bg-yellow-500">Pending Approval</Badge>
                                 </div>
                                 <p className="text-sm font-medium text-foreground mb-1">{job.company}</p>
@@ -2902,11 +3001,13 @@ const fetchVerificationRequests = async () => {
                               )}
                               {job.salaryRange && (
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm">{job.salaryRange}</span>
+                                  <DollarSign className="w-4 h-4 text-muted-foreground"/>
+                                  <span>{job.salaryRange}</span>
                                 </div>
                               )}
                               {job.experienceRequired && (
                                 <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4 text-muted-foreground"/>
                                   <span>{job.experienceRequired}</span>
                                 </div>
                               )}
