@@ -397,9 +397,16 @@ const Mentorship = () => {
 
                 {(() => {
                   const mentorId = mentor.userId || mentor.id;
-                  const existing = myRequests.find(r => (r.mentorId === mentorId) || (r.mentorId === mentor.userId) || (r.mentorId === mentor.id));
+                  // Check for ANY existing request (pending, accepted, or completed) to prevent duplicates
+                  const existing = myRequests.find(r => {
+                    const reqMentorId = String(r.mentorId || r.mentor_id || '');
+                    const currentMentorId = String(mentorId);
+                    return reqMentorId === currentMentorId;
+                  });
                   const state = existing?.status as undefined | 'pending' | 'accepted' | 'declined' | 'completed';
                   const viewProfile = () => window.location.assign(`/alumni/${mentorId}`);
+                  
+                  // If accepted, show Open Chat button
                   if (state === 'accepted') {
                     return (
                       <div className="flex items-center gap-2">
@@ -408,6 +415,8 @@ const Mentorship = () => {
                       </div>
                     );
                   }
+                  
+                  // If pending, show disabled button
                   if (state === 'pending') {
                     return (
                       <div className="flex items-center gap-2">
@@ -416,8 +425,24 @@ const Mentorship = () => {
                       </div>
                     );
                   }
+                  
+                  // If completed, show status
+                  if (state === 'completed') {
+                    return (
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" className="w-1/2" onClick={viewProfile}>View Profile</Button>
+                        <Button className="w-1/2" disabled variant="secondary">Mentorship Completed</Button>
+                      </div>
+                    );
+                  }
+                  
+                  // Check mentor capacity
                   const cap = capacityByMentor[mentorId];
                   const isFull = cap?.full === true;
+                  
+                  // Only allow new requests if no existing active request AND student hasn't hit limit
+                  const hasActiveRequest = Boolean(existing && (state === 'pending' || state === 'accepted'));
+                  
                   return (
                     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
@@ -426,10 +451,10 @@ const Mentorship = () => {
                       <Button 
                         className="w-1/2 bg-gradient-hero hover:opacity-90 transition-opacity"
                         onClick={() => handleRequestMentorship(mentor)}
-                        disabled={isFull}
+                        disabled={isFull || hasActiveRequest || usageActive >= 5}
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
-                        {isFull ? 'Mentor Full' : 'Request Mentorship'}
+                        {isFull ? 'Mentor Full' : hasActiveRequest ? 'Already Requested' : usageActive >= 5 ? 'Limit Reached' : 'Request Mentorship'}
                       </Button>
                     </div>
                   </DialogTrigger>

@@ -319,17 +319,27 @@ router.post('/requests', async (req, res) => {
       console.warn('Capacity checks failed:', (e as any)?.message);
     }
 
-    // Prevent duplicate active requests (pending/accepted) between same pair
+    // Prevent duplicate active requests (pending/accepted/completed) between same pair
     try {
       const active = await db.execute(sql`
         select * from mentorship_requests
-        where student_id = ${userId} and mentor_id = ${mentorId} and status in ('pending','accepted')
+        where student_id = ${userId} and mentor_id = ${mentorId} and status in ('pending','accepted','completed')
         order by created_at desc
         limit 1
       `);
       const existingActive = (active as any)?.rows?.[0];
       if (existingActive) {
-        return res.json({ request: existingActive, existing: true });
+        console.log('🚫 Duplicate request prevented:', {
+          student: userId,
+          mentor: mentorId,
+          existingStatus: existingActive.status,
+          existingId: existingActive.id
+        });
+        return res.status(409).json({ 
+          error: `You already have a ${existingActive.status} mentorship request with this mentor.`,
+          request: existingActive, 
+          existing: true 
+        });
       }
     } catch (e) {
       console.warn('Warning: active duplicate check failed:', (e as any)?.message);
