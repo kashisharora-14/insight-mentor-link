@@ -2036,11 +2036,6 @@ const fetchVerificationRequests = async () => {
               </div>
             )}
           </TabsContent>
-                    {
-                      id: '2',
-                      name: 'Priya Sharma',
-                      batch: 'MSCIT 2023',
-                      program: 'MSCIT Evening',
                       achievement: 'Won National Hackathon',
                       description: 'Led a team to victory at the National Smart India Hackathon 2024 with an innovative AI-powered healthcare solution. The project is now being implemented in 5 government hospitals.',
                       currentPosition: 'AI Research Engineer',
