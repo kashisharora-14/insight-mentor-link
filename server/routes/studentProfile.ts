@@ -126,18 +126,32 @@ router.post('/profile', authenticate, async (req: any, res) => {
       'motherOccupation', 'motherPhone', 'guardianName', 'guardianRelation',
       'guardianPhone', 'admissionType', 'scholarshipStatus', 'hostelResident',
       'hostelRoomNumber', 'transportMode', 'technicalSkills', 'softSkills',
-      'interests', 'careerGoals', 'linkedinUrl', 'githubUrl', 'portfolioUrl',
-      'profilePictureUrl'
+      'interests', 'careerGoals', 'linkedinUrl', 'githubUrl', 'portfolioUrl'
     ];
 
     fieldMapping.forEach(field => {
       if (data[field] !== undefined) {
         profileData[field] = data[field];
-        if (field === 'profilePictureUrl') {
-          console.log('🖼️ Saving profile picture, length:', data[field]?.length || 0);
-        }
       }
     });
+
+    // Handle profile picture separately with validation
+    if (data.profilePictureUrl !== undefined) {
+      const pictureUrl = data.profilePictureUrl;
+      if (pictureUrl && typeof pictureUrl === 'string') {
+        // Validate it's a proper base64 data URL
+        if (pictureUrl.startsWith('data:image/')) {
+          profileData.profilePictureUrl = pictureUrl;
+          console.log('🖼️ Saving profile picture, length:', pictureUrl.length);
+        } else {
+          console.warn('⚠️ Invalid profile picture format, skipping');
+        }
+      } else if (pictureUrl === '' || pictureUrl === null) {
+        // Allow clearing the profile picture
+        profileData.profilePictureUrl = '';
+        console.log('🖼️ Clearing profile picture');
+      }
+    }
 
     // Handle date conversion
     if (data.dateOfBirth) {

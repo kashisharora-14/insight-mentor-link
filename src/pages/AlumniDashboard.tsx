@@ -93,6 +93,7 @@ interface MentorshipRequest {
     bio?: string;
     skills?: string[];
   };
+  studentProfilePicture?: string; // Added for student profile picture URL
 }
 
 const AlumniDashboard = () => {
@@ -128,6 +129,7 @@ const AlumniDashboard = () => {
 
         if (response.ok) {
           const data = await response.json();
+          // Assuming the response data includes studentProfilePicture if available
           setAlumniRequests(data);
         }
       } catch (error) {
@@ -632,7 +634,30 @@ const AlumniDashboard = () => {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-start gap-3">
+                            {request.studentProfilePicture ? (
+                              <img 
+                                src={request.studentProfilePicture} 
+                                alt={request.studentName}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold">
+                                {request.studentName.split(' ').map(n => n[0]).join('')}
+                              </div>
+                            )}
+                            <div>
+                              <h3 className="font-semibold">{request.studentName}</h3>
+                              <p className="text-sm text-muted-foreground">{request.studentEmail}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(request.status)}
+                            {getStatusBadge(request.status)}
+                          </div>
+                        </div>
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <Label className="text-sm font-medium">Subject</Label>

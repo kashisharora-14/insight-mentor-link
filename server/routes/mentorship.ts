@@ -335,10 +335,10 @@ router.post('/requests', async (req, res) => {
           existingStatus: existingActive.status,
           existingId: existingActive.id
         });
-        return res.status(409).json({ 
+        return res.status(409).json({
           error: `You already have a ${existingActive.status} mentorship request with this mentor.`,
-          request: existingActive, 
-          existing: true 
+          request: existingActive,
+          existing: true
         });
       }
     } catch (e) {

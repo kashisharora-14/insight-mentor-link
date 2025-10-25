@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
+import { ArrowLeft } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -36,6 +37,14 @@ interface Participant {
   role: 'student' | 'alumni';
 }
 
+// Define a new interface to hold combined mentorship request and participant data
+interface MentorshipRequestWithParticipants {
+  studentId: string;
+  mentorId: string;
+  studentProfilePicture?: string;
+  mentorProfilePicture?: string;
+}
+
 export default function Chat() {
   const { requestId } = useParams<{ requestId: string }>();
   const navigate = useNavigate();
@@ -55,6 +64,9 @@ export default function Chat() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [participants, setParticipants] = useState<{ student?: Participant; mentor?: Participant }>({});
+  // State to hold the mentorship request details including participant profile pictures
+  const [mentorshipRequest, setMentorshipRequest] = useState<MentorshipRequestWithParticipants | null>(null);
+
 
   const fetchParticipants = async () => {
     if (!requestId) return;
@@ -64,7 +76,7 @@ export default function Chat() {
       });
       if (!resp.ok) return;
       const data = await resp.json();
-      
+
       // Fetch student profile
       if (data.studentId) {
         const studentResp = await fetch(`/api/student-profile/${data.studentId}`, {
@@ -81,6 +93,12 @@ export default function Chat() {
               department: studentData.profile?.department,
               role: 'student'
             }
+          }));
+          // Update mentorshipRequest state with student profile picture
+          setMentorshipRequest(prev => ({
+            ...prev,
+            studentId: data.studentId,
+            studentProfilePicture: studentData.profile?.profilePictureUrl
           }));
         }
       }
@@ -102,6 +120,12 @@ export default function Chat() {
               department: alumniData.department,
               role: 'alumni'
             }
+          }));
+          // Update mentorshipRequest state with mentor profile picture
+          setMentorshipRequest(prev => ({
+            ...prev,
+            mentorId: data.mentorId,
+            mentorProfilePicture: alumniData.profileImage
           }));
         }
       }
@@ -207,12 +231,32 @@ export default function Chat() {
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">Back</Button>
         <Card>
-          <CardHeader className="border-b">
-            {/* Chat Header with Participant Info */}
+          <CardHeader className="border-b p-4 bg-card">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-2">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div className="flex items-center gap-3">
+              {mentorshipRequest?.studentProfilePicture && user?.role === 'alumni' ? (
+                <img 
+                  src={mentorshipRequest.studentProfilePicture} 
+                  alt="Student"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+                />
+              ) : mentorshipRequest?.mentorProfilePicture && user?.role === 'student' ? (
+                <img 
+                  src={mentorshipRequest.mentorProfilePicture} 
+                  alt="Mentor"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+                />
+              ) : null}
+              <h1 className="text-2xl font-bold">Mentorship Chat</h1>
+            </div>
+            
+            {/* Existing participant info logic (can be kept or removed if redundant with new header logic) */}
             {otherParticipant && (
-              <div className="flex items-center gap-3 mb-2">
+              <div className="mt-2 flex items-center gap-3 mb-2">
                 {otherParticipant.profilePictureUrl ? (
                   <img 
                     src={otherParticipant.profilePictureUrl} 
@@ -308,7 +352,7 @@ export default function Chat() {
                         {participant?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
                       </div>
                     )}
-                    
+
                     {/* Message Bubble */}
                     <div className={`${isMine ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'} max-w-[70%] rounded-lg px-3 py-2 text-sm shadow-sm`}>
                       <div>{m.content}</div>

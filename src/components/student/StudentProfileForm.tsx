@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -25,7 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, Upload, User } from "lucide-react";
 
 const studentProfileSchema = z.object({
   // Academic Information - Punjab University CS Department
@@ -95,6 +95,9 @@ export function StudentProfileForm({ onSuccess }: StudentProfileFormProps) {
   const [currentSoftSkill, setCurrentSoftSkill] = useState('');
   const [currentInterest, setCurrentInterest] = useState('');
   const [loading, setLoading] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<StudentProfileFormValues>({
     resolver: zodResolver(studentProfileSchema),
@@ -142,6 +145,44 @@ export function StudentProfileForm({ onSuccess }: StudentProfileFormProps) {
     setInterests(interests.filter(i => i !== interestToRemove));
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file (PNG, JPG, etc.)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setProfilePicture(base64String);
+      setPreviewUrl(base64String);
+      toast.success('Profile picture uploaded successfully');
+    };
+    reader.onerror = () => {
+      toast.error('Failed to read image file');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeProfilePicture = () => {
+    setProfilePicture('');
+    setPreviewUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    toast.success('Profile picture removed');
+  };
+
   const onSubmit = async (values: StudentProfileFormValues) => {
     setLoading(true);
     try {
@@ -155,6 +196,7 @@ export function StudentProfileForm({ onSuccess }: StudentProfileFormProps) {
         currentSemester: parseInt(values.currentSemester),
         cgpa: values.cgpa ? parseFloat(values.cgpa) : null,
         currentBacklog: parseInt(values.currentBacklog),
+        profilePictureUrl: profilePicture,
       };
 
       const response = await fetch('/api/student-profile/profile', {
@@ -183,6 +225,63 @@ export function StudentProfileForm({ onSuccess }: StudentProfileFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-4xl mx-auto">
+        {/* Profile Picture */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Picture</CardTitle>
+            <CardDescription>Upload a professional photo that represents you well. This will be visible to alumni and other students on the platform.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col items-center gap-4">
+              {previewUrl ? (
+                <div className="relative">
+                  <img 
+                    src={previewUrl} 
+                    alt="Profile preview" 
+                    className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2 rounded-full h-8 w-8 p-0"
+                    onClick={removeProfilePicture}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/25">
+                  <User className="w-16 h-16 text-muted-foreground/50" />
+                </div>
+              )}
+              
+              <div className="flex flex-col items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="profile-picture-upload"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  {previewUrl ? 'Change Photo' : 'Upload Photo'}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  PNG, JPG up to 5MB
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Academic Information */}
         <Card>
           <CardHeader>
