@@ -69,6 +69,7 @@ export default function StudentProfileForm() {
 
       if (response.ok) {
         const data = await response.json()
+        console.log('📊 Profile API Response:', data)
         if (data.profile) {
           setFormData({
             rollNumber: data.profile.rollNumber || '',
@@ -105,7 +106,10 @@ export default function StudentProfileForm() {
             githubUrl: data.profile.githubUrl || '',
             portfolioUrl: data.profile.portfolioUrl || '',
           })
-          setProfilePicture(data.profile.profilePictureUrl || '')
+          // Set profile picture from database
+          const savedPicture = data.profile.profilePictureUrl || '';
+          console.log('🖼️ Retrieved profile picture:', savedPicture ? 'Image found' : 'No image');
+          setProfilePicture(savedPicture);
         }
       } else if (response.status === 401) {
         console.error('❌ Token is invalid or expired during fetch');
@@ -161,10 +165,11 @@ export default function StudentProfileForm() {
         technicalSkills: formData.technicalSkills ? formData.technicalSkills.split(',').map(s => s.trim()).filter(Boolean) : [],
         softSkills: formData.softSkills ? formData.softSkills.split(',').map(s => s.trim()).filter(Boolean) : [],
         interests: formData.interests ? formData.interests.split(',').map(s => s.trim()).filter(Boolean) : [],
-        profilePictureUrl: profilePicture,
+        profilePictureUrl: profilePicture || '', // Always include profile picture
       }
 
       console.log('Submitting profile data:', submitData)
+      console.log('🖼️ Profile picture included:', profilePicture ? 'Yes' : 'No')
 
       // Validate token before submission
       const tokenForSubmit = localStorage.getItem('authToken');
