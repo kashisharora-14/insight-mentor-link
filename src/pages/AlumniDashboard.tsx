@@ -26,7 +26,9 @@ import {
   Star,
   TrendingUp,
   Award,
-  MapPin
+  MapPin,
+  Twitter,
+  Linkedin
 } from 'lucide-react';
 
 // Assume apiClient is configured elsewhere, e.g., in a context or separate utility file

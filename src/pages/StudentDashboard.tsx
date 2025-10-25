@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navigation from "@/components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,7 +27,9 @@ import {
   Shield, // Import Shield icon
   Info, // Import Info icon
   ShieldCheck, // Import ShieldCheck icon
-  ShieldAlert // Import ShieldAlert icon
+  ShieldAlert, // Import ShieldAlert icon
+  Twitter,
+  Linkedin
 } from "lucide-react";
 import CareerRoadmap from "@/components/CareerRoadmap";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -35,6 +37,8 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, BarC
 import VerifiedBadge from '@/components/VerifiedBadge'; // Assuming VerifiedBadge component exists
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
@@ -43,6 +47,11 @@ const StudentDashboard = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Refs for popups
+  const celebratePopupRef = useRef<{ open: () => void }>(null);
+  const sharePopupRef = useRef<{ open: () => void }>(null);
+
 
   // Mock current student and user context (replace with actual auth context)
   const currentStudent = students[0];
@@ -719,12 +728,65 @@ const StudentDashboard = () => {
                               <h4 className="font-medium text-sm mb-1">Achievement:</h4>
                               <p className="text-sm text-primary font-medium">{story.achievement}</p>
                             </div>
-                            
+
                             <div>
                               <p className="text-sm text-muted-foreground line-clamp-4">
                                 {story.description}
                               </p>
                             </div>
+                          </div>
+                          
+                          {/* Add Celebrate and Share Buttons */}
+                          <div className="flex justify-center gap-3 mt-4">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="icon"
+                                  onClick={() => celebratePopupRef.current?.open()}
+                                >
+                                  <Zap className="w-4 h-4 text-primary" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-purple-600 to-blue-600 text-white">
+                                <DialogHeader>
+                                  <DialogTitle>🎉 Congratulations!</DialogTitle>
+                                </DialogHeader>
+                                <div className="flex flex-col items-center py-6">
+                                  <h3 className="text-xl font-bold mb-2">{story.name}</h3>
+                                  <p className="text-lg mb-4">On your incredible achievement: {story.achievement}!</p>
+                                  <p className="text-sm opacity-90">Share this amazing story with your network!</p>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="icon"
+                                  onClick={() => sharePopupRef.current?.open()}
+                                >
+                                  <ExternalLink className="w-4 h-4 text-secondary" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[425px]">
+                                <DialogHeader>
+                                  <DialogTitle>Share This Story</DialogTitle>
+                                </DialogHeader>
+                                <div className="flex flex-col items-center py-6 gap-4">
+                                  <p className="text-sm text-muted-foreground">Share {story.name}'s success story!</p>
+                                  <div className="flex gap-3">
+                                    <a href={`https://twitter.com/intent/tweet?url=${window.location.href}/success-stories/${story.id}&text=Check%20out%20${story.name}%27s%20amazing%20success%20story%21`} target="_blank" rel="noopener noreferrer">
+                                      <Twitter className="w-6 h-6 text-blue-500 hover:opacity-80" />
+                                    </a>
+                                    <a href={`https://www.linkedin.com/shareArticle?mini=true&url=${window.location.href}/success-stories/${story.id}&title=Alumni%20Success%20Story&summary=${story.description}&source=University%20Dashboard`} target="_blank" rel="noopener noreferrer">
+                                      <Linkedin className="w-6 h-6 text-blue-700 hover:opacity-80" />
+                                    </a>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
                           </div>
                         </CardContent>
                       </Card>
