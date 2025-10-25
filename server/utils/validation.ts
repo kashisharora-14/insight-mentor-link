@@ -99,16 +99,16 @@ export function validateStudentProfile(data: any): { valid: boolean; errors: str
     }
   }
 
-  // Validate URLs if provided (allow flexible URL formats)
+  // Validate URLs if provided (allow flexible URL formats including regional subdomains)
   if (data.linkedinUrl && data.linkedinUrl.trim() !== '') {
-    const linkedinRegex = /^https?:\/\/(www\.)?linkedin\.com/;
+    const linkedinRegex = /^https?:\/\/([a-z]{2}\.)?linkedin\.com/i;
     if (!linkedinRegex.test(data.linkedinUrl)) {
       errors.push('Invalid LinkedIn URL format');
     }
   }
 
   if (data.githubUrl && data.githubUrl.trim() !== '') {
-    const githubRegex = /^https?:\/\/(www\.)?github\.com/;
+    const githubRegex = /^https?:\/\/(www\.)?github\.com/i;
     if (!githubRegex.test(data.githubUrl)) {
       errors.push('Invalid GitHub URL format');
     }
