@@ -27,6 +27,15 @@ interface MessagesResponse {
   participantRole?: 'student' | 'mentor';
 }
 
+interface Participant {
+  id: string;
+  name: string;
+  profilePictureUrl?: string;
+  department?: string;
+  profession?: string;
+  role: 'student' | 'alumni';
+}
+
 export default function Chat() {
   const { requestId } = useParams<{ requestId: string }>();
   const navigate = useNavigate();
@@ -45,6 +54,61 @@ export default function Chat() {
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [participants, setParticipants] = useState<{ student?: Participant; mentor?: Participant }>({});
+
+  const fetchParticipants = async () => {
+    if (!requestId) return;
+    try {
+      const resp = await fetch(`/api/mentorship/${requestId}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      
+      // Fetch student profile
+      if (data.studentId) {
+        const studentResp = await fetch(`/api/student-profile/${data.studentId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+        });
+        if (studentResp.ok) {
+          const studentData = await studentResp.json();
+          setParticipants(prev => ({
+            ...prev,
+            student: {
+              id: data.studentId,
+              name: studentData.profile?.name || 'Student',
+              profilePictureUrl: studentData.profile?.profilePictureUrl,
+              department: studentData.profile?.department,
+              role: 'student'
+            }
+          }));
+        }
+      }
+
+      // Fetch alumni profile
+      if (data.mentorId) {
+        const alumniResp = await fetch(`/api/alumni/${data.mentorId}/profile`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+        });
+        if (alumniResp.ok) {
+          const alumniData = await alumniResp.json();
+          setParticipants(prev => ({
+            ...prev,
+            mentor: {
+              id: data.mentorId,
+              name: alumniData.name || 'Alumni',
+              profilePictureUrl: alumniData.profileImage,
+              profession: alumniData.profession,
+              department: alumniData.department,
+              role: 'alumni'
+            }
+          }));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch participants:', e);
+    }
+  };
 
   const fetchMessages = async () => {
     if (!requestId) return;
@@ -65,6 +129,7 @@ export default function Chat() {
   };
 
   useEffect(() => {
+    fetchParticipants();
     fetchMessages();
     // simple polling
     pollRef.current = window.setInterval(fetchMessages, 5000);
@@ -130,14 +195,44 @@ export default function Chat() {
     }
   };
 
+  const getParticipantInfo = (senderId: string) => {
+    if (senderId === participants.student?.id) return participants.student;
+    if (senderId === participants.mentor?.id) return participants.mentor;
+    return null;
+  };
+
+  const otherParticipant = participantRole === 'student' ? participants.mentor : participants.student;
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">Back</Button>
         <Card>
-          <CardHeader>
-            <CardTitle>Mentorship Chat</CardTitle>
+          <CardHeader className="border-b">
+            {/* Chat Header with Participant Info */}
+            {otherParticipant && (
+              <div className="flex items-center gap-3 mb-2">
+                {otherParticipant.profilePictureUrl ? (
+                  <img 
+                    src={otherParticipant.profilePictureUrl} 
+                    alt={otherParticipant.name}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary/80 to-primary rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                    {otherParticipant.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <CardTitle className="text-lg">{otherParticipant.name}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {otherParticipant.profession || otherParticipant.department}
+                  </p>
+                </div>
+              </div>
+            )}
+            {!otherParticipant && <CardTitle>Mentorship Chat</CardTitle>}
             {status !== 'accepted' && !chatClosedAt && (
               <p className="text-sm text-muted-foreground">Chat opens after the mentorship request is accepted.</p>
             )}
@@ -193,14 +288,33 @@ export default function Chat() {
                 </TooltipProvider>
               )}
             </div>
-            <div className="h-[60vh] overflow-y-auto border rounded p-3 space-y-2 bg-muted/20">
+            <div className="h-[60vh] overflow-y-auto border rounded p-4 space-y-3 bg-muted/20">
               {messages.map((m) => {
                 const isMine = m.senderId === (user?.id || '');
+                const participant = getParticipantInfo(m.senderId);
                 return (
-                  <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                  <div key={m.id} className={`flex items-start gap-2 ${isMine ? 'justify-end flex-row-reverse' : 'justify-start'}`}>
+                    {/* Profile Picture */}
+                    {participant?.profilePictureUrl ? (
+                      <img 
+                        src={participant.profilePictureUrl} 
+                        alt={participant.name}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-border"
+                      />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-xs ${
+                        isMine ? 'bg-primary' : 'bg-secondary text-secondary-foreground'
+                      }`}>
+                        {participant?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                      </div>
+                    )}
+                    
+                    {/* Message Bubble */}
                     <div className={`${isMine ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'} max-w-[70%] rounded-lg px-3 py-2 text-sm shadow-sm`}>
                       <div>{m.content}</div>
-                      <div className={`text-[10px] opacity-70 mt-1 ${isMine ? 'text-right' : 'text-left'}`}>{new Date(m.createdAt).toLocaleString()}</div>
+                      <div className={`text-[10px] opacity-70 mt-1 ${isMine ? 'text-right' : 'text-left'}`}>
+                        {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   </div>
                 );

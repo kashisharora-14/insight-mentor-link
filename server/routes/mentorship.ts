@@ -483,10 +483,39 @@ router.put('/:id/status', async (req, res) => {
   }
 });
 
-// Close chat on a mentorship (mentor only) with a reason
-router.post('/:id/close-chat', async (req, res) => {
+// Get mentorship request details
+router.get('/:requestId', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { requestId } = req.params;
+    const userId = (req as any).user!.userId;
+
+    const [request] = await db
+      .select()
+      .from(mentorshipRequests)
+      .where(eq(mentorshipRequests.id, requestId))
+      .limit(1);
+
+    if (!request) return res.status(404).json({ error: 'Mentorship request not found' });
+    if (request.studentId !== userId && request.mentorId !== userId) {
+      return res.status(403).json({ error: 'Not a participant' });
+    }
+
+    res.json({
+      id: request.id,
+      studentId: request.studentId,
+      mentorId: request.mentorId,
+      status: request.status,
+    });
+  } catch (err) {
+    console.error('Fetch request failed', err);
+    res.status(500).json({ error: 'Failed to fetch request details' });
+  }
+});
+
+// Close chat (mentor only)
+router.post('/:requestId/close-chat', async (req, res) => {
+  try {
+    const { requestId } = req.params;
     const { reason } = req.body as { reason: string };
     const userId = (req as any).user!.userId;
 
@@ -496,7 +525,7 @@ router.post('/:id/close-chat', async (req, res) => {
 
     const request = await db.select()
       .from(mentorshipRequests)
-      .where(eq(mentorshipRequests.id, id))
+      .where(eq(mentorshipRequests.id, requestId))
       .limit(1);
 
     if (request.length === 0) {
@@ -509,7 +538,7 @@ router.post('/:id/close-chat', async (req, res) => {
 
     await db.update(mentorshipRequests)
       .set({ chatClosedReason: reason.trim(), chatClosedAt: new Date(), updatedAt: new Date() })
-      .where(eq(mentorshipRequests.id, id));
+      .where(eq(mentorshipRequests.id, requestId));
 
     res.json({ message: 'Chat closed' });
   } catch (error) {
