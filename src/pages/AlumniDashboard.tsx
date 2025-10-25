@@ -254,20 +254,36 @@ const AlumniDashboard = () => {
     }
   };
 
-  const handleDeclineRequest = (requestId: string) => {
-    setAlumniRequests(prev =>
-      prev.map(req =>
-        req.id === requestId
-          ? { ...req, status: 'declined' as const }
-          : req
-      )
-    );
-    setDecliningRequest(null);
-    setDeclineReason("");
-    toast({
-      title: "Request Declined",
-      description: "The mentorship request has been declined.",
-    });
+  const handleDeclineRequest = async (requestId: string) => {
+    try {
+      const resp = await fetch(`/api/mentorship/${requestId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ status: 'declined' }),
+      });
+      if (!resp.ok) {
+        const e = await resp.json().catch(() => ({}));
+        throw new Error(e.error || 'Failed to decline request');
+      }
+      setAlumniRequests(prev =>
+        prev.map(req =>
+          req.id === requestId
+            ? { ...req, status: 'declined' as const }
+            : req
+        )
+      );
+      setDecliningRequest(null);
+      setDeclineReason("");
+      toast({
+        title: "Request Declined",
+        description: "The mentorship request has been declined.",
+      });
+    } catch (err: any) {
+      toast({ title: 'Failed', description: err.message || 'Could not decline request', variant: 'destructive' });
+    }
   };
 
   const handleCompleteRequest = async (requestId: string) => {
