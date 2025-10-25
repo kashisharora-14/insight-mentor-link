@@ -231,19 +231,6 @@ const AdminDashboard = () => {
   useEffect(() => {
     const insights: string[] = [];
 
-    // Mentorship insights
-    const totalRequests = mentorshipRequests.length;
-    const completedRequests = mentorshipRequests.filter((r: any) => r.status === 'completed').length;
-    const acceptedRequests = mentorshipRequests.filter((r: any) => r.status === 'accepted').length;
-
-    if (totalRequests > 0) {
-      const completionRate = Math.round((completedRequests / totalRequests) * 100);
-      const acceptanceRate = Math.round((acceptedRequests / totalRequests) * 100);
-
-      insights.push(`🎯 ${completionRate}% mentorship completion rate - ${completedRequests} of ${totalRequests} sessions completed`);
-      insights.push(`🤝 ${acceptanceRate}% of mentorship requests are accepted by alumni`);
-    }
-
     // Alumni engagement
     const verifiedAlumni = profiles.filter(p => p.role === 'alumni' && p.is_verified).length;
     const totalAlumni = profiles.filter(p => p.role === 'alumni').length;
@@ -252,29 +239,42 @@ const AdminDashboard = () => {
       insights.push(`✅ ${verificationRate}% of alumni are verified (${verifiedAlumni}/${totalAlumni})`);
     }
 
-    // Student engagement
+    // Student verification
+    const verifiedStudents = profiles.filter(p => p.role === 'student' && p.is_verified).length;
     const totalStudents = profiles.filter(p => p.role === 'student').length;
-    const studentsWithRequests = new Set(mentorshipRequests.map((r: any) => r.student_id)).size;
     if (totalStudents > 0) {
-      const engagementRate = Math.round((studentsWithRequests / totalStudents) * 100);
-      insights.push(`📈 ${engagementRate}% of students have requested mentorship`);
+      const studentVerificationRate = Math.round((verifiedStudents / totalStudents) * 100);
+      insights.push(`📚 ${studentVerificationRate}% of students are verified (${verifiedStudents}/${totalStudents})`);
     }
 
     // Event participation
     if (events.length > 0) {
+      const approvedEvents = events.filter(e => e.status === 'approved').length;
       const totalParticipants = events.reduce((sum, e) => sum + (e.participant_summary?.total || 0), 0);
-      const avgParticipants = Math.round(totalParticipants / events.length);
-      insights.push(`🎪 Average ${avgParticipants} participants per event (${events.length} events)`);
+      const avgParticipants = totalParticipants > 0 ? Math.round(totalParticipants / events.length) : 0;
+      insights.push(`🎪 ${approvedEvents} approved events with average ${avgParticipants} participants each`);
     }
 
     // Job opportunities
     const approvedJobs = jobs.filter((j: any) => j.status === 'approved').length;
-    if (approvedJobs > 0) {
-      insights.push(`💼 ${approvedJobs} job opportunities currently available for students`);
+    const pendingJobs = jobs.filter((j: any) => j.status === 'pending').length;
+    if (jobs.length > 0) {
+      insights.push(`💼 ${approvedJobs} active job postings${pendingJobs > 0 ? ` (${pendingJobs} pending approval)` : ''}`);
+    }
+
+    // Success stories
+    if (successStories.length > 0) {
+      insights.push(`🏆 ${successStories.length} success stories showcasing alumni achievements`);
+    }
+
+    // Department distribution
+    const deptCount = new Set(profiles.map(p => p.department).filter(Boolean)).size;
+    if (deptCount > 0) {
+      insights.push(`🏫 ${deptCount} departments represented in the network`);
     }
 
     setRealInsights(insights.length > 0 ? insights : ['📊 Gathering analytics data... Check back soon!']);
-  }, [profiles, mentorshipRequests, events, jobs]);
+  }, [profiles, events, jobs, successStories]);
 
 
   // Debug: Log events state changes
@@ -1558,12 +1558,12 @@ const fetchVerificationRequests = async () => {
         </Card>
 
         {/* Enhanced Stats Overview */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Card className="lg:col-span-2">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Network</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Users</p>
                   <p className="text-3xl font-bold">{stats.totalProfiles.toLocaleString()}</p>
                   <p className="text-sm text-green-600 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -1579,22 +1579,11 @@ const fetchVerificationRequests = async () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Engagement</p>
-                  <p className="text-3xl font-bold">{stats.engagementRate}%</p>
-                  <p className="text-sm text-muted-foreground">Platform activity</p>
-                </div>
-                <Zap className="w-8 h-8 text-warning" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
                   <p className="text-sm font-medium text-muted-foreground">Events</p>
-                  <p className="text-3xl font-bold">{stats.totalEvents}</p>
-                  <p className="text-sm text-muted-foreground">This year</p>
+                  <p className="text-3xl font-bold">{stats.totalEvents || 0}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {events.filter(e => e.status === 'approved').length} approved
+                  </p>
                 </div>
                 <Calendar className="w-8 h-8 text-primary" />
               </div>
@@ -1605,11 +1594,24 @@ const fetchVerificationRequests = async () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Mentorships</p>
-                  <p className="text-3xl font-bold">{stats.activeMentorships}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Job Postings</p>
+                  <p className="text-3xl font-bold">{jobs.length || 0}</p>
                   <p className="text-sm text-muted-foreground">
-                    {stats.pendingRequests} pending
+                    {jobs.filter(j => j.status === 'approved').length} active
                   </p>
+                </div>
+                <Briefcase className="w-8 h-8 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Success Stories</p>
+                  <p className="text-3xl font-bold">{successStories.length || 0}</p>
+                  <p className="text-sm text-muted-foreground">Published</p>
                 </div>
                 <Award className="w-8 h-8 text-primary" />
               </div>
@@ -1743,30 +1745,64 @@ const fetchVerificationRequests = async () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <LineChart className="w-5 h-5" />
-                    Mentorship Trends (6 Months)
+                    <Briefcase className="w-5 h-5" />
+                    Job Posting Statistics
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ChartContainer
-                    config={{
-                      completionRate: { label: "Completion Rate", color: "#667eea" },
-                      acceptanceRate: { label: "Acceptance Rate", color: "#764ba2" },
-                      total: { label: "Total Requests", color: "#4facfe" }
-                    }}
-                  >
-                    <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={mentorshipTrends}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Area type="monotone" dataKey="total" stroke="#4facfe" fill="#4facfe" fillOpacity={0.3} />
-                        <Line type="monotone" dataKey="completionRate" stroke="#667eea" strokeWidth={2} />
-                        <Line type="monotone" dataKey="acceptanceRate" stroke="#764ba2" strokeWidth={2} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                  <div className="space-y-4">
+                    {(() => {
+                      const approvedJobs = jobs.filter(j => j.status === 'approved').length;
+                      const pendingJobs = jobs.filter(j => j.status === 'pending').length;
+                      const rejectedJobs = jobs.filter(j => j.status === 'rejected').length;
+                      const totalJobs = jobs.length;
+
+                      if (totalJobs === 0) {
+                        return (
+                          <div className="text-center py-8">
+                            <Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">No job postings yet</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <>
+                          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <span className="font-medium">Approved Jobs</span>
+                            </div>
+                            <Badge className="bg-green-600">{approvedJobs}</Badge>
+                          </div>
+                          {pendingJobs > 0 && (
+                            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-yellow-600" />
+                                <span className="font-medium">Pending Approval</span>
+                              </div>
+                              <Badge className="bg-yellow-600">{pendingJobs}</Badge>
+                            </div>
+                          )}
+                          {rejectedJobs > 0 && (
+                            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <XCircle className="w-5 h-5 text-red-600" />
+                                <span className="font-medium">Rejected</span>
+                              </div>
+                              <Badge variant="destructive">{rejectedJobs}</Badge>
+                            </div>
+                          )}
+                          <div className="pt-4 border-t">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-primary">{totalJobs}</div>
+                              <div className="text-sm text-muted-foreground">Total Job Postings</div>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 </CardContent>
               </Card>
 
