@@ -297,8 +297,10 @@ const StudentDashboard = () => {
               batchYear: data.profile.batchYear || data.profile.batch_year || new Date().getFullYear(),
               semester: data.profile.currentSemester || data.profile.current_semester || 1,
               cgpa: data.profile.cgpa || 'N/A',
+              profilePictureUrl: data.profile.profilePictureUrl || '',
               hasProfile: true,
             });
+            console.log('🖼️ Profile picture loaded:', data.profile.profilePictureUrl ? 'Yes' : 'No');
           } else {
             // No profile yet - set basic info from user
             setStudentProfile({
@@ -309,6 +311,7 @@ const StudentDashboard = () => {
               batchYear: new Date().getFullYear(),
               semester: 1,
               cgpa: 'N/A',
+              profilePictureUrl: '',
               hasProfile: false,
             });
           }
@@ -323,6 +326,7 @@ const StudentDashboard = () => {
             batchYear: new Date().getFullYear(),
             semester: 1,
             cgpa: 'N/A',
+            profilePictureUrl: '',
             hasProfile: false,
           });
         }
@@ -337,6 +341,7 @@ const StudentDashboard = () => {
           batchYear: new Date().getFullYear(),
           semester: 1,
           cgpa: 'N/A',
+          profilePictureUrl: '',
           hasProfile: false,
         });
       } finally {
@@ -383,9 +388,17 @@ const StudentDashboard = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold">
-              {currentStudent.name.split(' ').map(n => n[0]).join('')}
-            </div>
+            {studentProfile?.profilePictureUrl ? (
+              <img 
+                src={studentProfile.profilePictureUrl} 
+                alt={studentProfile.name || 'Student'}
+                className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-hero rounded-full flex items-center justify-center text-white font-bold">
+                {(studentProfile?.name || currentStudent.name).split(' ').map(n => n[0]).join('')}
+              </div>
+            )}
           </div>
         </div>
 
