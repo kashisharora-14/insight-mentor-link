@@ -121,7 +121,8 @@ router.post('/profile', authenticate, async (req: any, res) => {
       'motherOccupation', 'motherPhone', 'guardianName', 'guardianRelation',
       'guardianPhone', 'admissionType', 'scholarshipStatus', 'hostelResident',
       'hostelRoomNumber', 'transportMode', 'technicalSkills', 'softSkills',
-      'interests', 'careerGoals', 'linkedinUrl', 'githubUrl', 'portfolioUrl'
+      'interests', 'careerGoals', 'linkedinUrl', 'githubUrl', 'portfolioUrl',
+      'profilePictureUrl'
     ];
 
     fieldMapping.forEach(field => {

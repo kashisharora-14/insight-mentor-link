@@ -8,12 +8,15 @@ import { Button } from '../components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Textarea } from '../components/ui/textarea'
 import { toast } from '../components/ui/use-toast'
-import { Loader2, Save, ArrowLeft } from 'lucide-react'
+import { Loader2, Save, ArrowLeft, Upload, User } from 'lucide-react'
 
 export default function StudentProfileForm() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [fetchingProfile, setFetchingProfile] = useState(true)
+  const [profilePicture, setProfilePicture] = useState<string>('')
+  const [isDragging, setIsDragging] = useState(false)
   const [formData, setFormData] = useState({
     rollNumber: '',
     program: '',
@@ -56,7 +59,7 @@ export default function StudentProfileForm() {
 
   const fetchProfile = async () => {
     try {
-      // Corrected to use 'authToken' as per the thinking
+      setFetchingProfile(true)
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/student-profile/profile', {
         headers: {
@@ -102,10 +105,11 @@ export default function StudentProfileForm() {
             githubUrl: data.profile.githubUrl || '',
             portfolioUrl: data.profile.portfolioUrl || '',
           })
+          setProfilePicture(data.profile.profilePictureUrl || '')
         }
       } else if (response.status === 401) {
         console.error('❌ Token is invalid or expired during fetch');
-        localStorage.removeItem('authToken'); // Corrected to remove 'authToken'
+        localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         toast({
           title: "Session Expired",
@@ -121,6 +125,8 @@ export default function StudentProfileForm() {
         description: 'Could not load profile data. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setFetchingProfile(false)
     }
   }
 
@@ -155,6 +161,7 @@ export default function StudentProfileForm() {
         technicalSkills: formData.technicalSkills ? formData.technicalSkills.split(',').map(s => s.trim()).filter(Boolean) : [],
         softSkills: formData.softSkills ? formData.softSkills.split(',').map(s => s.trim()).filter(Boolean) : [],
         interests: formData.interests ? formData.interests.split(',').map(s => s.trim()).filter(Boolean) : [],
+        profilePictureUrl: profilePicture,
       }
 
       console.log('Submitting profile data:', submitData)
@@ -238,6 +245,45 @@ export default function StudentProfileForm() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleImageDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    
+    const file = e.dataTransfer.files[0]
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setProfilePicture(event.target?.result as string)
+        toast({
+          title: 'Success',
+          description: 'Profile picture uploaded successfully!',
+        })
+      }
+      reader.readAsDataURL(file)
+    } else {
+      toast({
+        title: 'Error',
+        description: 'Please upload an image file',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setProfilePicture(event.target?.result as string)
+        toast({
+          title: 'Success',
+          description: 'Profile picture uploaded successfully!',
+        })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -258,10 +304,76 @@ export default function StudentProfileForm() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Academic Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Academic Information</h3>
+            {fetchingProfile ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading profile...</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Profile Picture Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Profile Picture</h3>
+                  <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors w-full md:w-64 ${
+                        isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'
+                      }`}
+                      onDrop={handleImageDrop}
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onClick={() => document.getElementById('profile-picture-input')?.click()}
+                    >
+                      {profilePicture ? (
+                        <div className="space-y-2">
+                          <img 
+                            src={profilePicture} 
+                            alt="Profile" 
+                            className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-primary/20"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProfilePicture('');
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="w-32 h-32 rounded-full bg-muted mx-auto flex items-center justify-center">
+                            <User className="w-16 h-16 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                            <p className="text-sm text-muted-foreground">Drag & drop or click to upload</p>
+                            <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      id="profile-picture-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageSelect}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        Upload a professional photo that represents you well. This will be visible to alumni and other students on the platform.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Academic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Academic Information</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -580,7 +692,8 @@ export default function StudentProfileForm() {
                   Cancel
                 </Button>
               </div>
-            </form>
+              </form>
+            )}
           </CardContent>
         </Card>
       </div>
