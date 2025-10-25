@@ -39,6 +39,7 @@ import { useNavigate } from 'react-router-dom';
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("requests");
   const [apiStudentRequests, setApiStudentRequests] = useState<any[]>([]);
+  const [successStories, setSuccessStories] = useState<any[]>([]);
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -74,6 +75,20 @@ const StudentDashboard = () => {
       } catch {}
     };
     load();
+  }, []);
+
+  // Load success stories
+  useEffect(() => {
+    const loadSuccessStories = async () => {
+      try {
+        const response = await fetch('/api/success-stories');
+        if (response.ok) {
+          const data = await response.json();
+          setSuccessStories(data);
+        }
+      } catch {}
+    };
+    loadSuccessStories();
   }, []);
 
   const displayedStudentRequests = useMemo(() => {
@@ -452,7 +467,7 @@ const StudentDashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className={isMobile 
             ? "flex w-full overflow-x-auto overflow-y-hidden p-1 gap-1 scrollbar-hide" 
-            : "grid w-full grid-cols-6"
+            : "grid w-full grid-cols-5"
           }>
             <TabsTrigger value="requests" className={isMobile 
               ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
@@ -461,13 +476,6 @@ const StudentDashboard = () => {
               <MessageCircle className="w-4 h-4" />
               {isMobile ? "Help" : "Mentorship"}
             </TabsTrigger>
-            <TabsTrigger value="analytics" className={isMobile 
-              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
-              : "flex items-center gap-2"
-            }>
-              <BarChart3 className="w-4 h-4" />
-              {isMobile ? "Stats" : "Analytics"}
-            </TabsTrigger>
             <TabsTrigger value="connections" className={isMobile 
               ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
               : "flex items-center gap-2"
@@ -475,26 +483,19 @@ const StudentDashboard = () => {
               <Users className="w-4 h-4" />
               {isMobile ? "Net" : "Connections"}
             </TabsTrigger>
+            <TabsTrigger value="success-stories" className={isMobile 
+              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
+              : "flex items-center gap-2"
+            }>
+              <Award className="w-4 h-4" />
+              {isMobile ? "Stories" : "Success Stories"}
+            </TabsTrigger>
             <TabsTrigger value="roadmap" className={isMobile 
               ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
               : "flex items-center gap-2"
             }>
               <Route className="w-4 h-4" />
               {isMobile ? "Path" : "Roadmap"}
-            </TabsTrigger>
-            <TabsTrigger value="recommendations" className={isMobile 
-              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
-              : "flex items-center gap-2"
-            }>
-              <Brain className="w-4 h-4" />
-              {isMobile ? "AI" : "AI Recommendations"}
-            </TabsTrigger>
-            <TabsTrigger value="achievements" className={isMobile 
-              ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
-              : "flex items-center gap-2"
-            }>
-              <Award className="w-4 h-4" />
-              {isMobile ? "Awards" : "Achievements"}
             </TabsTrigger>
             <TabsTrigger value="profile" className={isMobile 
               ? "flex-shrink-0 flex flex-col items-center gap-1 p-2 text-xs" 
@@ -504,311 +505,6 @@ const StudentDashboard = () => {
               {isMobile ? "Profile" : "Profile"}
             </TabsTrigger>
           </TabsList>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics">
-            <div className="grid lg:grid-cols-2 gap-6 mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    Skill Development Progress
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer
-                    config={{
-                      current: { label: "Your Level", color: "#667eea" },
-                      target: { label: "Target", color: "#764ba2" },
-                      industry: { label: "Industry Avg", color: "#f093fb" }
-                    }}
-                  >
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={skillProgressData} layout="horizontal">
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" domain={[0, 100]} />
-                        <YAxis dataKey="skill" type="category" width={100} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="current" fill="#667eea" />
-                        <Bar dataKey="industry" fill="#f093fb" opacity={0.6} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Career Readiness Trend
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer
-                    config={{
-                      score: { label: "Your Score", color: "#667eea" },
-                      industry: { label: "Industry Benchmark", color: "#764ba2" }
-                    }}
-                  >
-                    <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={careerReadinessData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis domain={[50, 100]} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Area type="monotone" dataKey="score" stroke="#667eea" fill="#667eea" fillOpacity={0.3} />
-                        <Area type="monotone" dataKey="industry" stroke="#764ba2" fill="none" strokeDasharray="5 5" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Performance Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Overall Progress</span>
-                      <span className="text-sm font-medium">82%</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div className="bg-primary h-2 rounded-full" style={{width: '82%'}}></div>
-                    </div>
-
-                    <div className="space-y-3 pt-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Skills Completed</span>
-                        <span className="text-sm font-medium">12/15</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Mentorship Hours</span>
-                        <span className="text-sm font-medium">24h</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Network Growth</span>
-                        <span className="text-sm font-medium">+150%</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Industry Comparison</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-primary">Top 15%</div>
-                      <div className="text-sm text-muted-foreground">in your batch</div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Skill Level</span>
-                        <Badge variant="outline" className="text-green-600">Above Average</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Network Size</span>
-                        <Badge variant="outline" className="text-blue-600">Growing</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Career Focus</span>
-                        <Badge variant="outline" className="text-purple-600">Excellent</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Next Milestones</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-2 bg-gradient-card rounded">
-                      <Target className="w-4 h-4 text-primary" />
-                      <div>
-                        <div className="text-sm font-medium">Complete AWS Cert</div>
-                        <div className="text-xs text-muted-foreground">Due in 3 weeks</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-2 bg-gradient-card rounded">
-                      <Users className="w-4 h-4 text-warning" />
-                      <div>
-                        <div className="text-sm font-medium">Connect with 2 Alumni</div>
-                        <div className="text-xs text-muted-foreground">This month</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-2 bg-gradient-card rounded">
-                      <BookOpen className="w-4 h-4 text-success" />
-                      <div>
-                        <div className="text-sm font-medium">Update Portfolio</div>
-                        <div className="text-xs text-muted-foreground">Add 2 projects</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* AI Recommendations Tab */}
-          <TabsContent value="recommendations">
-            <div className="grid md:grid-cols-2 gap-6">
-              {personalizedRecommendations.map((rec, index) => (
-                <Card key={index} className="shadow-elegant">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Zap className="w-5 h-5 text-primary" />
-                        {rec.title}
-                      </CardTitle>
-                      <Badge variant={rec.priority === 'High' ? 'default' : 'secondary'}>
-                        {rec.priority}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="text-sm text-muted-foreground">{rec.description}</div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm">{rec.timeline}</span>
-                        </div>
-                        <Badge variant="outline">{rec.type}</Badge>
-                      </div>
-                      <Button className="w-full bg-gradient-hero hover:opacity-90" size="sm">
-                        Take Action
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Achievements Tab */}
-          <TabsContent value="achievements">
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card className="bg-gradient-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="w-5 h-5 text-primary" />
-                    Recent Achievements
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
-                      <div className="w-8 h-8 bg-gradient-hero rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">First Mentor Connection</div>
-                        <div className="text-xs text-muted-foreground">Unlocked 2 days ago</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
-                      <div className="w-8 h-8 bg-gradient-hero rounded-full flex items-center justify-center">
-                        <TrendingUp className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">Skill Score Milestone</div>
-                        <div className="text-xs text-muted-foreground">80+ overall score</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
-                      <div className="w-8 h-8 bg-gradient-hero rounded-full flex items-center justify-center">
-                        <Users className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">Network Builder</div>
-                        <div className="text-xs text-muted-foreground">5+ connections</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Progress Badges</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="text-center p-3 bg-gradient-card rounded-lg">
-                      <div className="text-2xl mb-1">🎯</div>
-                      <div className="text-xs font-medium">Goal Achiever</div>
-                    </div>
-                    <div className="text-center p-3 bg-gradient-card rounded-lg">
-                      <div className="text-2xl mb-1">🤝</div>
-                      <div className="text-xs font-medium">Networker</div>
-                    </div>
-                    <div className="text-center p-3 bg-gradient-card rounded-lg">
-                      <div className="text-2xl mb-1">📚</div>
-                      <div className="text-xs font-medium">Learner</div>
-                    </div>
-                    <div className="text-center p-3 bg-muted rounded-lg opacity-50">
-                      <div className="text-2xl mb-1">🚀</div>
-                      <div className="text-xs">Innovator</div>
-                    </div>
-                    <div className="text-center p-3 bg-muted rounded-lg opacity-50">
-                      <div className="text-2xl mb-1">👑</div>
-                      <div className="text-xs">Leader</div>
-                    </div>
-                    <div className="text-center p-3 bg-muted rounded-lg opacity-50">
-                      <div className="text-2xl mb-1">⭐</div>
-                      <div className="text-xs">Expert</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Leaderboard</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-2 bg-gradient-card rounded">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
-                        <span className="text-sm">Arjun Kumar</span>
-                      </div>
-                      <span className="text-sm font-medium">95</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gradient-card rounded">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
-                        <span className="text-sm">Priya Sharma</span>
-                      </div>
-                      <span className="text-sm font-medium">89</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-primary/10 rounded border border-primary">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>
-                        <span className="text-sm font-medium">You</span>
-                      </div>
-                      <span className="text-sm font-medium">82</span>
-                    </div>
-                    <div className="text-center pt-2">
-                      <span className="text-xs text-muted-foreground">Top 15% in your batch</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
 
           {/* Mentorship Requests Tab */}
           <TabsContent value="requests">
@@ -926,8 +622,11 @@ const StudentDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" />
-                  Your Alumni Connections
+                  Your Connections
                 </CardTitle>
+                <CardDescription>
+                  All your professional connections including mentors, alumni, and peers
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {studentConnections.length === 0 ? (
@@ -963,6 +662,70 @@ const StudentDashboard = () => {
                             <MessageCircle className="w-4 h-4 mr-2" />
                             Message
                           </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Success Stories Tab */}
+          <TabsContent value="success-stories">
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="w-5 h-5 text-primary" />
+                  Alumni Success Stories
+                </CardTitle>
+                <CardDescription>
+                  Inspiring achievements from our Punjab University Computer Science alumni
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {successStories.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Award className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No success stories available yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {successStories.map((story: any) => (
+                      <Card key={story.id} className="border border-border hover:shadow-glow transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex flex-col items-center text-center mb-4">
+                            {story.imageUrl ? (
+                              <img 
+                                src={story.imageUrl} 
+                                alt={story.name}
+                                className="w-20 h-20 rounded-full object-cover mb-3 border-2 border-primary/20"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 rounded-full bg-gradient-hero flex items-center justify-center text-white font-bold text-2xl mb-3">
+                                {story.name?.charAt(0) || 'A'}
+                              </div>
+                            )}
+                            <h3 className="font-semibold text-lg">{story.name}</h3>
+                            <p className="text-sm text-primary font-medium">{story.currentPosition}</p>
+                            <p className="text-sm text-muted-foreground">{story.company}</p>
+                            <Badge variant="secondary" className="mt-2">
+                              {story.program} - Batch {story.batch}
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <h4 className="font-medium text-sm mb-1">Achievement:</h4>
+                              <p className="text-sm text-primary font-medium">{story.achievement}</p>
+                            </div>
+                            
+                            <div>
+                              <p className="text-sm text-muted-foreground line-clamp-4">
+                                {story.description}
+                              </p>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
