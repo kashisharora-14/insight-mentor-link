@@ -335,29 +335,22 @@ const AdminDashboard = () => {
         pendingRequests: data.pendingRequests || 0,
         engagementRate: data.engagementRate || 0,
         monthlyGrowth: data.monthlyGrowth || 0,
-        aiInsights: data.aiInsights || []
+        aiInsights: []
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
-      // Fallback to mock data if API fails and set default stats
+      // Set to 0 if API fails - no dummy data
       setStats({
-        totalProfiles: 12,
-        verifiedProfiles: 8,
-        totalDonations: 216000,
-        totalEvents: 10,
-        totalProducts: 15,
-        activeMentorships: 4,
-        pendingRequests: 4,
-        engagementRate: 78,
-        monthlyGrowth: 12.5,
-        aiInsights: [
-          "🎯 UICET department shows highest engagement rate (85%) - consider replicating their strategies",
-          "📈 Mentorship requests increased 23% this month - consider scaling mentor onboarding",
-          "🌍 Alumni donations up 40% internationally - focus on global engagement campaigns",
-          "💡 Technology sector alumni most likely to mentor (78% participation rate)",
-          "📊 Weekend events show 30% higher attendance - optimize scheduling",
-          "🔗 Alumni with 5+ connections donate 3x more - encourage networking"
-        ]
+        totalProfiles: 0,
+        verifiedProfiles: 0,
+        totalDonations: 0,
+        totalEvents: 0,
+        totalProducts: 0,
+        activeMentorships: 0,
+        pendingRequests: 0,
+        engagementRate: 0,
+        monthlyGrowth: 0,
+        aiInsights: []
       });
     }
   };
@@ -1699,57 +1692,48 @@ const fetchVerificationRequests = async () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[
-                      { name: 'Punjab', value: 30, color: '#667eea' },
-                      { name: 'Delhi NCR', value: 25, color: '#764ba2' },
-                      { name: 'Mumbai', value: 15, color: '#f093fb' },
-                      { name: 'Bangalore', value: 12, color: '#f5576c' },
-                      { name: 'International', value: 18, color: '#4facfe' }
-                    ].map((region, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: region.color }}
-                            ></div>
-                            <span className="font-medium">{region.name}</span>
+                    {(() => {
+                      const totalAlumni = profiles.filter(p => p.role === 'alumni').length;
+                      
+                      if (totalAlumni === 0) {
+                        return (
+                          <div className="text-center py-8">
+                            <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">No alumni geographic data available</p>
+                            <p className="text-xs text-muted-foreground mt-2">Alumni locations will appear here once profiles are updated</p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">
-                              {(region.value * 83.4).toFixed(0)} alumni
-                            </span>
-                            <Badge variant="outline">{region.value}%</Badge>
-                          </div>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div
-                            className="h-2 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${region.value}%`,
-                              backgroundColor: region.color
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      }
 
-                    <div className="pt-4 border-t">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">8,340</div>
-                        <div className="text-sm text-muted-foreground">Total Alumni Worldwide</div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                          <div className="text-lg font-bold text-primary">42</div>
-                          <div className="text-xs text-muted-foreground">Countries</div>
-                        </div>
-                        <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                          <div className="text-lg font-bold text-primary">156</div>
-                          <div className="text-xs text-muted-foreground">Cities</div>
-                        </div>
-                      </div>
-                    </div>
+                      return (
+                        <>
+                          <div className="text-center py-4">
+                            <p className="text-sm text-muted-foreground">
+                              Geographic distribution data not yet available
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Alumni need to add location information to their profiles
+                            </p>
+                          </div>
+                          <div className="pt-4 border-t">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-primary">{totalAlumni}</div>
+                              <div className="text-sm text-muted-foreground">Total Alumni Registered</div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                              <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                                <div className="text-lg font-bold text-primary">0</div>
+                                <div className="text-xs text-muted-foreground">Countries</div>
+                              </div>
+                              <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                                <div className="text-lg font-bold text-primary">0</div>
+                                <div className="text-xs text-muted-foreground">Cities</div>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>
@@ -1790,33 +1774,63 @@ const fetchVerificationRequests = async () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
-                    Industry-wise Alumni Growth
+                    Companies Where Alumni Work
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[
-                      { name: 'Technology', alumni: 1450, avgSalary: 1200000, growth: 15 },
-                      { name: 'Finance', alumni: 890, avgSalary: 1800000, growth: 8 },
-                      { name: 'Healthcare', alumni: 680, avgSalary: 950000, growth: 12 },
-                      { name: 'Education', alumni: 520, avgSalary: 600000, growth: 5 },
-                      { name: 'Government', alumni: 430, avgSalary: 800000, growth: 3 },
-                      { name: 'Startups', alumni: 380, avgSalary: 1100000, growth: 25 }
-                    ].map((industry, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium">{industry.name}</span>
-                            <Badge variant={industry.growth > 15 ? "default" : industry.growth > 8 ? "secondary" : "outline"} className={industry.growth > 15 ? "text-green-600" : industry.growth > 8 ? "text-blue-600" : "text-muted-foreground"}>
-                              +{industry.growth}%
-                            </Badge>
+                    {(() => {
+                      const alumniProfiles = profiles.filter(p => p.role === 'alumni');
+                      
+                      if (alumniProfiles.length === 0) {
+                        return (
+                          <div className="text-center py-8">
+                            <Building className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">No alumni company data available</p>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            {industry.alumni} alumni • Avg: ₹{(industry.avgSalary/100000).toFixed(1)}L
+                        );
+                      }
+
+                      // Group by company
+                      const companyMap = new Map<string, number>();
+                      alumniProfiles.forEach(profile => {
+                        const company = profile.company || 'Not Specified';
+                        companyMap.set(company, (companyMap.get(company) || 0) + 1);
+                      });
+
+                      const companyData = Array.from(companyMap.entries())
+                        .map(([company, count]) => ({ company, count }))
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 10);
+
+                      if (companyData.length === 0 || (companyData.length === 1 && companyData[0].company === 'Not Specified')) {
+                        return (
+                          <div className="text-center py-8">
+                            <Building className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">No company information available</p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {alumniProfiles.length} alumni registered, awaiting profile updates
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return companyData.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium">{item.company}</span>
+                              <Badge variant="outline">
+                                {item.count} {item.count === 1 ? 'alumnus' : 'alumni'}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {((item.count / alumniProfiles.length) * 100).toFixed(1)}% of total alumni
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ));
+                    })()}
                   </div>
                 </CardContent>
               </Card>
