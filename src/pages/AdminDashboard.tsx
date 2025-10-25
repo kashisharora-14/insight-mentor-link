@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import confetti from 'canvas-confetti';
 // import {supabase } from '@/integrations/supabase/client'; // Replaced with API client
 import {
   Users,
@@ -27,7 +28,11 @@ import {
   GraduationCap,
   MapPin,
   Briefcase,
-  DollarSign
+  DollarSign,
+  Share2,
+  PartyPopper,
+  Trophy,
+  Building
 } from 'lucide-react';
 import Navigation from '@/components/ui/navigation';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -97,6 +102,19 @@ interface MentorshipRequest {
   created_at: string;
   mentor_profile?: any;
   student_profile?: any;
+}
+
+interface SuccessStory {
+  id: string;
+  name: string;
+  batch: string;
+  program: string;
+  achievement: string;
+  description: string;
+  currentPosition: string;
+  company: string;
+  imageUrl?: string;
+  date: string;
 }
 
 const AdminDashboard = () => {
@@ -1314,15 +1332,14 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
 
         {/* Detailed Management Tabs */}
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 gap-1">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 gap-1">
             <TabsTrigger value="analytics" className="text-xs lg:text-sm px-2 lg:px-3">Analytics</TabsTrigger>
             <TabsTrigger value="student-success" className="text-xs lg:text-sm px-2 lg:px-3">Success</TabsTrigger>
             <TabsTrigger value="verification" className="text-xs lg:text-sm px-2 lg:px-3">Verify</TabsTrigger>
             <TabsTrigger value="profiles" className="text-xs lg:text-sm px-2 lg:px-3">Users</TabsTrigger>
             <TabsTrigger value="events" className="text-xs lg:text-sm px-2 lg:px-3">Events</TabsTrigger>
-            <TabsTrigger value="event-requests" className="text-xs lg:text-sm px-2 lg:px-3">Event Req</TabsTrigger>
+            <TabsTrigger value="event-requests" className="text-xs lg:text-sm px-2 lg:px-3">Event Request</TabsTrigger>
             <TabsTrigger value="jobs" className="text-xs lg:text-sm px-2 lg:px-3">Jobs</TabsTrigger>
-            <TabsTrigger value="mentorships" className="text-xs lg:text-sm px-2 lg:px-3">Mentorships</TabsTrigger>
           </TabsList>
 
           {/* Analytics Tab */}
@@ -1506,113 +1523,181 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
             </div>
           </TabsContent>
 
-          {/* Student Success Analytics Tab */}
+          {/* Success Stories Tab */}
           <TabsContent value="student-success">
-            <div className="grid lg:grid-cols-2 gap-6 mb-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    Student Success Metrics
-                  </CardTitle>
-                  <CardDescription>
-                    Key performance indicators for student outcomes and platform impact
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {[
-                      { metric: 'Placement Rate', value: 89, target: 85, trend: '+4%' },
-                      { metric: 'Avg. Starting Salary', value: 6.2, target: 5.8, trend: '+6.9%' },
-                      { metric: 'Industry Readiness', value: 78, target: 75, trend: '+4%' },
-                      { metric: 'Alumni Mentorship', value: 67, target: 60, trend: '+11.7%' },
-                      { metric: 'Skill Certification', value: 72, target: 70, trend: '+2.9%' },
-                      { metric: 'Job Satisfaction', value: 8.4, target: 8.0, trend: '+5%' }
-                    ].map((metric, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-gradient-card rounded-lg">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">{metric.metric}</span>
-                            <Badge variant={metric.value >= metric.target ? "default" : "secondary"}>
-                              {metric.trend}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-2xl font-bold text-primary">
-                              {metric.metric.includes('Salary') ? `₹${metric.value}L` :
-                               metric.metric.includes('Satisfaction') ? metric.value : `${metric.value}%`}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-primary" />
+                  Department Success Stories
+                </CardTitle>
+                <CardDescription>
+                  Inspiring achievements from our Computer Science department alumni and students
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6">
+                  {[
+                    {
+                      id: '1',
+                      name: 'Rajesh Kumar',
+                      batch: 'MCA 2022',
+                      program: 'MCA Morning',
+                      achievement: 'Joined Google as Software Engineer',
+                      description: 'Secured a position at Google after graduating with outstanding performance in competitive programming and machine learning projects. Started with a package of ₹45 LPA.',
+                      currentPosition: 'Software Engineer',
+                      company: 'Google',
+                      date: 'October 2024'
+                    },
+                    {
+                      id: '2',
+                      name: 'Priya Sharma',
+                      batch: 'MSCIT 2023',
+                      program: 'MSCIT Evening',
+                      achievement: 'Won National Hackathon',
+                      description: 'Led a team to victory at the National Smart India Hackathon 2024 with an innovative AI-powered healthcare solution. The project is now being implemented in 5 government hospitals.',
+                      currentPosition: 'AI Research Engineer',
+                      company: 'Microsoft Research',
+                      date: 'September 2024'
+                    },
+                    {
+                      id: '3',
+                      name: 'Amit Singh',
+                      batch: 'MCA 2021',
+                      program: 'MCA Morning',
+                      achievement: 'Founded Successful Startup',
+                      description: 'Founded EduTech Solutions, a startup that helps students prepare for competitive exams using AI. Raised ₹2 Crore in seed funding and now serves 50,000+ students.',
+                      currentPosition: 'Founder & CEO',
+                      company: 'EduTech Solutions',
+                      date: 'August 2024'
+                    },
+                    {
+                      id: '4',
+                      name: 'Neha Gupta',
+                      batch: 'MSCIT 2023',
+                      program: 'MSCIT Morning',
+                      achievement: 'Published Research in IEEE',
+                      description: 'Published groundbreaking research on blockchain security in IEEE Transactions journal. The paper has been cited 50+ times and presented at international conferences.',
+                      currentPosition: 'Security Researcher',
+                      company: 'Amazon Web Services',
+                      date: 'July 2024'
+                    }
+                  ].map((story) => (
+                    <Card key={story.id} className="overflow-hidden border-2 border-primary/20 hover:border-primary/40 transition-colors">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                                {story.name.split(' ').map(n => n[0]).join('')}
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-semibold">{story.name}</h3>
+                                <p className="text-sm text-muted-foreground">{story.batch} • {story.program}</p>
+                              </div>
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              Target: {metric.metric.includes('Salary') ? `₹${metric.target}L` :
-                                      metric.metric.includes('Satisfaction') ? metric.target : `${metric.target}%`}
+                            <Badge className="mb-3 bg-gradient-to-r from-amber-500 to-orange-500 border-none">
+                              <Trophy className="w-3 h-3 mr-1" />
+                              {story.achievement}
+                            </Badge>
+                            <p className="text-sm text-foreground/90 mb-3 leading-relaxed">{story.description}</p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Briefcase className="w-4 h-4" />
+                                <span>{story.currentPosition}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Building className="w-4 h-4" />
+                                <span>{story.company}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>{story.date}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                        <div className="flex gap-2 pt-4 border-t">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              const shareText = `🎉 ${story.achievement}!\n\n${story.name} from ${story.batch} ${story.program} has achieved great success!\n\n${story.description}\n\nCurrently: ${story.currentPosition} at ${story.company}`;
+                              
+                              if (navigator.share) {
+                                navigator.share({
+                                  title: `Success Story: ${story.name}`,
+                                  text: shareText,
+                                }).catch(() => {
+                                  navigator.clipboard.writeText(shareText);
+                                  toast({
+                                    title: "Copied to clipboard!",
+                                    description: "Share this success story with others",
+                                  });
+                                });
+                              } else {
+                                navigator.clipboard.writeText(shareText);
+                                toast({
+                                  title: "Copied to clipboard!",
+                                  description: "Share this success story with others",
+                                });
+                              }
+                            }}
+                          >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                            onClick={() => {
+                              // Trigger party popper confetti animation
+                              const duration = 3 * 1000;
+                              const animationEnd = Date.now() + duration;
+                              const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Globe className="w-5 h-5" />
-                    Platform Impact Analytics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-gradient-card rounded-lg">
-                        <div className="text-2xl font-bold text-primary">8,340</div>
-                        <div className="text-sm text-muted-foreground">Total Alumni Registered</div>
-                      </div>
-                      <div className="text-center p-4 bg-gradient-card rounded-lg">
-                        <div className="text-2xl font-bold text-warning">2,890</div>
-                        <div className="text-sm text-muted-foreground">Active Students</div>
-                      </div>
-                    </div>
+                              function randomInRange(min: number, max: number) {
+                                return Math.random() * (max - min) + min;
+                              }
 
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Alumni Verification Rate</span>
-                        <span className="text-sm font-medium">87%</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-primary h-2 rounded-full" style={{width: '87%'}}></div>
-                      </div>
+                              const interval: any = setInterval(function() {
+                                const timeLeft = animationEnd - Date.now();
 
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Mentorship Match Success</span>
-                        <span className="text-sm font-medium">94%</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-success h-2 rounded-full" style={{width: '94%'}}></div>
-                      </div>
+                                if (timeLeft <= 0) {
+                                  return clearInterval(interval);
+                                }
 
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Event Participation Rate</span>
-                        <span className="text-sm font-medium">76%</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div className="bg-warning h-2 rounded-full" style={{width: '76%'}}></div>
-                      </div>
-                    </div>
+                                const particleCount = 50 * (timeLeft / duration);
 
-                    <div className="pt-4 border-t">
-                      <h4 className="font-medium mb-3">Quick Analytics Summary</h4>
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        <p>• 67% of students find mentors within 2 weeks</p>
-                        <p>• Alumni response rate: 89% within 48 hours</p>
-                        <p>• Platform satisfaction score: 4.6/5.0</p>
-                        <p>• Monthly active users: 12,450 (+15%)</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                                confetti({
+                                  ...defaults,
+                                  particleCount,
+                                  origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                                });
+                                confetti({
+                                  ...defaults,
+                                  particleCount,
+                                  origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                                });
+                              }, 250);
+
+                              toast({
+                                title: "🎉 Celebrating Success!",
+                                description: `Congratulations to ${story.name}!`,
+                              });
+                            }}
+                          >
+                            <PartyPopper className="w-4 h-4 mr-2" />
+                            Celebrate
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Verification Tab */}
@@ -2622,50 +2707,6 @@ const handleUnverifyUser = async (userId: string, userEmail: string) => {
             </Card>
           </TabsContent>
 
-          {/* Mentorships Tab */}
-          <TabsContent value="mentorships">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mentorship Requests</CardTitle>
-                <CardDescription>Monitor mentorship program activity</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mentorshipRequests.map((request) => (
-                    <div key={request.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium">{request.field_of_interest}</h3>
-                        <Badge
-                          variant={
-                            request.status === 'approved' ? 'default' :
-                            request.status === 'pending' ? 'secondary' : 'destructive'
-                          }
-                        >
-                          {request.status}
-                        </Badge>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-4 text-sm text-muted-foreground">
-                        <div>
-                          <p><strong>Student:</strong> {request.student_profile?.name}</p>
-                          <p><strong>Department:</strong> {request.student_profile?.department}</p>
-                        </div>
-                        {request.mentor_profile && (
-                          <div>
-                            <p><strong>Mentor:</strong> {request.mentor_profile.name}</p>
-                            <p><strong>Position:</strong> {request.mentor_profile.current_job} at {request.mentor_profile.company}</p>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">{request.description}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Created: {new Date(request.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
     </div>
