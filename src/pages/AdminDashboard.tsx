@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
 // import {supabase } from '@/integrations/supabase/client'; // Replaced with API client
