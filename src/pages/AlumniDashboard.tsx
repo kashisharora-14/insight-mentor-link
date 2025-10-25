@@ -28,7 +28,9 @@ import {
   Award,
   MapPin,
   Twitter,
-  Linkedin
+  Linkedin,
+  Zap, // Import Zap for the celebrate icon
+  ExternalLink // Import ExternalLink for the share icon
 } from 'lucide-react';
 
 // Assume apiClient is configured elsewhere, e.g., in a context or separate utility file

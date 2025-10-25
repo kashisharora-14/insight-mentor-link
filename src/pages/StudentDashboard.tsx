@@ -741,21 +741,25 @@ const StudentDashboard = () => {
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button 
-                                  variant="outline" 
-                                  size="icon"
-                                  onClick={() => celebratePopupRef.current?.open()}
+                                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg"
+                                  size="sm"
                                 >
-                                  <Zap className="w-4 h-4 text-primary" />
+                                  <Zap className="w-4 h-4 mr-2" />
+                                  Celebrate
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-purple-600 to-blue-600 text-white">
+                              <DialogContent className="sm:max-w-[425px] bg-gradient-to-br from-purple-600 to-blue-600 text-white border-none">
                                 <DialogHeader>
-                                  <DialogTitle>🎉 Congratulations!</DialogTitle>
+                                  <DialogTitle className="text-2xl text-center">🎉 Congratulations! 🎊</DialogTitle>
                                 </DialogHeader>
-                                <div className="flex flex-col items-center py-6">
-                                  <h3 className="text-xl font-bold mb-2">{story.name}</h3>
-                                  <p className="text-lg mb-4">On your incredible achievement: {story.achievement}!</p>
-                                  <p className="text-sm opacity-90">Share this amazing story with your network!</p>
+                                <div className="flex flex-col items-center py-6 space-y-4">
+                                  <div className="text-6xl animate-bounce">🎉</div>
+                                  <h3 className="text-xl font-bold text-center">{story.name}</h3>
+                                  <p className="text-lg text-center">On your incredible achievement:</p>
+                                  <p className="text-xl font-bold text-center text-yellow-300">{story.achievement}!</p>
+                                  <p className="text-sm opacity-90 text-center mt-4">
+                                    This is truly inspiring! Keep shining! ✨
+                                  </p>
                                 </div>
                               </DialogContent>
                             </Dialog>
@@ -764,24 +768,39 @@ const StudentDashboard = () => {
                               <DialogTrigger asChild>
                                 <Button 
                                   variant="outline" 
-                                  size="icon"
-                                  onClick={() => sharePopupRef.current?.open()}
+                                  size="sm"
+                                  className="border-primary text-primary hover:bg-primary hover:text-white"
                                 >
-                                  <ExternalLink className="w-4 h-4 text-secondary" />
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Share
                                 </Button>
                               </DialogTrigger>
                               <DialogContent className="sm:max-w-[425px]">
                                 <DialogHeader>
-                                  <DialogTitle>Share This Story</DialogTitle>
+                                  <DialogTitle className="text-center">Share This Success Story</DialogTitle>
                                 </DialogHeader>
                                 <div className="flex flex-col items-center py-6 gap-4">
-                                  <p className="text-sm text-muted-foreground">Share {story.name}'s success story!</p>
-                                  <div className="flex gap-3">
-                                    <a href={`https://twitter.com/intent/tweet?url=${window.location.href}/success-stories/${story.id}&text=Check%20out%20${story.name}%27s%20amazing%20success%20story%21`} target="_blank" rel="noopener noreferrer">
-                                      <Twitter className="w-6 h-6 text-blue-500 hover:opacity-80" />
+                                  <p className="text-sm text-muted-foreground text-center">
+                                    Inspire others by sharing {story.name}'s success story!
+                                  </p>
+                                  <div className="flex gap-4 mt-4">
+                                    <a 
+                                      href={`https://twitter.com/intent/tweet?url=${window.location.href}/success-stories/${story.id}&text=Check%20out%20${story.name}%27s%20amazing%20success%20story%21`} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 px-4 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors"
+                                    >
+                                      <Twitter className="w-5 h-5" />
+                                      Twitter
                                     </a>
-                                    <a href={`https://www.linkedin.com/shareArticle?mini=true&url=${window.location.href}/success-stories/${story.id}&title=Alumni%20Success%20Story&summary=${story.description}&source=University%20Dashboard`} target="_blank" rel="noopener noreferrer">
-                                      <Linkedin className="w-6 h-6 text-blue-700 hover:opacity-80" />
+                                    <a 
+                                      href={`https://www.linkedin.com/shareArticle?mini=true&url=${window.location.href}/success-stories/${story.id}&title=Alumni%20Success%20Story&summary=${story.description}&source=University%20Dashboard`} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
+                                    >
+                                      <Linkedin className="w-5 h-5" />
+                                      LinkedIn
                                     </a>
                                   </div>
                                 </div>
