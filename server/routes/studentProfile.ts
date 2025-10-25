@@ -42,6 +42,10 @@ router.get('/profile', authenticate, async (req: any, res) => {
       return res.json({ profile: null });
     }
 
+    // Log profile picture retrieval
+    const pictureUrl = profile[0].profilePictureUrl || '';
+    console.log('🖼️ Retrieving profile picture, length:', pictureUrl.length);
+    
     // Return profile with camelCase field names
     res.json({ 
       profile: {
@@ -76,7 +80,7 @@ router.get('/profile', authenticate, async (req: any, res) => {
         linkedinUrl: profile[0].linkedinUrl,
         githubUrl: profile[0].githubUrl,
         portfolioUrl: profile[0].portfolioUrl,
-        profilePictureUrl: profile[0].profilePictureUrl || '',
+        profilePictureUrl: pictureUrl,
       }
     });
   } catch (error) {
@@ -129,6 +133,9 @@ router.post('/profile', authenticate, async (req: any, res) => {
     fieldMapping.forEach(field => {
       if (data[field] !== undefined) {
         profileData[field] = data[field];
+        if (field === 'profilePictureUrl') {
+          console.log('🖼️ Saving profile picture, length:', data[field]?.length || 0);
+        }
       }
     });
 
