@@ -27,6 +27,34 @@ const authenticate = (req: any, res: any, next: any) => {
   }
 };
 
+// Get student profile by userId (for viewing other students)
+router.get('/:userId', authenticate, async (req: any, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const profile = await db.select()
+      .from(studentProfiles)
+      .where(eq(studentProfiles.userId, userId))
+      .limit(1);
+
+    if (profile.length === 0) {
+      console.log('ℹ️ Profile not found for user:', userId);
+      return res.json({ profile: null });
+    }
+
+    // Return profile with camelCase field names
+    res.json({ 
+      profile: {
+        ...profile[0],
+        profilePictureUrl: profile[0].profilePictureUrl || '',
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching student profile:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
 // Get student profile
 router.get('/profile', authenticate, async (req: any, res) => {
   try {

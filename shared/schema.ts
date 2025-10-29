@@ -89,6 +89,9 @@ export const studentProfiles = pgTable('student_profiles', {
   githubUrl: text('github_url'),
   portfolioUrl: text('portfolio_url'),
 
+  // Profile Picture
+  profilePictureUrl: text('profile_picture_url'),
+
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
