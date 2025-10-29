@@ -134,7 +134,7 @@ const Home = () => {
       <Navigation />
       
       {/* Hero Section with DCSA Branding */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+      <section className="relative overflow-hidden bg-gradient-to-br from-red-900 via-amber-900 to-red-950">
         <div className="absolute inset-0 bg-[url('/attached_assets/image_1759089891441.png')] bg-cover bg-center opacity-10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
@@ -153,7 +153,7 @@ const Home = () => {
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
               Department of Computer Science
               <br />
-              <span className="text-blue-400">& Applications</span>
+              <span className="text-amber-400">& Applications</span>
             </h1>
             <p className="text-xl text-white/90 mb-3 font-semibold">
               Panjab University, Chandigarh
@@ -169,7 +169,7 @@ const Home = () => {
               <Link to="/login">
                 <Button 
                   size="lg" 
-                  className="bg-blue-600 text-white hover:bg-blue-700 shadow-glow"
+                  className="bg-red-900 text-white hover:bg-red-800 shadow-glow"
                   onClick={triggerConfetti}
                 >
                   <GraduationCap className="w-5 h-5 mr-2" />
@@ -199,7 +199,7 @@ const Home = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
+                <div className="text-3xl md:text-4xl font-bold text-red-900 mb-2">
                   {stat.number}
                 </div>
                 <div className="text-muted-foreground font-medium">
@@ -351,8 +351,8 @@ const Home = () => {
                 onClick={triggerConfetti}
               >
                 <CardContent className="p-8 text-center">
-                  <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-500/20 transition-colors">
-                    <feature.icon className="w-8 h-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-red-900/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-red-900/20 transition-colors">
+                    <feature.icon className="w-8 h-8 text-red-900" />
                   </div>
                   <h3 className="text-xl font-semibold mb-4">{feature.title}</h3>
                   <p className="text-muted-foreground leading-relaxed">
@@ -366,7 +366,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-600 to-blue-800">
+      <section className="py-20 bg-gradient-to-br from-red-900 to-amber-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Join the DCSA Alumni Network
@@ -378,7 +378,7 @@ const Home = () => {
             <Link to="/alumni-directory">
               <Button 
                 size="lg" 
-                className="bg-white text-blue-600 hover:bg-blue-50"
+                className="bg-white text-red-900 hover:bg-amber-50"
                 onClick={triggerConfetti}
               >
                 <Users className="w-5 h-5 mr-2" />
