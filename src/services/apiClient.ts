@@ -70,7 +70,12 @@ const resolveBaseUrl = (): string => {
     return processUrl;
   }
 
-  return "/api";
+  // Updated API base URL to handle Replit environment
+  const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? `${window.location.protocol}//${window.location.hostname}/api`
+    : 'http://localhost:3001';
+
+  return API_BASE_URL;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
