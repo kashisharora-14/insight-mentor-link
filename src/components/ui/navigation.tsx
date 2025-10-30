@@ -69,7 +69,11 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <GraduationCap className="w-8 h-8 text-primary" />
+            <img 
+              src="/attached_assets/image_1761796285523.png" 
+              alt="DCSA Logo" 
+              className="h-12 w-12 object-contain"
+            />
             <span className="font-bold text-xl text-primary">Re-Connect</span>
           </Link>
 
