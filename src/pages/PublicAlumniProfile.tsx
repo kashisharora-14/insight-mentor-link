@@ -4,7 +4,7 @@ import Navigation from '@/components/ui/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Calendar, MapPin, Linkedin, Star, Briefcase, GraduationCap, Phone, Code, Award, Trophy, BookOpen, User, Github, Twitter } from 'lucide-react';
+import { Mail, Building, Calendar, MapPin, Linkedin, Star, Briefcase, GraduationCap, Phone, Code, Award, Trophy, BookOpen, User, Github, Twitter, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface PublicProfile {
@@ -48,11 +48,14 @@ interface PublicProfile {
   certifications?: string[] | string;
   careerJourney?: string;
   adviceForStudents?: string;
+  githubUrl?: string;
+  twitterUrl?: string;
 }
 
 type MyRequest = {
   id: string;
   status: 'pending' | 'accepted' | 'declined' | 'completed';
+  mentorId: string;
 };
 
 const normalizeList = (value: unknown): string[] => {
@@ -83,7 +86,7 @@ export default function PublicAlumniProfile() {
   const [reviews, setReviews] = useState<Array<{ reviewId: string; rating: number; comment?: string; createdAt: string; studentName: string }>>([]);
   const [capacity, setCapacity] = useState<{ accepted: number; full: boolean } | null>(null);
   const [myRequest, setMyRequest] = useState<MyRequest | null>(null);
-  
+
   // Check if current user is admin
   const isAdmin = user?.role === 'admin';
 
@@ -116,7 +119,7 @@ export default function PublicAlumniProfile() {
         if (req.ok) {
           const items: Array<{ id: string; mentorId: string; status: MyRequest['status'] }> = await req.json();
           const match = items.find(r => r.mentorId === id);
-          setMyRequest(match ? { id: match.id, status: match.status } : null);
+          setMyRequest(match ? { id: match.id, status: match.status, mentorId: match.mentorId } : null);
         }
       } finally {
         setLoading(false);
@@ -314,9 +317,7 @@ export default function PublicAlumniProfile() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-foreground hover:underline"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-                    </svg>
+                    <Github className="w-4 h-4" />
                     GitHub
                   </a>
                 )}
@@ -327,9 +328,7 @@ export default function PublicAlumniProfile() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-foreground hover:underline"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
+                    <Twitter className="w-4 h-4" />
                     Twitter
                   </a>
                 )}
@@ -395,23 +394,52 @@ export default function PublicAlumniProfile() {
                     </p>
                     <div className="mt-4">
                       {(() => {
-                        if (myRequest?.status === 'accepted') {
+                        const mentorId = profile.user_id; // Use profile.user_id for mentorId
+                        // Check for ANY existing request (pending, accepted, or completed) to prevent duplicates
+                        const existing = myRequest ? myRequest : null; // Use the already fetched myRequest
+                        const state = existing?.status as undefined | 'pending' | 'accepted' | 'declined' | 'completed';
+
+                        // If accepted, show Open Chat button (no Request Mentorship button)
+                        if (state === 'accepted') {
                           return (
-                            <Button className="w-full" onClick={() => navigate(`/chat/${myRequest.id}`)}>
+                            <Button onClick={() => navigate(`/chat/${existing.id}`)} className="w-full">
                               Open Chat
                             </Button>
                           );
                         }
-                        if (myRequest?.status === 'pending') {
+
+                        // If pending, show disabled button (no Request Mentorship button)
+                        if (state === 'pending') {
                           return (
-                            <Button className="w-full" variant="outline" disabled>
-                              Request Pending
-                            </Button>
+                            <Button className="w-full" disabled>Request Sent (Pending)</Button>
                           );
                         }
+
+                        // If completed, show status (no Request Mentorship button)
+                        if (state === 'completed') {
+                          return (
+                            <Button className="w-full" disabled variant="secondary">Mentorship Completed</Button>
+                          );
+                        }
+
+                        // If declined, don't show any button (student can request again via Mentorship page if needed)
+                        if (state === 'declined') {
+                          return null;
+                        }
+
+                        // Only show Request Mentorship if no existing request at all
+                        // Check mentor capacity
+                        const cap = capacity; // Use the already fetched capacity
+                        const isFull = cap?.full === true;
+
                         return (
-                          <Button className="w-full" onClick={() => navigate('/mentorship')} disabled={capacity?.full}>
-                            Request Mentorship
+                          <Button
+                            className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
+                            onClick={() => navigate('/mentorship')} // Navigate to mentorship page to request
+                            disabled={isFull} // Assuming usageActive is not directly available here, use capacity
+                          >
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            {isFull ? 'Mentor Full' : 'Request Mentorship'}
                           </Button>
                         );
                       })()}
@@ -498,7 +526,7 @@ export default function PublicAlumniProfile() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line italic">
+                  <p className="text-sm leading-relaxed text-foreground/90 italic">
                     "{profile.adviceForStudents}"
                   </p>
                 </CardContent>
