@@ -242,68 +242,11 @@ const Home = () => {
                 </Card>
               ))
             ) : (
-              <>
-                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
-                  <CardContent className="p-0">
-                    <img 
-                      src="/attached_assets/image_1759089891441.png" 
-                      alt="Tech Workshop"
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    <div className="p-6">
-                      <Badge className="mb-3">Workshop</Badge>
-                      <h3 className="text-xl font-semibold mb-3">AI & Machine Learning Workshop</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Join us for an intensive workshop on AI and ML fundamentals
-                      </p>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Coming Soon
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
-                  <CardContent className="p-0">
-                    <img 
-                      src="/attached_assets/image_1759089891441.png" 
-                      alt="Guest Lecture"
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    <div className="p-6">
-                      <Badge className="mb-3">Seminar</Badge>
-                      <h3 className="text-xl font-semibold mb-3">Industry Expert Talk</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Insights from leading tech industry professionals
-                      </p>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Coming Soon
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
-                  <CardContent className="p-0">
-                    <img 
-                      src="/attached_assets/image_1759089891441.png" 
-                      alt="Networking Event"
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    <div className="p-6">
-                      <Badge className="mb-3">Networking</Badge>
-                      <h3 className="text-xl font-semibold mb-3">Alumni Meet & Greet</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Connect with successful DCSA alumni
-                      </p>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Coming Soon
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
+              <div className="col-span-3 text-center py-12">
+                <Calendar className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+                <p className="text-lg text-muted-foreground">No upcoming events at the moment</p>
+                <p className="text-sm text-muted-foreground mt-2">Check back soon for new events</p>
+              </div>
             )}
           </div>
 
@@ -360,65 +303,11 @@ const Home = () => {
                 </Card>
               ))
             ) : (
-              <>
-                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="w-12 h-12 bg-red-900/10 rounded-lg flex items-center justify-center mb-4">
-                      <Briefcase className="w-6 h-6 text-red-900" />
-                    </div>
-                    <Badge className="mb-3">Full-time</Badge>
-                    <h3 className="text-xl font-semibold mb-2">Software Engineer</h3>
-                    <p className="text-lg font-medium text-muted-foreground mb-3">
-                      Leading Tech Company
-                    </p>
-                    <p className="text-muted-foreground mb-4">
-                      Join our team to work on cutting-edge technology and innovative solutions
-                    </p>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      Remote / Hybrid
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="w-12 h-12 bg-amber-900/10 rounded-lg flex items-center justify-center mb-4">
-                      <Briefcase className="w-6 h-6 text-amber-900" />
-                    </div>
-                    <Badge className="mb-3">Internship</Badge>
-                    <h3 className="text-xl font-semibold mb-2">Data Science Intern</h3>
-                    <p className="text-lg font-medium text-muted-foreground mb-3">
-                      Analytics Firm
-                    </p>
-                    <p className="text-muted-foreground mb-4">
-                      Gain hands-on experience in data analysis and machine learning
-                    </p>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      Chandigarh, India
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="w-12 h-12 bg-red-900/10 rounded-lg flex items-center justify-center mb-4">
-                      <Briefcase className="w-6 h-6 text-red-900" />
-                    </div>
-                    <Badge className="mb-3">Contract</Badge>
-                    <h3 className="text-xl font-semibold mb-2">Full Stack Developer</h3>
-                    <p className="text-lg font-medium text-muted-foreground mb-3">
-                      Startup
-                    </p>
-                    <p className="text-muted-foreground mb-4">
-                      Build scalable web applications with modern tech stack
-                    </p>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      Bangalore, India
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
+              <div className="col-span-3 text-center py-12">
+                <Briefcase className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+                <p className="text-lg text-muted-foreground">No job postings available</p>
+                <p className="text-sm text-muted-foreground mt-2">Check back later for new opportunities</p>
+              </div>
             )}
           </div>
 
