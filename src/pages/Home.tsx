@@ -134,22 +134,23 @@ const Home = () => {
       <Navigation />
       
       {/* Hero Section with DCSA Branding */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-red-900 via-amber-900 to-red-950">
-        <div className="absolute inset-0 bg-[url('/attached_assets/image_1759089891441.png')] bg-cover bg-center opacity-20"></div>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/attached_assets/image_1759089891441.png')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-2xl">
               Department of Computer Science
               <br />
               <span className="text-amber-400">& Applications</span>
             </h1>
-            <p className="text-xl text-white mb-3 font-semibold drop-shadow-md">
+            <p className="text-xl text-white mb-3 font-semibold drop-shadow-lg">
               Panjab University, Chandigarh
             </p>
             <Badge className="mb-6 bg-white/20 text-white border-white/30 backdrop-blur-sm">
               Alumni Connect Portal
             </Badge>
-            <p className="text-lg text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md">
+            <p className="text-lg text-white mb-8 max-w-3xl mx-auto drop-shadow-lg">
               Bridging the gap between current students and successful alumni. 
               Get mentorship, explore career opportunities, and join our thriving community.
             </p>
@@ -169,7 +170,7 @@ const Home = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-2 border-white bg-white/10 text-white hover:bg-white hover:text-red-900 backdrop-blur-sm font-semibold transition-all"
+                  className="border-2 border-white bg-white/20 text-white hover:bg-white hover:text-red-900 backdrop-blur-sm font-semibold transition-all"
                   onClick={triggerConfetti}
                 >
                   <Users className="w-5 h-5 mr-2" />
@@ -241,10 +242,68 @@ const Home = () => {
                 </Card>
               ))
             ) : (
-              <div className="col-span-3 text-center py-12">
-                <Calendar className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No upcoming events at the moment</p>
-              </div>
+              <>
+                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-0">
+                    <img 
+                      src="/attached_assets/image_1759089891441.png" 
+                      alt="Tech Workshop"
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    <div className="p-6">
+                      <Badge className="mb-3">Workshop</Badge>
+                      <h3 className="text-xl font-semibold mb-3">AI & Machine Learning Workshop</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Join us for an intensive workshop on AI and ML fundamentals
+                      </p>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Coming Soon
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-0">
+                    <img 
+                      src="/attached_assets/image_1759089891441.png" 
+                      alt="Guest Lecture"
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    <div className="p-6">
+                      <Badge className="mb-3">Seminar</Badge>
+                      <h3 className="text-xl font-semibold mb-3">Industry Expert Talk</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Insights from leading tech industry professionals
+                      </p>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Coming Soon
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-0">
+                    <img 
+                      src="/attached_assets/image_1759089891441.png" 
+                      alt="Networking Event"
+                      className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                    <div className="p-6">
+                      <Badge className="mb-3">Networking</Badge>
+                      <h3 className="text-xl font-semibold mb-3">Alumni Meet & Greet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Connect with successful DCSA alumni
+                      </p>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Coming Soon
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
             )}
           </div>
 
@@ -301,10 +360,65 @@ const Home = () => {
                 </Card>
               ))
             ) : (
-              <div className="col-span-3 text-center py-12">
-                <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No job openings available at the moment</p>
-              </div>
+              <>
+                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="w-12 h-12 bg-red-900/10 rounded-lg flex items-center justify-center mb-4">
+                      <Briefcase className="w-6 h-6 text-red-900" />
+                    </div>
+                    <Badge className="mb-3">Full-time</Badge>
+                    <h3 className="text-xl font-semibold mb-2">Software Engineer</h3>
+                    <p className="text-lg font-medium text-muted-foreground mb-3">
+                      Leading Tech Company
+                    </p>
+                    <p className="text-muted-foreground mb-4">
+                      Join our team to work on cutting-edge technology and innovative solutions
+                    </p>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Remote / Hybrid
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="w-12 h-12 bg-amber-900/10 rounded-lg flex items-center justify-center mb-4">
+                      <Briefcase className="w-6 h-6 text-amber-900" />
+                    </div>
+                    <Badge className="mb-3">Internship</Badge>
+                    <h3 className="text-xl font-semibold mb-2">Data Science Intern</h3>
+                    <p className="text-lg font-medium text-muted-foreground mb-3">
+                      Analytics Firm
+                    </p>
+                    <p className="text-muted-foreground mb-4">
+                      Gain hands-on experience in data analysis and machine learning
+                    </p>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Chandigarh, India
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-elegant hover:shadow-glow transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="w-12 h-12 bg-red-900/10 rounded-lg flex items-center justify-center mb-4">
+                      <Briefcase className="w-6 h-6 text-red-900" />
+                    </div>
+                    <Badge className="mb-3">Contract</Badge>
+                    <h3 className="text-xl font-semibold mb-2">Full Stack Developer</h3>
+                    <p className="text-lg font-medium text-muted-foreground mb-3">
+                      Startup
+                    </p>
+                    <p className="text-muted-foreground mb-4">
+                      Build scalable web applications with modern tech stack
+                    </p>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Bangalore, India
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
             )}
           </div>
 
@@ -366,7 +480,7 @@ const Home = () => {
             <Link to="/alumni-directory">
               <Button 
                 size="lg" 
-                className="bg-white text-red-900 hover:bg-amber-50"
+                className="bg-white text-red-900 hover:bg-amber-50 hover:text-red-900 font-semibold"
                 onClick={triggerConfetti}
               >
                 <Users className="w-5 h-5 mr-2" />
@@ -377,7 +491,7 @@ const Home = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white text-white hover:bg-white/10"
+                className="border-2 border-white bg-white/10 text-white hover:bg-white hover:text-red-900 backdrop-blur-sm font-semibold"
                 onClick={triggerConfetti}
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
@@ -385,7 +499,7 @@ const Home = () => {
               </Button>
             </Link>
           </div>
-          <div className="mt-8 flex items-center justify-center space-x-4 text-white/80">
+          <div className="mt-8 flex items-center justify-center space-x-4 text-white">
             <CheckCircle className="w-5 h-5" />
             <span>Free to use</span>
             <CheckCircle className="w-5 h-5" />
