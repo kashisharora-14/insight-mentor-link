@@ -138,15 +138,6 @@ const Home = () => {
         <div className="absolute inset-0 bg-[url('/attached_assets/image_1759089891441.png')] bg-cover bg-center opacity-30"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            {/* DCSA Logo */}
-            <div className="mb-8 flex justify-center">
-              <img 
-                src="/attached_assets/image_1761796285523.png" 
-                alt="DCSA Logo" 
-                className="w-48 h-48 object-contain drop-shadow-2xl"
-              />
-            </div>
-
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
               Department of Computer Science
               <br />
