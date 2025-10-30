@@ -394,49 +394,55 @@ export default function PublicAlumniProfile() {
                     </p>
                     <div className="mt-4">
                       {(() => {
-                        const mentorId = profile.user_id; // Use profile.user_id for mentorId
-                        // Check for ANY existing request (pending, accepted, or completed) to prevent duplicates
-                        const existing = myRequest ? myRequest : null; // Use the already fetched myRequest
+                        const mentorId = profile.user_id;
+                        const existing = myRequest;
                         const state = existing?.status as undefined | 'pending' | 'accepted' | 'declined' | 'completed';
 
-                        // If accepted, show Open Chat button (no Request Mentorship button)
+                        // If accepted, show Open Chat button with icon
                         if (state === 'accepted') {
                           return (
-                            <Button onClick={() => navigate(`/chat/${existing.id}`)} className="w-full">
+                            <Button 
+                              onClick={() => navigate(`/chat/${existing.id}`)} 
+                              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
                               Open Chat
                             </Button>
                           );
                         }
 
-                        // If pending, show disabled button (no Request Mentorship button)
+                        // If pending, show disabled button
                         if (state === 'pending') {
                           return (
-                            <Button className="w-full" disabled>Request Sent (Pending)</Button>
+                            <Button className="w-full" disabled>
+                              Request Sent (Pending)
+                            </Button>
                           );
                         }
 
-                        // If completed, show status (no Request Mentorship button)
+                        // If completed, show status
                         if (state === 'completed') {
                           return (
-                            <Button className="w-full" disabled variant="secondary">Mentorship Completed</Button>
+                            <Button className="w-full" disabled variant="secondary">
+                              Mentorship Completed
+                            </Button>
                           );
                         }
 
-                        // If declined, don't show any button (student can request again via Mentorship page if needed)
+                        // If declined, don't show any button
                         if (state === 'declined') {
                           return null;
                         }
 
-                        // Only show Request Mentorship if no existing request at all
-                        // Check mentor capacity
-                        const cap = capacity; // Use the already fetched capacity
+                        // Only show Request Mentorship if no existing request
+                        const cap = capacity;
                         const isFull = cap?.full === true;
 
                         return (
                           <Button
                             className="w-full bg-gradient-hero hover:opacity-90 transition-opacity"
-                            onClick={() => navigate('/mentorship')} // Navigate to mentorship page to request
-                            disabled={isFull} // Assuming usageActive is not directly available here, use capacity
+                            onClick={() => navigate('/mentorship')}
+                            disabled={isFull}
                           >
                             <MessageCircle className="w-4 h-4 mr-2" />
                             {isFull ? 'Mentor Full' : 'Request Mentorship'}
