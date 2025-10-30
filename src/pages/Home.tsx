@@ -141,8 +141,8 @@ const Home = () => {
             {/* DCSA Logo */}
             <div className="mb-8 flex justify-center">
               <img 
-                src="/attached_assets/image_1759090315853.png" 
-                alt="Panjab University Logo" 
+                src="/attached_assets/image_1761796285523.png" 
+                alt="DCSA Logo" 
                 className="w-48 h-48 object-contain drop-shadow-2xl"
               />
             </div>
@@ -331,31 +331,6 @@ const Home = () => {
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* University Campus Images */}
-          <div className="mb-16 grid md:grid-cols-3 gap-6">
-            <div className="rounded-xl overflow-hidden shadow-elegant">
-              <img 
-                src="/attached_assets/image_1759090445522.png" 
-                alt="Panjab University Campus" 
-                className="w-full h-64 object-cover"
-              />
-            </div>
-            <div className="rounded-xl overflow-hidden shadow-elegant">
-              <img 
-                src="/attached_assets/image_1759155272244.png" 
-                alt="DCSA Department" 
-                className="w-full h-64 object-cover"
-              />
-            </div>
-            <div className="rounded-xl overflow-hidden shadow-elegant">
-              <img 
-                src="/attached_assets/image_1759158797038.png" 
-                alt="Campus View" 
-                className="w-full h-64 object-cover"
-              />
-            </div>
-          </div>
-          
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Platform Features
@@ -388,15 +363,8 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-20 bg-gradient-to-br from-red-900 to-amber-900 overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <img 
-            src="/attached_assets/image_1759155630053.png" 
-            alt="Background" 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-20 bg-gradient-to-br from-red-900 to-amber-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Join the DCSA Alumni Network
           </h2>
