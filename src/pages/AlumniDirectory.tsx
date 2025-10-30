@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/ui/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -123,9 +123,11 @@ const AlumniDirectory = () => {
   const [mentorshipOnly, setMentorshipOnly] = useState(false);
   const [alumni, setAlumni] = useState<AlumniProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [myRequests, setMyRequests] = useState<Array<{ id: string; mentorId: string; status: string }>>([]);
 
   useEffect(() => {
     fetchAlumni();
+    fetchMyRequests();
   }, []);
 
   const fetchAlumni = async () => {
@@ -143,6 +145,24 @@ const AlumniDirectory = () => {
       toast.error("Failed to load alumni directory");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMyRequests = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      
+      const response = await fetch('/api/mentorship/my-requests-student', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setMyRequests(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Error fetching mentorship requests:', error);
     }
   };
 
@@ -386,13 +406,55 @@ const AlumniDirectory = () => {
                   >
                     View Full Profile
                   </Button>
-                  <Button
-                    className="w-1/2 bg-gradient-hero hover:opacity-90 transition-opacity"
-                    disabled
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Go to Mentorship Page
-                  </Button>
+                  {(() => {
+                    const existingRequest = myRequests.find(r => r.mentorId === person.userId);
+                    const status = existingRequest?.status;
+
+                    if (status === 'accepted') {
+                      return (
+                        <Button
+                          className="w-1/2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                          onClick={() => window.location.assign(`/chat/${existingRequest.id}`)}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Open Chat
+                        </Button>
+                      );
+                    }
+
+                    if (status === 'pending') {
+                      return (
+                        <Button
+                          className="w-1/2"
+                          disabled
+                        >
+                          Request Pending
+                        </Button>
+                      );
+                    }
+
+                    if (status === 'completed') {
+                      return (
+                        <Button
+                          className="w-1/2"
+                          disabled
+                          variant="secondary"
+                        >
+                          Completed
+                        </Button>
+                      );
+                    }
+
+                    return (
+                      <Button
+                        className="w-1/2 bg-gradient-hero hover:opacity-90 transition-opacity"
+                        onClick={() => window.location.assign('/mentorship')}
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Request Mentorship
+                      </Button>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
