@@ -135,21 +135,21 @@ const Home = () => {
       
       {/* Hero Section with DCSA Branding */}
       <section className="relative overflow-hidden bg-gradient-to-br from-red-900 via-amber-900 to-red-950">
-        <div className="absolute inset-0 bg-[url('/attached_assets/image_1759089891441.png')] bg-cover bg-center opacity-30"></div>
+        <div className="absolute inset-0 bg-[url('/attached_assets/image_1759089891441.png')] bg-cover bg-center opacity-20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
               Department of Computer Science
               <br />
               <span className="text-amber-400">& Applications</span>
             </h1>
-            <p className="text-xl text-white/90 mb-3 font-semibold">
+            <p className="text-xl text-white mb-3 font-semibold drop-shadow-md">
               Panjab University, Chandigarh
             </p>
-            <Badge className="mb-6 bg-white/20 text-white border-white/30">
+            <Badge className="mb-6 bg-white/20 text-white border-white/30 backdrop-blur-sm">
               Alumni Connect Portal
             </Badge>
-            <p className="text-lg text-white/80 mb-8 max-w-3xl mx-auto">
+            <p className="text-lg text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md">
               Bridging the gap between current students and successful alumni. 
               Get mentorship, explore career opportunities, and join our thriving community.
             </p>
@@ -157,7 +157,7 @@ const Home = () => {
               <Link to="/login">
                 <Button 
                   size="lg" 
-                  className="bg-red-900 text-white hover:bg-red-800 shadow-glow"
+                  className="bg-red-900 text-white hover:bg-red-800 shadow-glow font-semibold"
                   onClick={triggerConfetti}
                 >
                   <GraduationCap className="w-5 h-5 mr-2" />
@@ -169,7 +169,7 @@ const Home = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-white text-white hover:bg-white hover:text-slate-900"
+                  className="border-2 border-white bg-white/10 text-white hover:bg-white hover:text-red-900 backdrop-blur-sm font-semibold transition-all"
                   onClick={triggerConfetti}
                 >
                   <Users className="w-5 h-5 mr-2" />
