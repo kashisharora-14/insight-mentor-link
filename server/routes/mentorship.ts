@@ -39,7 +39,7 @@ router.get('/my-requests-student', async (req, res) => {
       const { rows } = await client.query(q, [userId]);
       const out = rows.map((r: any) => ({
         id: r.id,
-        mentorId: r.mentorid || r.mentorId,
+        mentorId: String(r.mentorId || r.mentorid || r.mentor_id),
         mentorName: r.mentorname || r.mentorName || 'Mentor',
         mentorEmail: r.mentoremail || r.mentorEmail || '',
         mentorProfilePicture: r.mentorprofilepicture || r.mentorProfilePicture || null,
@@ -50,6 +50,7 @@ router.get('/my-requests-student', async (req, res) => {
         status: r.status as 'pending' | 'accepted' | 'declined' | 'completed',
         createdAt: (r.createdat ? new Date(r.createdat) : (r.createdAt ? new Date(r.createdAt) : new Date())).toISOString(),
       }));
+      console.log('📋 Returning student requests:', out);
       res.json(out);
     } finally {
       await client.end();

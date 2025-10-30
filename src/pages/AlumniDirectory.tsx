@@ -151,7 +151,10 @@ const AlumniDirectory = () => {
   const fetchMyRequests = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      if (!token) return;
+      if (!token) {
+        console.log('No auth token found');
+        return;
+      }
       
       const response = await fetch('/api/mentorship/my-requests-student', {
         headers: { Authorization: `Bearer ${token}` }
@@ -159,7 +162,10 @@ const AlumniDirectory = () => {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('My mentorship requests:', data);
         setMyRequests(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Failed to fetch requests:', response.status);
       }
     } catch (error) {
       console.error('Error fetching mentorship requests:', error);
@@ -409,6 +415,8 @@ const AlumniDirectory = () => {
                   {(() => {
                     const existingRequest = myRequests.find(r => r.mentorId === person.userId);
                     const status = existingRequest?.status;
+                    
+                    console.log('Checking alumni:', person.name, 'userId:', person.userId, 'existingRequest:', existingRequest);
 
                     if (status === 'accepted') {
                       return (
