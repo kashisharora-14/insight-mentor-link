@@ -135,6 +135,7 @@ const Home = () => {
       
       {/* Hero Section with DCSA Branding */}
       <section className="relative overflow-hidden bg-gradient-to-br from-red-900 via-amber-900 to-red-950">
+        <div className="absolute inset-0 bg-[url('/attached_assets/image_1759089891441.png')] bg-cover bg-center opacity-30"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             {/* DCSA Logo */}
