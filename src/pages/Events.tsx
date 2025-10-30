@@ -1234,14 +1234,16 @@ const Events = () => {
             return (
             <Card key={event.id} className="shadow-elegant hover:shadow-glow transition-all duration-300 group overflow-hidden">
               <div className="aspect-video relative">
-                {event.banner_url ? (
+                {event.banner_url || event.poster_url ? (
                   <img
-                    src={event.banner_url}
+                    src={event.banner_url || event.poster_url}
                     alt={`${event.title} banner`}
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-card" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center">
+                    <Calendar className="w-20 h-20 text-primary/30" />
+                  </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/40"></div>
                 <div className="absolute top-4 left-4 flex flex-wrap gap-2">
